@@ -478,7 +478,7 @@ footer {
         justify-content: center;
     }
 
-    .navbar nav, nav {
+    .navbar nav {
         position: absolute;
         top: 100%;
         left: 0;
@@ -489,15 +489,15 @@ footer {
         padding: 20px 0;
         gap: 15px;
         border-bottom: 1px solid #333;
-        display: none !important; 
+        display: none; 
         z-index: 1000;
     }
 
-    .navbar nav.active, nav.active {
+    .navbar nav.active {
         display: flex !important;
     }
 
-    .navbar a, nav a, .nav-links a {
+    .navbar nav a {
         font-size: 16px !important;
         margin: 5px 0 !important;
     }
@@ -544,4 +544,4 @@ footer {
     .movie-poster, .movie-card img {
         height: 230px;
     }
-}
+        }
