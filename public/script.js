@@ -289,7 +289,6 @@ async function openModal(item) {
             <p style="line-height: 1.6; font-size: 14px; color: #ddd; max-height: 90px; overflow-y: auto;">${overview}</p>
             
             <div style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap;">
-                <!-- Tombol Favorit (Bintang ⭐) -->
                 <button onclick='toggleFavoriteCurrent(${JSON.stringify(item).replace(/'/g, "&#39;")})' id="modalFavBtn" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: ${isFav ? '#332b00' : '#222'}; color: ${isFav ? '#ffd700' : '#fff'}; border: 1px solid ${isFav ? '#ffd700' : '#444'}; border-radius: 5px; cursor: pointer; font-weight: bold;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFav ? '#ffd700' : 'none'}" stroke="${isFav ? '#ffd700' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -297,7 +296,6 @@ async function openModal(item) {
                     <span>${isFav ? 'Favorit' : 'Favorit'}</span>
                 </button>
 
-                <!-- Tombol Watchlist (Bookmark 🔖) -->
                 <button onclick='toggleWatchlistCurrent(${JSON.stringify(item).replace(/'/g, "&#39;")})' id="modalWatchBtn" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: ${isWatchlist ? '#002b3d' : '#222'}; color: ${isWatchlist ? '#00acee' : '#fff'}; border: 1px solid ${isWatchlist ? '#00acee' : '#444'}; border-radius: 5px; cursor: pointer; font-weight: bold;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="${isWatchlist ? '#00acee' : 'none'}" stroke="${isWatchlist ? '#00acee' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
