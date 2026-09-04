@@ -182,11 +182,13 @@ function displayItems(items, container = movieContainer, showPagination = true) 
     });
 }
 
-function openModal(item) {
+async function openModal(item) {
     activeItemId = item.id;
     currentMediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
     
     if (!movieModal || !modalBody) return;
+
+    await addToHistory(item);
 
     const title = item.title || item.name || item.original_title || item.original_name || "Untitled";
     const overview = item.overview || "Tidak ada sinopsis tersedia.";
@@ -205,6 +207,7 @@ function openModal(item) {
             <p style="color: #aaa; font-size: 13px;">Rilis: ${releaseDate} | Rating: &#9733; ${rating}</p>
             <p style="line-height: 1.6; font-size: 14px; color: #ddd;">${overview}</p>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick='toggleFavoriteCurrent(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="padding: 10px 20px; background: #e50914; color: #fff; border: none; border-radius: 5px; cursor: pointer;">❤️ Favorit</button>
                 <button onclick="closeMovieModal()" style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Tutup</button>
             </div>
         </div>
@@ -225,3 +228,123 @@ window.addEventListener("click", function(event) {
         closeMovieModal();
     }
 });
+
+async function toggleFavoriteCurrent(item) {
+    const user = getCurrentUser();
+    if (!user) {
+        alert("Silakan login terlebih dahulu untuk menyimpan ke Favorit!");
+        showPage('login-page');
+        closeMovieModal();
+        return;
+    }
+
+    const movieId = item.id;
+    const title = item.title || item.name || "Untitled";
+    const posterPath = item.poster_path || "";
+    const voteAverage = item.vote_average || 0;
+    const releaseDate = item.release_date || item.first_air_date || "";
+
+    const { data: existing } = await supabaseClient
+        .from('favorites')
+        .select('*')
+        .eq('user_email', user.email)
+        .eq('movie_id', movieId);
+
+    if (existing && existing.length > 0) {
+        await supabaseClient
+            .from('favorites')
+            .delete()
+            .eq('user_email', user.email)
+            .eq('movie_id', movieId);
+        alert("Dihapus dari Favorit.");
+    } else {
+        const { error } = await supabaseClient
+            .from('favorites')
+            .insert([{ 
+                user_email: user.email, 
+                movie_id: movieId, 
+                title: title, 
+                poster_path: posterPath,
+                vote_average: voteAverage,
+                release_date: releaseDate,
+                media_type: currentMediaType
+            }]);
+        
+        if (!error) {
+            alert("Berhasil ditambahkan ke Favorit!");
+        }
+    }
+}
+
+async function showFavorites() {
+    showPage('favorites-page');
+    const user = getCurrentUser();
+    const container = document.getElementById("favoritesContainer");
+    
+    if (!user) {
+        if (container) container.innerHTML = '<div class="loading">Silakan login untuk melihat halaman favorites.</div>';
+        return;
+    }
+
+    if (container) container.innerHTML = '<div class="loading">Memuat favorites...</div>';
+
+    const { data: favs, error } = await supabaseClient
+        .from('favorites')
+        .select('*')
+        .eq('user_email', user.email);
+
+    if (error) {
+        if (container) container.innerHTML = '<div class="loading">Gagal memuat data dari server.</div>';
+        return;
+    }
+
+    displayItems(favs, container, false);
+}
+
+async function addToHistory(item) {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    const movieId = item.id;
+    const title = item.title || item.name || "Untitled";
+    const posterPath = item.poster_path || "";
+    const releaseDate = item.release_date || item.first_air_date || "";
+
+    await supabaseClient
+        .from('history')
+        .delete()
+        .eq('user_email', user.email)
+        .eq('movie_id', movieId);
+
+    await supabaseClient
+        .from('history')
+        .insert([{
+            user_email: user.email,
+            movie_id: movieId,
+            title: title,
+            poster_path: posterPath,
+            release_date: releaseDate,
+            media_type: currentMediaType
+        }]);
+}
+
+async function loadHistory() {
+    const user = getCurrentUser();
+    const container = document.getElementById("historyContainer");
+    if (!container || !user) return;
+
+    container.innerHTML = '<div class="loading">Memuat riwayat...</div>';
+
+    const { data: historyItems, error } = await supabaseClient
+        .from('history')
+        .select('*')
+        .eq('user_email', user.email)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        container.innerHTML = '<div class="loading">Gagal memuat riwayat tayangan.</div>';
+        return;
+    }
+
+    displayItems(historyItems, container, false);
+        }
