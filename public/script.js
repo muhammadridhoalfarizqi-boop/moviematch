@@ -214,9 +214,9 @@ async function openModal(item) {
 
     modalBody.innerHTML = `
         <div class="modal-detail" style="display: flex; flex-direction: column; gap: 12px;">
-            <!-- Tombol Pilihan Server Lengkap (13 Server) -->
+            <!-- Tombol Pilihan Server -->
             <div style="display: flex; flex-direction: column; gap: 6px;">
-                <span style="color: #aaa; font-size: 13px; font-weight: bold;">Pilih Server (1 - 13):</span>
+                <span style="color: #aaa; font-size: 13px; font-weight: bold;">Pilih Server:</span>
                 <div id="serverButtons" style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 100px; overflow-y: auto; padding: 4px; background: #111; border-radius: 6px; border: 1px solid #333;">
                     ${servers.map((s, index) => `
                         <button onclick="switchServer('${s.url}', this)" 
@@ -228,10 +228,10 @@ async function openModal(item) {
                 </div>
             </div>
 
-            <!-- Frame Video Player -->
             <div style="position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
                 <iframe id="playerFrame" src="${servers[0].url}" 
                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
+                    sandbox="allow-scripts allow-same-origin allow-presentation"
                     allowfullscreen>
                 </iframe>
             </div>
@@ -394,4 +394,4 @@ async function loadHistory() {
     }
 
     displayItems(historyItems, container, false);
-        }
+}
