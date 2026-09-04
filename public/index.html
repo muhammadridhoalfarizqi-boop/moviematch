@@ -10,13 +10,19 @@
 
     <header class="navbar">
         <div class="logo" onclick="showPage('home-page')">MovieMatch</div>
+        
+        <div class="menu-toggle" id="mobile-menu" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
 
-        <nav>
-            <a onclick="showPage('home-page')">Home</a>
-            <a onclick="scrollToSection('mood')">MoodMatch</a>
-            <a onclick="scrollToSection('movies')">Catalog</a>
-            <a onclick="showFavorites()">Favorites</a>
-            <a id="nav-auth" onclick="handleAuthClick()">Login</a>
+        <nav class="nav-links" id="navLinks">
+            <a onclick="showPage('home-page'); toggleMenu();">Home</a>
+            <a onclick="scrollToSection('mood'); toggleMenu();">MoodMatch</a>
+            <a onclick="scrollToSection('movies'); toggleMenu();">Catalog</a>
+            <a onclick="showFavorites(); toggleMenu();">Favorites</a>
+            <a id="nav-auth" onclick="handleAuthClick(); toggleMenu();">Login</a>
         </nav>
     </header>
 
@@ -154,7 +160,6 @@
                     <div>
                         <p class="label">USER PROFILE</p>
                         <h2 id="profileWelcome">Welcome, User</h2>
-                        <!-- Badge status membership -->
                         <p id="userStatusBadge" style="font-size: 13px; margin-top: 5px; color: #aaa;"></p>
                     </div>
                     <button onclick="logout()" class="primary-button" style="background:#e50914;">Logout</button>
@@ -233,4 +238,4 @@
     <script src="script.js"></script>
 
 </body>
-  </html>
+                    </html>
