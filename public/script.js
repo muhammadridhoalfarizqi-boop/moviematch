@@ -263,12 +263,9 @@ async function openModal(item) {
     ];
 
     modalBody.innerHTML = `
-        <div class="modal-detail" style="display: flex; flex-direction: column; gap: 12px; position: relative;">
-            <!-- Tombol Close (X) di pojok kanan atas -->
-            <button onclick="closeMovieModal()" style="position: absolute; top: -5px; right: 0; background: #222; color: #fff; border: 1px solid #444; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">&times;</button>
-
+        <div class="modal-detail" style="display: flex; flex-direction: column; gap: 12px;">
             <!-- Tombol Pilihan Server -->
-            <div style="display: flex; flex-direction: column; gap: 6px; padding-right: 35px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
                 <span style="color: #aaa; font-size: 13px; font-weight: bold;">Pilih Server:</span>
                 <div id="serverButtons" style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 100px; overflow-y: auto; padding: 4px; background: #111; border-radius: 6px; border: 1px solid #333;">
                     ${servers.map((s, index) => `
