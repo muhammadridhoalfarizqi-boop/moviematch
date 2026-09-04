@@ -260,6 +260,10 @@ async function openModal(item) {
         { name: "VidSrc NL", url: `https://player.vidsrc.nl/embed/${currentMediaType}/${activeItemId}` },
         { name: "IDSrc TO", url: `https://idsrc.to/embed/${currentMediaType}/${activeItemId}` },
         { name: "VidSrc ICU", url: `https://vidsrc.icu/embed/${currentMediaType}/${activeItemId}` }
+        { name: "Dailymotion", url: `https://www.dailymotion.com/embed/video/${activeItemId}` },
+        { name: "Rumble", url: `https://rumble.com/embed/${activeItemId}/` },
+        { name: "Ok.ru", url: `https://ok.ru/videoembed/${activeItemId}` },
+        { name: "Bstation", url: `https://player.bilibili.com/player.html?bvid=${activeItemId}&high_quality=1&danmaku=0` }
     ];
 
     modalBody.innerHTML = `
