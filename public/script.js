@@ -259,7 +259,7 @@ async function openModal(item) {
         { name: "Anime-KKI", url: `https://anime-kki.herokuapp.com/embed/${activeItemId}` },
         { name: "VidSrc NL", url: `https://player.vidsrc.nl/embed/${currentMediaType}/${activeItemId}` },
         { name: "IDSrc TO", url: `https://idsrc.to/embed/${currentMediaType}/${activeItemId}` },
-        { name: "VidSrc ICU", url: `https://vidsrc.icu/embed/${currentMediaType}/${activeItemId}` }
+        { name: "VidSrc ICU", url: `https://vidsrc.icu/embed/${currentMediaType}/${activeItemId}` },
         { name: "Dailymotion", url: `https://www.dailymotion.com/embed/video/${activeItemId}` },
         { name: "Rumble", url: `https://rumble.com/embed/${activeItemId}/` },
         { name: "Ok.ru", url: `https://ok.ru/videoembed/${activeItemId}` },
@@ -451,4 +451,3 @@ async function loadHistory() {
 
     displayItems(historyItems, container, false);
             }
-                                   
