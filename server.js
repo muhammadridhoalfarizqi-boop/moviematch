@@ -2,16 +2,17 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'Ridho',        
-    password: '089524620042ridho',  
-    database: 'moviematch_db'
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'Ridho',        
+    password: process.env.DB_PASSWORD || '089524620042ridho',  
+    database: process.env.DB_NAME || 'moviematch_db'
 });
 
 db.connect((err) => {
@@ -75,14 +76,16 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-const path = require('path');
-
 app.use(express.static(path.join(__dirname)));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(3000, () => {
-    console.log('Server berjalan di http://localhost:3000');
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(3000, () => {
+        console.log('Server berjalan di http://localhost:3000');
+    });
+}
+
+module.exports = app;
