@@ -178,3 +178,50 @@ function displayItems(items, container = movieContainer, showPagination = true) 
         container.appendChild(card);
     });
 }
+
+function openModal(item) {
+    activeItemId = item.id;
+    currentMediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    
+    if (!movieModal || !modalBody) return;
+
+    const title = item.title || item.name || item.original_title || item.original_name || "Untitled";
+    const overview = item.overview || "Tidak ada sinopsis tersedia.";
+    const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
+    const releaseDate = item.release_date || item.first_air_date || "N/A";
+
+    modalBody.innerHTML = `
+        <div class="modal-detail" style="display: flex; flex-direction: column; gap: 15px;">
+            <div style="position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
+                <iframe src="https://vidsrc.xyz/embed/${currentMediaType}?tmdb=${activeItemId}" 
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
+                    allowfullscreen>
+                </iframe>
+            </div>
+            <h2>${title}</h2>
+            <p style="color: #aaa; font-size: 13px;">Rilis: ${releaseDate} | Rating: &#9733; ${rating}</p>
+            <p style="line-height: 1.6; font-size: 14px; color: #ddd;">${overview}</p>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick="closeMovieModal()" style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Tutup</button>
+            </div>
+        </div>
+    `;
+
+    movieModal.style.display = "flex";
+}
+
+function closeMovieModal() {
+    if (movieModal) {
+        movieModal.style.display = "none";
+        if (modalBody) modalBody.innerHTML = ""; 
+    }
+}
+
+window.addEventListener("click", function(event) {
+    if (event.target === movieModal) {
+        closeMovieModal();
+    }
+}); `;
+        container.appendChild(card);
+    });
+}
