@@ -311,6 +311,10 @@ function switchServer(url, clickedBtn) {
     clickedBtn.style.background = "#e50914";
 }
 
+function closeModal() {
+    closeMovieModal();
+}
+
 function closeMovieModal() {
     if (movieModal) {
         movieModal.style.display = "none";
