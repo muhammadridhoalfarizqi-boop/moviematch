@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieMatch</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo" onclick="showPage('home-page')">MovieMatch</div>
+
+        <nav>
+            <a onclick="showPage('home-page')">Home</a>
+            <a onclick="scrollToSection('mood')">MoodMatch</a>
+            <a onclick="scrollToSection('movies')">Catalog</a>
+            <a onclick="showFavorites()">Favorites</a>
+            <a id="nav-auth" onclick="handleAuthClick()">Login</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <div id="home-page" class="page active">
+
+            <section class="hero" id="home">
+                <div class="hero-content">
+                    <p class="label">MOVIE & TV RECOMMENDATION</p>
+                    <h1>Temukan tayangan yang <span>cocok dengan anda.</span></h1>
+                    <p class="hero-description">Temukan film dan series berdasarkan mood, genre, dan preferensi kamu.</p>
+                    <button class="primary-button" onclick="scrollToSection('mood')">Find My Content</button>
+                </div>
+            </section>
+
+            <section class="mood-section" id="mood">
+                <div class="section-title">
+                    <p class="label">MOODMATCH</p>
+                    <h2>Apa yang kamu rasakan hari ini?</h2>
+                    <p>Pilih suasana yang sedang kamu rasakan.</p>
+                </div>
+
+                <div class="mood-container">
+                    <button class="mood-card" onclick="recommendMood('happy')">
+                        <span>Happy / Senang</span>
+                        <small>Comedy and animation</small>
+                    </button>
+                    <button class="mood-card" onclick="recommendMood('scary')">
+                        <span>Scary / Takut</span>
+                        <small>Horror and thriller</small>
+                    </button>
+                    <button class="mood-card" onclick="recommendMood('action')">
+                        <span>Exciting / Seru</span>
+                        <small>Action and adventure</small>
+                    </button>
+                    <button class="mood-card" onclick="recommendMood('sad')">
+                        <span>Emotional / Perasaan</span>
+                        <small>Drama and romance</small>
+                    </button>
+                    <button class="mood-card" onclick="recommendMood('chill')">
+                        <span>Relaxed / Rileks</span>
+                        <small>Family and comedy</small>
+                    </button>
+                </div>
+            </section>
+
+            <section class="search-section">
+                <div class="section-title">
+                    <p class="label">EXPLORE & SEARCH</p>
+                    <h2>Pilih Kategori Tayangan</h2>
+                </div>
+
+                <div class="filter-container" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px;">
+                    <div style="display: flex; border: 1px solid #444; border-radius: 8px; overflow: hidden; background: #222;">
+                        <button id="typeBtnMovie" onclick="setMediaType('movie')" style="padding: 10px 18px; background: #e50914; color: #fff; border: none; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s;">MOVIES</button>
+                        <button id="typeBtnTv" onclick="setMediaType('tv')" style="padding: 10px 18px; background: #222; color: #aaa; border: none; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s;">SERIES</button>
+                    </div>
+
+                    <select id="categorySelect" onchange="loadContent(this.value)" style="padding: 10px; border-radius: 8px; background: #222; color: #fff; border: 1px solid #444; font-size: 14px; cursor: pointer;">
+                        <option value="popular">Popular</option>
+                        <option value="trending">Trending Week</option>
+                        <option value="top_rated">Top Rated</option>
+                        <option value="upcoming">Upcoming / On Air</option>
+                    </select>
+
+                    <select id="genreSelect" onchange="getMoviesByGenre(this.value, this.options[this.selectedIndex].text)" style="padding: 10px; border-radius: 8px; background: #222; color: #fff; border: 1px solid #444; font-size: 14px; cursor: pointer;">
+                        <option value="">Semua Genre</option>
+                        <option value="28">Action</option>
+                        <option value="12">Adventure</option>
+                        <option value="16">Animation</option>
+                        <option value="35">Comedy</option>
+                        <option value="80">Crime</option>
+                        <option value="99">Documentary</option>
+                        <option value="18">Drama</option>
+                        <option value="10751">Family</option>
+                        <option value="14">Fantasy</option>
+                        <option value="27">Horror</option>
+                        <option value="10749">Romance</option>
+                        <option value="878">Sci-Fi</option>
+                        <option value="53">Thriller</option>
+                        <option value="bl">BL (Boys' Love)</option>
+                        <option value="gl">GL (Girls' Love)</option>
+                    </select>
+
+                    <select id="runtimeSelect" onchange="filterByRuntime(this.value)" style="padding: 10px; border-radius: 8px; background: #222; color: #fff; border: 1px solid #444; font-size: 14px; cursor: pointer;">
+                        <option value="all">Semua Durasi</option>
+                        <option value="short">Singkat (&lt; 90 Menit)</option>
+                        <option value="medium">Sedang (90 - 120 Menit)</option>
+                        <option value="long">Panjang (&gt; 120 Menit)</option>
+                    </select>
+                </div>
+
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Cari judul..." onkeydown="handleSearch(event)">
+                    <button onclick="searchMovies()">Search</button>
+                </div>
+            </section>
+
+            <section class="movies-section" id="movies">
+                <div class="section-header">
+                    <div>
+                        <p class="label">CATALOG</p>
+                        <h2 id="movieTitle">Popular Movies</h2>
+                    </div>
+                </div>
+
+                <div id="movieContainer" class="movie-container">
+                    <div class="loading">Loading content...</div>
+                </div>
+            </section>
+
+            <footer id="footer-info">
+                <p>MovieMatch</p>
+                <p>Movie data provided by TMDB</p>
+            </footer>
+
+        </div>
+
+        <div id="favorites-page" class="page">
+            <section class="movies-section">
+                <div class="section-header">
+                    <div>
+                        <p class="label">SAVED LIST</p>
+                        <h2>Your Favorites</h2>
+                    </div>
+                </div>
+                <div id="favoritesContainer" class="movie-container"></div>
+            </section>
+        </div>
+
+        <div id="profile-page" class="page">
+            <section class="movies-section">
+                <div class="section-header">
+                    <div>
+                        <p class="label">USER PROFILE</p>
+                        <h2 id="profileWelcome">Welcome, User</h2>
+                    </div>
+                    <button onclick="logout()" class="primary-button" style="background:#e50914;">Logout</button>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h3>Riwayat Tayangan Dilihat (Watch History)</h3>
+                    <div id="historyContainer" class="movie-container" style="margin-top: 15px;"></div>
+                </div>
+            </section>
+        </div>
+
+        <div id="login-page" class="page">
+            <div class="auth-page">
+                <div class="auth-box">
+                    <a onclick="showPage('home-page')" class="auth-logo">MovieMatch</a>
+                    <h1>Welcome back</h1>
+                    <p class="auth-description">Login untuk melanjutkan ke MovieMatch.</p>
+
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="loginEmail">Email</label>
+                            <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                        </div>
+                        <button type="submit" class="auth-button">Login</button>
+                    </form>
+
+                    <p id="loginMessage" class="auth-message"></p>
+                    <p class="auth-switch">Don't have an account? <a onclick="showPage('register-page')">Register</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="register-page" class="page">
+            <div class="auth-page">
+                <div class="auth-box">
+                    <a onclick="showPage('home-page')" class="auth-logo">MovieMatch</a>
+                    <h1>Create an account</h1>
+                    <p class="auth-description">Buat akun untuk mendapatkan pengalaman MovieMatch.</p>
+
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label for="registerName">Name</label>
+                            <input type="text" id="registerName" placeholder="Enter your name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerEmail">Email</label>
+                            <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Password</label>
+                            <input type="password" id="registerPassword" placeholder="Create a password" required>
+                        </div>
+                        <button type="submit" class="auth-button">Create Account</button>
+                    </form>
+
+                    <p id="registerMessage" class="auth-message"></p>
+                    <p class="auth-switch">Already have an account? <a onclick="showPage('login-page')">Login</a></p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="movieModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
