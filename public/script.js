@@ -209,6 +209,8 @@ async function searchByQuery(query) {
         movieTitle.textContent = `Hasil Pencarian: "${query}"`;
     }
 
+    history.pushState({ search: query }, "", `?search=${encodeURIComponent(query)}`);
+
     let url = `${BASE_URL}/search/${currentMediaType}?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=id-ID`;
     try {
         const res = await fetch(url);
@@ -220,6 +222,20 @@ async function searchByQuery(query) {
         }
     }
 }
+
+window.addEventListener("popstate", (event) => {
+    const searchInputEl = document.getElementById("searchInput");
+    if (event.state && event.state.search) {
+        if (searchInputEl) searchInputEl.value = event.state.search;
+        searchByQuery(event.state.search);
+    } else {
+        if (searchInputEl) searchInputEl.value = "";
+        if (movieTitle) {
+            movieTitle.textContent = currentMediaType === 'movie' ? "Popular Movies" : "Popular Series";
+        }
+        loadContent('popular', 1);
+    }
+});
 
 function displayItems(items, container = movieContainer, showPagination = true) {
     if (!container) return;
