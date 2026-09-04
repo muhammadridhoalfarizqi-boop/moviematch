@@ -221,7 +221,4 @@ window.addEventListener("click", function(event) {
     if (event.target === movieModal) {
         closeMovieModal();
     }
-}); `;
-        container.appendChild(card);
-    });
-}
+});
