@@ -63,15 +63,7 @@ nav a:hover {
     display: flex;
     align-items: center;
     padding: 80px 8%;
-    background:
-        linear-gradient(
-            90deg,
-            #0b0b0f 20%,
-            rgba(11, 11, 15, 0.85) 50%,
-            rgba(11, 11, 15, 0.3)
-        ),
-        url("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba")
-        center / cover;
+    background: linear-gradient(90deg, #0b0b0f 20%, rgba(11, 11, 15, 0.85) 50%, rgba(11, 11, 15, 0.3)), url("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba") center / cover;
 }
 
 .hero-content {
@@ -173,6 +165,43 @@ nav a:hover {
     line-height: 1.5;
 }
 
+.filter-container {
+    display: flex; 
+    gap: 10px; 
+    flex-wrap: wrap; 
+    align-items: center; 
+    margin-bottom: 15px;
+}
+
+.media-type-switch {
+    display: flex; 
+    border: 1px solid #444; 
+    border-radius: 8px; 
+    overflow: hidden; 
+    background: #222;
+}
+
+.media-type-switch button {
+    padding: 10px 18px; 
+    background: #222; 
+    color: #aaa; 
+    border: none; 
+    cursor: pointer; 
+    font-size: 14px; 
+    font-weight: bold; 
+    transition: 0.3s;
+}
+
+.filter-container select {
+    padding: 10px; 
+    border-radius: 8px; 
+    background: #222; 
+    color: #fff; 
+    border: 1px solid #444; 
+    font-size: 14px; 
+    cursor: pointer;
+}
+
 .search-box {
     max-width: 700px;
     display: flex;
@@ -204,6 +233,9 @@ nav a:hover {
 
 .section-header {
     margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .section-header h2 {
@@ -242,7 +274,7 @@ nav a:hover {
     padding: 10px;
 }
 
-.movie-info h3, .movie-title {
+.movie-info h3 {
     font-size: 14px;
     margin: 0 0 5px 0;
     white-space: nowrap;
@@ -250,7 +282,7 @@ nav a:hover {
     text-overflow: ellipsis;
 }
 
-.movie-info p, .movie-meta {
+.movie-info p {
     font-size: 12px;
     color: #aaa;
     margin: 0;
@@ -258,11 +290,6 @@ nav a:hover {
 
 .loading {
     color: #888890;
-    padding: 30px 0;
-}
-
-.error {
-    color: #e50914;
     padding: 30px 0;
 }
 
@@ -415,12 +442,6 @@ footer {
     color: #ffffff;
 }
 
-.modal-detail {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
 .menu-icon {
     display: none;
     font-size: 28px;
@@ -428,11 +449,25 @@ footer {
     color: #fff;
 }
 
+.profile-badge {
+    font-size: 13px;
+    margin-top: 5px;
+    color: #aaa;
+}
+
+.logout-btn {
+    background: #e50914;
+    margin-top: 0;
+}
+
+.history-wrapper {
+    margin-top: 30px;
+}
+
 @media (max-width: 900px) {
     .mood-container {
         grid-template-columns: repeat(2, 1fr);
     }
-
     .hero h1 {
         font-size: 45px;
     }
@@ -481,39 +516,31 @@ footer {
         min-height: 500px;
         padding: 60px 5%;
     }
-
     .hero h1 {
         font-size: 38px;
     }
-
     .mood-section,
     .search-section,
     .movies-section {
         padding: 60px 5%;
     }
-
     .mood-container {
         grid-template-columns: 1fr;
     }
-
     .search-box {
         flex-direction: column;
         gap: 10px;
     }
-
     .search-box input {
         border-right: 1px solid #303038;
     }
-
     .search-box button {
         padding: 14px;
     }
-
     .movie-container {
         grid-template-columns: repeat(2, 1fr);
         gap: 15px;
     }
-
     .movie-card img {
         height: 230px;
     }
