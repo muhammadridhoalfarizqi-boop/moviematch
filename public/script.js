@@ -26,9 +26,6 @@ let activeSeason = 1;
 let activeEpisode = 1;
 let activeServerIndex = 0;
 
-let currentOverviewEn = "";
-let currentOverviewId = "";
-
 document.addEventListener("DOMContentLoaded", () => {
     updateNavAuth();
     loadContent('popular', 1);
@@ -245,27 +242,30 @@ async function openModal(item) {
     const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
     const releaseDate = item.release_date || item.first_air_date || "N/A";
 
+    const user = getCurrentUser();
+    let isFav = false;
+    let isWatchlist = false;
+
+    if (user) {
+        const { data: favData } = await supabaseClient.from('favorites').select('*').eq('user_email', user.email).eq('movie_id', activeItemId);
+        if (favData && favData.length > 0) isFav = true;
+
+        const { data: watchData } = await supabaseClient.from('watchlist').select('*').eq('user_email', user.email).eq('movie_id', activeItemId);
+        if (watchData && watchData.length > 0) isWatchlist = true;
+    }
+
     const servers = [
-        { name: "Zxcstream", url: `https://zxcstream.xyz/embed/${currentMediaType}/${activeItemId}` },
-        { name: "VidSrc XYZ", url: `https://vidsrc.xyz/embed/${currentMediaType}?tmdb=${activeItemId}` },
-        { name: "VidSrc ME", url: `https://vidsrc.me/embed/${currentMediaType}?tmdb=${activeItemId}` },
         { name: "Embed SU", url: `https://embed.su/embed/${currentMediaType}/${activeItemId}` },
+        { name: "VidSrc XYZ", url: `https://vidsrc.xyz/embed/${currentMediaType}?tmdb=${activeItemId}` },
         { name: "VidSrc CC", url: `https://vidsrc.cc/v2/embed/${currentMediaType}/${activeItemId}` },
-        { name: "MultiEmbed", url: `https://multiembed.mov/?video_id=${activeItemId}&tmdb=1${currentMediaType === 'tv' ? '&s=1&e=1' : ''}` },
         { name: "AutoEmbed", url: `https://player.autoembed.cc/embed/${currentMediaType}/${activeItemId}` },
-        { name: "2Embed", url: `https://2embed.cc/embed/${currentMediaType}/${activeItemId}` },
-        { name: "MoviesAPI", url: `https://moviesapi.club/movie/${activeItemId}` },
-        { name: "VidSrc VIP", url: `https://vidsrc.vip/embed/${currentMediaType}/${activeItemId}` },
-        { name: "Anime-KKI", url: `https://anime-kki.herokuapp.com/embed/${activeItemId}` },
-        { name: "VidSrc NL", url: `https://player.vidsrc.nl/embed/${currentMediaType}/${activeItemId}` },
-        { name: "IDSrc TO", url: `https://idsrc.to/embed/${currentMediaType}/${activeItemId}` },
-        { name: "VidSrc ICU", url: `https://vidsrc.icu/embed/${currentMediaType}/${activeItemId}` }
+        { name: "2Embed", url: `https://2embed.cc/embed/${currentMediaType}/${activeItemId}` }
     ];
 
     modalBody.innerHTML = `
         <div class="modal-detail" style="display: flex; flex-direction: column; gap: 12px;">
             <div style="display: flex; flex-direction: column; gap: 6px;">
-                <span style="color: #aaa; font-size: 13px; font-weight: bold;">Pilih Server:</span>
+                <span style="color: #aaa; font-size: 13px; font-weight: bold;">Pilih Server (Disarankan Embed SU / VidSrc):</span>
                 <div id="serverButtons" style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 100px; overflow-y: auto; padding: 4px; background: #111; border-radius: 6px; border: 1px solid #333;">
                     ${servers.map((s, index) => `
                         <button onclick="switchServer('${s.url}', this)" 
@@ -288,9 +288,24 @@ async function openModal(item) {
             <p style="color: #aaa; font-size: 13px;">Rilis: ${releaseDate} | Rating: &#9733; ${rating}</p>
             <p style="line-height: 1.6; font-size: 14px; color: #ddd; max-height: 90px; overflow-y: auto;">${overview}</p>
             
-            <div style="display: flex; gap: 10px; margin-top: 5px;">
-                <button onclick='toggleFavoriteCurrent(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="padding: 8px 16px; background: #e50914; color: #fff; border: none; border-radius: 5px; cursor: pointer;">❤️ Favorit</button>
-                <button onclick="closeMovieModal()" style="padding: 8px 16px; background: #333; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Tutup</button>
+            <div style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap;">
+                <!-- Tombol Favorit (Bintang ⭐) -->
+                <button onclick='toggleFavoriteCurrent(${JSON.stringify(item).replace(/'/g, "&#39;")})' id="modalFavBtn" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: ${isFav ? '#332b00' : '#222'}; color: ${isFav ? '#ffd700' : '#fff'}; border: 1px solid ${isFav ? '#ffd700' : '#444'}; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFav ? '#ffd700' : 'none'}" stroke="${isFav ? '#ffd700' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <span>${isFav ? 'Favorit' : 'Favorit'}</span>
+                </button>
+
+                <!-- Tombol Watchlist (Bookmark 🔖) -->
+                <button onclick='toggleWatchlistCurrent(${JSON.stringify(item).replace(/'/g, "&#39;")})' id="modalWatchBtn" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: ${isWatchlist ? '#002b3d' : '#222'}; color: ${isWatchlist ? '#00acee' : '#fff'}; border: 1px solid ${isWatchlist ? '#00acee' : '#444'}; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="${isWatchlist ? '#00acee' : 'none'}" stroke="${isWatchlist ? '#00acee' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>Watchlist</span>
+                </button>
+
+                <button onclick="closeMovieModal()" style="padding: 8px 16px; background: #333; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Tutup</button>
             </div>
         </div>
     `;
@@ -349,12 +364,22 @@ async function toggleFavoriteCurrent(item) {
         .eq('user_email', user.email)
         .eq('movie_id', movieId);
 
+    const btn = document.getElementById("modalFavBtn");
+
     if (existing && existing.length > 0) {
         await supabaseClient
             .from('favorites')
             .delete()
             .eq('user_email', user.email)
             .eq('movie_id', movieId);
+        
+        if (btn) {
+            btn.style.background = "#222";
+            btn.style.color = "#fff";
+            btn.style.borderColor = "#444";
+            btn.querySelector("svg").setAttribute("fill", "none");
+            btn.querySelector("svg").setAttribute("stroke", "currentColor");
+        }
         alert("Dihapus dari Favorit.");
     } else {
         const { error } = await supabaseClient
@@ -370,7 +395,78 @@ async function toggleFavoriteCurrent(item) {
             }]);
         
         if (!error) {
+            if (btn) {
+                btn.style.background = "#332b00";
+                btn.style.color = "#ffd700";
+                btn.style.borderColor = "#ffd700";
+                btn.querySelector("svg").setAttribute("fill", "#ffd700");
+                btn.querySelector("svg").setAttribute("stroke", "#ffd700");
+            }
             alert("Berhasil ditambahkan ke Favorit!");
+        }
+    }
+}
+
+async function toggleWatchlistCurrent(item) {
+    const user = getCurrentUser();
+    if (!user) {
+        alert("Silakan login terlebih dahulu untuk menggunakan Watchlist!");
+        showPage('login-page');
+        closeMovieModal();
+        return;
+    }
+
+    const movieId = item.id;
+    const title = item.title || item.name || "Untitled";
+    const posterPath = item.poster_path || "";
+    const voteAverage = item.vote_average || 0;
+    const releaseDate = item.release_date || item.first_air_date || "";
+
+    const { data: existing } = await supabaseClient
+        .from('watchlist')
+        .select('*')
+        .eq('user_email', user.email)
+        .eq('movie_id', movieId);
+
+    const btn = document.getElementById("modalWatchBtn");
+
+    if (existing && existing.length > 0) {
+        await supabaseClient
+            .from('watchlist')
+            .delete()
+            .eq('user_email', user.email)
+            .eq('movie_id', movieId);
+        
+        if (btn) {
+            btn.style.background = "#222";
+            btn.style.color = "#fff";
+            btn.style.borderColor = "#444";
+            btn.querySelector("svg").setAttribute("fill", "none");
+            btn.querySelector("svg").setAttribute("stroke", "currentColor");
+        }
+        alert("Dihapus dari Watchlist.");
+    } else {
+        const { error } = await supabaseClient
+            .from('watchlist')
+            .insert([{ 
+                user_email: user.email, 
+                movie_id: movieId, 
+                title: title, 
+                poster_path: posterPath,
+                vote_average: voteAverage,
+                release_date: releaseDate,
+                media_type: currentMediaType
+            }]);
+        
+        if (!error) {
+            if (btn) {
+                btn.style.background = "#002b3d";
+                btn.style.color = "#00acee";
+                btn.style.borderColor = "#00acee";
+                btn.querySelector("svg").setAttribute("fill", "#00acee");
+                btn.querySelector("svg").setAttribute("stroke", "#00acee");
+            }
+            alert("Berhasil ditambahkan ke Watchlist!");
         }
     }
 }
@@ -385,19 +481,29 @@ async function showFavorites() {
         return;
     }
 
-    if (container) container.innerHTML = '<div class="loading">Memuat favorites...</div>';
+    if (container) container.innerHTML = '<div class="loading">Memuat favorites & watchlist...</div>';
 
-    const { data: favs, error } = await supabaseClient
+    const { data: favs } = await supabaseClient
         .from('favorites')
         .select('*')
         .eq('user_email', user.email);
 
-    if (error) {
-        if (container) container.innerHTML = '<div class="loading">Gagal memuat data dari server.</div>';
-        return;
+    const { data: watch } = await supabaseClient
+        .from('watchlist')
+        .select('*')
+        .eq('user_email', user.email);
+
+    let combined = [];
+    if (favs) combined = combined.concat(favs);
+    if (watch) {
+        watch.forEach(w => {
+            if (!combined.some(c => c.movie_id === w.movie_id)) {
+                combined.push(w);
+            }
+        });
     }
 
-    displayItems(favs, container, false);
+    displayItems(combined, container, false);
 }
 
 async function addToHistory(item) {
@@ -429,21 +535,4 @@ async function addToHistory(item) {
 
 async function loadHistory() {
     const user = getCurrentUser();
-    const container = document.getElementById("historyContainer");
-    if (!container || !user) return;
-
-    container.innerHTML = '<div class="loading">Memuat riwayat...</div>';
-
-    const { data: historyItems, error } = await supabaseClient
-        .from('history')
-        .select('*')
-        .eq('user_email', user.email)
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        container.innerHTML = '<div class="loading">Gagal memuat riwayat tayangan.</div>';
-        return;
-    }
-
-    displayItems(historyItems, container, false);
-}
+    const container = document.getElementById("histor
