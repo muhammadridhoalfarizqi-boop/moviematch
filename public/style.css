@@ -408,6 +408,7 @@ footer {
     font-weight: bold;
     color: #a7a7ad;
     cursor: pointer;
+    z-index: 1010;
 }
 
 .close-modal:hover {
@@ -447,7 +448,6 @@ footer {
     transform: scale(1.1);
 }
 
-/* --- HAMBURGER MENU & RESPONSIVE FIX --- */
 .menu-icon {
     display: none;
     font-size: 28px;
@@ -478,7 +478,6 @@ footer {
         justify-content: center;
     }
 
-    /* Paksa sembunyikan navigasi secara default di HP dan buat sistem dropdown */
     .navbar nav, nav {
         position: absolute;
         top: 100%;
@@ -494,7 +493,6 @@ footer {
         z-index: 1000;
     }
 
-    /* Kelas aktif agar menu muncul pas ikon garis tiga di-klik */
     .navbar nav.active, nav.active {
         display: flex !important;
     }
