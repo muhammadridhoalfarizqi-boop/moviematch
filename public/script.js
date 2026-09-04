@@ -233,7 +233,6 @@ function displayItems(items, container = movieContainer, showPagination = true) 
 }
 
 async function openModal(item) {
-async function openModal(item) {
     activeItemId = item.id;
     currentMediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
     
@@ -265,7 +264,6 @@ async function openModal(item) {
 
     modalBody.innerHTML = `
         <div class="modal-detail" style="display: flex; flex-direction: column; gap: 12px;">
-            <!-- Tombol Pilihan Server Full Lebar -->
             <div style="display: flex; flex-direction: column; gap: 6px;">
                 <span style="color: #aaa; font-size: 13px; font-weight: bold;">Pilih Server:</span>
                 <div id="serverButtons" style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 100px; overflow-y: auto; padding: 4px; background: #111; border-radius: 6px; border: 1px solid #333;">
