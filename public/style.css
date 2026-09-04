@@ -504,3 +504,23 @@ footer {
         height: 230px;
     }
                           }
+header, .navbar, nav {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1000;
+}
+
+@media (max-width: 768px) {
+    header, .navbar, nav {
+        padding: 10px 15px !important;
+    }
+    .navbar a, nav a, .nav-links a {
+        font-size: 14px !important;
+        margin: 0 5px !important;
+    }
+}
