@@ -221,6 +221,8 @@ nav a:hover {
     border-radius: 8px;
     overflow: hidden;
     transition: 0.25s;
+    position: relative;
+    cursor: pointer;
 }
 
 .movie-card:hover {
@@ -267,67 +269,6 @@ footer {
     color: #77777f;
     font-size: 13px;
     line-height: 2;
-}
-
-@media (max-width: 900px) {
-    .mood-container {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .hero h1 {
-        font-size: 45px;
-    }
-}
-
-@media (max-width: 600px) {
-    .navbar {
-        padding: 0 5%;
-    }
-
-    nav {
-        display: none;
-    }
-
-    .hero {
-        min-height: 500px;
-        padding: 60px 5%;
-    }
-
-    .hero h1 {
-        font-size: 38px;
-    }
-
-    .mood-section,
-    .search-section,
-    .movies-section {
-        padding: 60px 5%;
-    }
-
-    .mood-container {
-        grid-template-columns: 1fr;
-    }
-
-    .search-box {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .search-box input {
-        border-right: 1px solid #303038;
-    }
-
-    .search-box button {
-        padding: 14px;
-    }
-
-    .movie-container {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-    }
-
-    .movie-poster {
-        height: 230px;
-    }
 }
 
 .auth-page {
@@ -429,16 +370,6 @@ footer {
     cursor: pointer;
 }
 
-@media (max-width: 500px) {
-    .auth-page {
-        padding: 20px;
-    }
-
-    .auth-box {
-        padding: 30px 25px;
-    }
-}
-
 .modal {
     display: none;
     position: fixed;
@@ -486,18 +417,6 @@ footer {
     gap: 16px;
 }
 
-.modal-detail img {
-    width: 100%;
-    max-height: 350px;
-    object-fit: cover;
-    border-radius: 8px;
-}
-
-.movie-card {
-    position: relative;
-    cursor: pointer;
-}
-
 .fav-btn {
     position: absolute;
     top: 10px;
@@ -525,92 +444,63 @@ footer {
     transform: scale(1.1);
 }
 
-@media (max-width: 768px) {
-    .navbar {
-        padding: 0 4%;
-        height: 60px;
-    }
-    
-    .logo {
-        font-size: 20px;
-    }
-
-    .hero {
-        padding: 40px 5%;
-        min-height: 450px;
-        background-position: center;
+@media (max-width: 900px) {
+    .mood-container {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .hero h1 {
-        font-size: 32px;
-        line-height: 1.2;
+        font-size: 45px;
+    }
+}
+
+@media (max-width: 600px) {
+    .navbar {
+        padding: 0 5%;
     }
 
-    .hero-description {
-        font-size: 14px;
+    nav {
+        display: none;
+    }
+
+    .hero {
+        min-height: 500px;
+        padding: 60px 5%;
+    }
+
+    .hero h1 {
+        font-size: 38px;
     }
 
     .mood-section,
     .search-section,
     .movies-section {
-        padding: 40px 4%;
+        padding: 60px 5%;
     }
 
-    .section-title h2, 
-    .section-header h2 {
-        font-size: 24px;
+    .mood-container {
+        grid-template-columns: 1fr;
     }
 
-    .filter-container {
+    .search-box {
         flex-direction: column;
-        align-items: stretch !important;
+        gap: 10px;
     }
 
-    .filter-container > div,
-    .filter-container select {
-        width: 100%;
+    .search-box input {
+        border-right: 1px solid #303038;
+    }
+
+    .search-box button {
+        padding: 14px;
     }
 
     .movie-container {
         grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        gap: 15px;
     }
 
     .movie-poster {
-        height: 210px;
+        height: 230px;
     }
-
-    .movie-title {
-        font-size: 14px;
-    }
-
-    .modal-content {
-        width: 98%;
-        padding: 15px 10px;
-        max-height: 95vh;
-    }
-
-    .modal-detail h2 {
-        font-size: 18px;
-    }
-}
-
-@media (max-width: 400px) {
-    .movie-container {
-        grid-template-columns: 1fr;
-    }
-
-    .movie-poster {
-        height: 320px;
-    }
-}
-
-.video-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 10;
-    background: transparent;
 }

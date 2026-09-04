@@ -12,8 +12,6 @@ const loginForm = document.getElementById("loginForm");
 const movieModal = document.getElementById("movieModal");
 const modalBody = document.getElementById("modalBody");
 const navAuth = document.getElementById("nav-auth");
-const currentUser = getCurrentUser();
-const isUserPremium = currentUser ? currentUser.isPremium : false;
 
 let currentPage = 1;
 let currentMediaType = 'movie';
@@ -74,7 +72,7 @@ function showProfile() {
     const statusBadge = document.getElementById("userStatusBadge");
     if (statusBadge) {
         const isPremium = user.isPremium || false; 
-        statusBadge.textContent = isPremium ? "Premium Member" : "Free Member (Standar)";
+        statusBadge.textContent = isPremium ? "Status: Premium Member" : "Status: Free Member (Standar)";
         statusBadge.style.color = isPremium ? "#46f846" : "#aaa";
     }
 
@@ -733,7 +731,6 @@ if (registerForm) {
 }
 
 if (loginForm) {
-    loginForm.name = "loginForm";
     loginForm.addEventListener("submit", async function(e) {
         e.preventDefault();
         const email = document.getElementById("loginEmail").value.trim();
@@ -761,19 +758,4 @@ if (loginForm) {
             msg.textContent = "Terjadi kesalahan koneksi ke server.";
         }
     });
-}
-
-function playMovieCustom(movieId, isUserPremium) {
-    let videoPlayerContainer = document.getElementById("activeVideoIframe");
-    let embedUrl = "";
-
-    if (isUserPremium) {
-        embedUrl = `https://www.youtube.com/embed/official-clean-stream-id`; 
-    } else {
-        embedUrl = getServerUrl(activeServerIndex, movieId, true, activeSeason, activeEpisode);
-    }
-
-    if (videoPlayerContainer) {
-        videoPlayerContainer.src = embedUrl;
-    }
 }
