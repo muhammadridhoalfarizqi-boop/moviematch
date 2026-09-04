@@ -46,6 +46,13 @@ function handleAuthClick() {
     getCurrentUser() ? showProfile() : showPage('login-page');
 }
 
+function toggleMenu() {
+    const menuList = document.getElementById("menuList");
+    if (menuList) {
+        menuList.classList.toggle("active");
+    }
+}
+
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
     const targetPage = document.getElementById(pageId);
