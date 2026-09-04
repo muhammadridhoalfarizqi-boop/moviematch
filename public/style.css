@@ -217,10 +217,12 @@ nav a:hover {
 }
 
 .movie-card {
-    background: #15151b;
+    background: #181818;
     border-radius: 8px;
     overflow: hidden;
-    transition: 0.25s;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s;
     position: relative;
     cursor: pointer;
 }
@@ -229,28 +231,29 @@ nav a:hover {
     transform: translateY(-6px);
 }
 
-.movie-poster {
+.movie-card img {
     width: 100%;
-    height: 270px;
-    object-fit: cover;
+    height: 270px; 
+    object-fit: cover; 
     display: block;
 }
 
 .movie-info {
-    padding: 15px;
+    padding: 10px;
 }
 
-.movie-title {
-    font-size: 16px;
-    margin-bottom: 10px;
-    line-height: 1.4;
+.movie-info h3, .movie-title {
+    font-size: 14px;
+    margin: 0 0 5px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.movie-meta {
-    display: flex;
-    justify-content: space-between;
-    color: #8d8d94;
-    font-size: 13px;
+.movie-info p, .movie-meta {
+    font-size: 12px;
+    color: #aaa;
+    margin: 0;
 }
 
 .loading {
@@ -444,6 +447,14 @@ footer {
     transform: scale(1.1);
 }
 
+/* --- HAMBURGER MENU & RESPONSIVE FIX --- */
+.menu-icon {
+    display: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #fff;
+}
+
 @media (max-width: 900px) {
     .mood-container {
         grid-template-columns: repeat(2, 1fr);
@@ -454,15 +465,47 @@ footer {
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .navbar {
-        padding: 0 5%;
+        position: relative;
+        justify-content: space-between;
+        padding: 15px 5% !important;
     }
 
-    nav {
-        display: none;
+    .menu-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
+    /* Paksa sembunyikan navigasi secara default di HP dan buat sistem dropdown */
+    .navbar nav, nav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: rgba(18, 18, 18, 0.98);
+        flex-direction: column !important;
+        align-items: center;
+        padding: 20px 0;
+        gap: 15px;
+        border-bottom: 1px solid #333;
+        display: none !important; 
+        z-index: 1000;
+    }
+
+    /* Kelas aktif agar menu muncul pas ikon garis tiga di-klik */
+    .navbar nav.active, nav.active {
+        display: flex !important;
+    }
+
+    .navbar a, nav a, .nav-links a {
+        font-size: 16px !important;
+        margin: 5px 0 !important;
+    }
+}
+
+@media (max-width: 600px) {
     .hero {
         min-height: 500px;
         padding: 60px 5%;
@@ -500,149 +543,7 @@ footer {
         gap: 15px;
     }
 
-    .movie-poster {
+    .movie-poster, .movie-card img {
         height: 230px;
-    }
-                          }
-header, .navbar, nav {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    z-index: 1000;
-}
-
-@media (max-width: 768px) {
-    header, .navbar, nav {
-        padding: 10px 15px !important;
-    }
-    .navbar a, nav a, .nav-links a {
-        font-size: 14px !important;
-        margin: 0 5px !important;
-    }
-}
-
-.movie-card {
-    background: #181818;
-    border-radius: 8px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.2s;
-}
-
-.movie-card img {
-    width: 100%;
-    height: 270px; 
-    object-fit: cover; 
-}
-
-.movie-info {
-    padding: 10px;
-}
-
-.movie-info h3 {
-    font-size: 14px;
-    margin: 0 0 5px 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.movie-info p {
-    font-size: 12px;
-    color: #aaa;
-    margin: 0;
-}
-
-
-/* --- NAVBAR & HAMBURGER MENU (GARIS TIGA) UNTUK HP --- */
-.menu-toggle {
-    display: none;
-    flex-direction: column;
-    cursor: pointer;
-    gap: 5px;
-}
-
-.menu-toggle span {
-    width: 25px;
-    height: 3px;
-    background: #fff;
-    border-radius: 2px;
-    transition: 0.3s;
-}
-
-@media (max-width: 768px) {
-    .menu-toggle {
-        display: flex; 
-    }
-
-    .nav-links {
-        display: none; 
-        flex-direction: column;
-        position: absolute;
-        top: 60px;
-        left: 0;
-        width: 100%;
-        background: rgba(18, 18, 18, 0.95);
-        padding: 20px 0;
-        text-align: center;
-        border-bottom: 1px solid #333;
-        z-index: 999;
-    }
-
-    .nav-links.active {
-        display: flex;
-    }
-
-    .nav-links li {
-        margin: 10px 0;
-    }
-}
-
-.menu-icon {
-    display: none;
-    font-size: 28px;
-    cursor: pointer;
-    color: #fff;
-}
-
-.hidden {
-    display: flex; 
-}
-
-@media (max-width: 768px) {
-    .navbar {
-        position: relative;
-        justify-content: space-between;
-        padding: 15px 20px;
-    }
-
-    .menu-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .navbar nav {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        background-color: rgba(18, 18, 18, 0.98);
-        flex-direction: column;
-        align-items: center;
-        padding: 20px 0;
-        gap: 15px;
-        border-bottom: 1px solid #333;
-        display: none; 
-        z-index: 1000;
-    }
-
-    .navbar nav.active {
-        display: flex;
     }
 }
