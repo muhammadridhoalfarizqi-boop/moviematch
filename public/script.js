@@ -280,7 +280,6 @@ async function openModal(item) {
             <div style="position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
                 <iframe id="playerFrame" src="${servers[0].url}" 
                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
-                    sandbox="allow-scripts allow-same-origin allow-presentation"
                     allowfullscreen>
                 </iframe>
             </div>
