@@ -72,6 +72,17 @@ function showPage(pageId) {
     const targetPage = document.getElementById(pageId);
     if (targetPage) targetPage.classList.add('active');
     window.scrollTo(0, 0);
+
+    if (pageId === 'home-page') {
+        if (movieTitle) {
+            movieTitle.textContent = currentMediaType === 'movie' ? "Popular Movies" : "Popular Series";
+        }
+        const searchInputEl = document.getElementById("searchInput");
+        if (searchInputEl) {
+            searchInputEl.value = "";
+        }
+        loadContent('popular', 1);
+    }
 }
 
 function scrollToSection(sectionId) {
