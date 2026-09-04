@@ -442,6 +442,19 @@ async function addToHistory(item) {
         }]);
 }
 
+function searchMovies() {
+    if (searchInput && searchInput.value.trim() !== "") {
+        searchByQuery(searchInput.value.trim());
+    }
+}
+
+function handleSearch(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        searchMovies();
+    }
+}
+
 async function loadHistory() {
     const user = getCurrentUser();
     const container = document.getElementById("historyContainer");
