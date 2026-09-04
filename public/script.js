@@ -15,6 +15,8 @@ const loginForm = document.getElementById("loginForm");
 const movieModal = document.getElementById("movieModal");
 const modalBody = document.getElementById("modalBody");
 const navAuth = document.getElementById("nav-auth");
+const searchInput = document.getElementById("searchInput");
+const searchForm = document.getElementById("searchForm");
 
 let currentPage = 1;
 let currentMediaType = 'movie';
@@ -32,6 +34,15 @@ let currentOverviewId = "";
 document.addEventListener("DOMContentLoaded", () => {
     updateNavAuth();
     loadContent('popular', 1);
+
+    if (searchForm) {
+    searchForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+        if (searchInput && searchInput.value.trim() !== "") {
+            searchByQuery(searchInput.value.trim());
+        }
+    });
+}
 });
 
 function getCurrentUser() {
