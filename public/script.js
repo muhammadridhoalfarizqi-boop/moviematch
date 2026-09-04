@@ -254,16 +254,34 @@ function displayItems(items, container = movieContainer, showPagination = true) 
         const poster = item.poster_path 
             ? `${IMAGE_URL}${item.poster_path}` 
             : 'https://via.placeholder.com/300x450?text=No+Image';
-        const title = item.title || item.name || item.original_title || item.original_name || "Untitled";
+        
+        const title = item.title || item.name || "Untitled";
+        const originalTitle = item.original_title || item.original_name || "";
+        
+        const displaySubTitle = (originalTitle && originalTitle !== title) ? `<span style="font-size: 11px; color: #888; display: block; margin-top: 2px;">${originalTitle}</span>` : "";
+
         const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
         const releaseDate = item.release_date || item.first_air_date || "";
         const year = releaseDate ? releaseDate.substring(0, 4) : "N/A";
+
+        let countryText = "";
+        const lang = item.original_language;
+        if (lang === 'ko') countryText = "🇰🇷 Korea";
+        else if (lang === 'ja') countryText = "🇯🇵 Jepang";
+        else if (lang === 'zh' || lang === 'cn') countryText = "🇨🇳 China";
+        else if (lang === 'th') countryText = "🇹🇭 Thailand";
+        else if (lang === 'en') countryText = "🇺🇸/🇬🇧 Barat";
+        else if (lang === 'id') countryText = "🇮🇩 Indonesia";
+        else if (lang === 'fr') countryText = "🇫🇷 Prancis";
+        else if (lang === 'es') countryText = "🇪🇸 Spanyol";
+        else countryText = lang ? lang.toUpperCase() : "";
 
         card.innerHTML = `
             <img src="${poster}" alt="${title}" loading="lazy">
             <div class="movie-info">
                 <h3>${title}</h3>
-                <p>${year} | &#9733; ${rating}</p>
+                ${displaySubTitle}
+                <p style="margin-top: 4px;">${year} ${countryText ? `| ${countryText}` : ""} | &#9733; ${rating}</p>
             </div>
         `;
         container.appendChild(card);
