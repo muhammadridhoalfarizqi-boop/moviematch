@@ -1,7 +1,7 @@
 const API_KEY = "c460f7483f7f090ecb7b0ebf0b214d50";
 const BASE_URL = "https://api.themoviedb.org/3";
 const IMAGE_URL = "https://image.tmdb.org/t/p/w500";
-const BACKEND_URL = "http://localhost:3000/api";
+const BACKEND_URL = "/api";
 
 const movieContainer = document.getElementById("movieContainer");
 const favoritesContainer = document.getElementById("favoritesContainer");
