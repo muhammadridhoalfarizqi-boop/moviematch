@@ -227,16 +227,17 @@
     </div>
 
     <script>
-        window.addEventListener('click', function(event) {
-            const modal = document.getElementById('movieModal');
-            if (modal && modal.style.display === 'flex') {
-                const originalOpen = window.open;
-                window.open = function(url) {
-                    console.warn("Iklan redirect berhasil diblokir:", url);
-                    return null;
-                };
-            }
-        }, true);
+    document.addEventListener('click', function(event) {
+        const iframe = document.getElementById('playerFrame');
+        if (iframe && iframe.contains(event.target)) {
+            event.stopPropagation();
+        }
+    }, true);
+
+    window.open = function(url) {
+        console.warn("Pop-up iklan berhasil ditahan:", url);
+        return null;
+    };
     </script>
 
     <script src="script.js" defer></script>
