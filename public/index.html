@@ -4,20 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MovieMatch</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header class="navbar">
         <div class="logo" onclick="showPage('home-page')">MovieMatch</div>
-        
-        <div class="menu-toggle" id="mobile-menu" onclick="toggleMenu()">
-            <span></span>
-            <span></span>
-            <span></span>
+        <div class="menu-icon" id="menuIcon" onclick="toggleMenu()">
+            <i class="ri-menu-3-line"></i>
         </div>
 
-        <nav class="nav-links" id="navLinks">
+        <nav id="menuList">
             <a onclick="showPage('home-page'); toggleMenu();">Home</a>
             <a onclick="scrollToSection('mood'); toggleMenu();">MoodMatch</a>
             <a onclick="scrollToSection('movies'); toggleMenu();">Catalog</a>
@@ -27,9 +25,7 @@
     </header>
 
     <main>
-
         <div id="home-page" class="page active">
-
             <section class="hero" id="home">
                 <div class="hero-content">
                     <p class="label">MOVIE & TV RECOMMENDATION</p>
@@ -139,7 +135,6 @@
                 <p>MovieMatch</p>
                 <p>Movie data provided by TMDB</p>
             </footer>
-
         </div>
 
         <div id="favorites-page" class="page">
@@ -178,7 +173,6 @@
                     <a onclick="showPage('home-page')" class="auth-logo">MovieMatch</a>
                     <h1>Welcome back</h1>
                     <p class="auth-description">Login untuk melanjutkan ke MovieMatch.</p>
-
                     <form id="loginForm">
                         <div class="form-group">
                             <label for="loginEmail">Email</label>
@@ -190,7 +184,6 @@
                         </div>
                         <button type="submit" class="auth-button">Login</button>
                     </form>
-
                     <p id="loginMessage" class="auth-message"></p>
                     <p class="auth-switch">Don't have an account? <a onclick="showPage('register-page')">Register</a></p>
                 </div>
@@ -203,7 +196,6 @@
                     <a onclick="showPage('home-page')" class="auth-logo">MovieMatch</a>
                     <h1>Create an account</h1>
                     <p class="auth-description">Buat akun untuk mendapatkan pengalaman MovieMatch.</p>
-
                     <form id="registerForm">
                         <div class="form-group">
                             <label for="registerName">Name</label>
@@ -219,13 +211,11 @@
                         </div>
                         <button type="submit" class="auth-button">Create Account</button>
                     </form>
-
                     <p id="registerMessage" class="auth-message"></p>
                     <p class="auth-switch">Already have an account? <a onclick="showPage('login-page')">Login</a></p>
                 </div>
             </div>
         </div>
-
     </main>
 
     <div id="movieModal" class="modal">
@@ -236,6 +226,5 @@
     </div>
 
     <script src="script.js"></script>
-
 </body>
-                    </html>
+    </html>
