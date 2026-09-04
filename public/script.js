@@ -195,25 +195,72 @@ async function openModal(item) {
     const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
     const releaseDate = item.release_date || item.first_air_date || "N/A";
 
+    const servers = [
+        { name: "Zxcstream", url: `https://zxcstream.xyz/embed/${currentMediaType}/${activeItemId}` },
+        { name: "VidSrc XYZ", url: `https://vidsrc.xyz/embed/${currentMediaType}?tmdb=${activeItemId}` },
+        { name: "VidSrc ME", url: `https://vidsrc.me/embed/${currentMediaType}?tmdb=${activeItemId}` },
+        { name: "Embed SU", url: `https://embed.su/embed/${currentMediaType}/${activeItemId}` },
+        { name: "VidSrc CC", url: `https://vidsrc.cc/v2/embed/${currentMediaType}/${activeItemId}` },
+        { name: "MultiEmbed", url: `https://multiembed.mov/?video_id=${activeItemId}&tmdb=1${currentMediaType === 'tv' ? '&s=1&e=1' : ''}` },
+        { name: "AutoEmbed", url: `https://player.autoembed.cc/embed/${currentMediaType}/${activeItemId}` },
+        { name: "2Embed", url: `https://2embed.cc/embed/${currentMediaType}/${activeItemId}` },
+        { name: "MoviesAPI", url: `https://moviesapi.club/movie/${activeItemId}` },
+        { name: "VidSrc VIP", url: `https://vidsrc.vip/embed/${currentMediaType}/${activeItemId}` },
+        { name: "Anime-KKI", url: `https://anime-kki.herokuapp.com/embed/${activeItemId}` },
+        { name: "VidSrc NL", url: `https://player.vidsrc.nl/embed/${currentMediaType}/${activeItemId}` },
+        { name: "IDSrc TO", url: `https://idsrc.to/embed/${currentMediaType}/${activeItemId}` },
+        { name: "VidSrc ICU", url: `https://vidsrc.icu/embed/${currentMediaType}/${activeItemId}` }
+    ];
+
     modalBody.innerHTML = `
-        <div class="modal-detail" style="display: flex; flex-direction: column; gap: 15px;">
+        <div class="modal-detail" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Tombol Pilihan Server Lengkap (13 Server) -->
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <span style="color: #aaa; font-size: 13px; font-weight: bold;">Pilih Server (1 - 13):</span>
+                <div id="serverButtons" style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 100px; overflow-y: auto; padding: 4px; background: #111; border-radius: 6px; border: 1px solid #333;">
+                    ${servers.map((s, index) => `
+                        <button onclick="switchServer('${s.url}', this)" 
+                            class="server-btn" 
+                            style="padding: 5px 10px; background: ${index === 0 ? '#e50914' : '#222'}; color: #fff; border: 1px solid #444; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">
+                            ${s.name}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Frame Video Player -->
             <div style="position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
-                <iframe src="https://vidsrc.xyz/embed/${currentMediaType}?tmdb=${activeItemId}" 
+                <iframe id="playerFrame" src="${servers[0].url}" 
                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
                     allowfullscreen>
                 </iframe>
             </div>
+
             <h2>${title}</h2>
             <p style="color: #aaa; font-size: 13px;">Rilis: ${releaseDate} | Rating: &#9733; ${rating}</p>
-            <p style="line-height: 1.6; font-size: 14px; color: #ddd;">${overview}</p>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button onclick='toggleFavoriteCurrent(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="padding: 10px 20px; background: #e50914; color: #fff; border: none; border-radius: 5px; cursor: pointer;">❤️ Favorit</button>
-                <button onclick="closeMovieModal()" style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Tutup</button>
+            <p style="line-height: 1.6; font-size: 14px; color: #ddd; max-height: 90px; overflow-y: auto;">${overview}</p>
+            
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <button onclick='toggleFavoriteCurrent(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="padding: 8px 16px; background: #e50914; color: #fff; border: none; border-radius: 5px; cursor: pointer;">❤️ Favorit</button>
+                <button onclick="closeMovieModal()" style="padding: 8px 16px; background: #333; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Tutup</button>
             </div>
         </div>
     `;
 
     movieModal.style.display = "flex";
+}
+
+function switchServer(url, clickedBtn) {
+    const playerFrame = document.getElementById("playerFrame");
+    if (playerFrame) {
+        playerFrame.src = url;
+    }
+
+    const buttons = document.querySelectorAll("#serverButtons button");
+    buttons.forEach(btn => {
+        btn.style.background = "#222";
+    });
+    clickedBtn.style.background = "#e50914";
 }
 
 function closeMovieModal() {
