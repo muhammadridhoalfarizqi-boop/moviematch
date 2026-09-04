@@ -226,6 +226,19 @@
         </div>
     </div>
 
+    <script>
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('movieModal');
+            if (modal && modal.style.display === 'flex') {
+                const originalOpen = window.open;
+                window.open = function(url) {
+                    console.warn("Iklan redirect berhasil diblokir:", url);
+                    return null;
+                };
+            }
+        }, true);
+    </script>
+
     <script src="script.js" defer></script>
 </body>
     </html>
