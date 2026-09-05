@@ -36,9 +36,21 @@ let activeServerIndex = 0;
 let currentOverviewEn = "";
 let currentOverviewId = "";
 
+let otpEmail = '';
+let otpTimer = null;
+
 document.addEventListener("DOMContentLoaded", () => {
     updateNavAuth();
     loadContent('popular', 1);
+
+    if (searchForm) {
+    searchForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+        if (searchInput && searchInput.value.trim() !== "") {
+            searchByQuery(searchInput.value.trim());
+        }
+    });
+    }
 
     const subscription = supabaseClient
     .channel('users-channel')
@@ -48,16 +60,46 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log('User baru daftar:', payload.new);
         }
     )
-    .subscribe();
+    .subscribe():
 
-    if (searchForm) {
-    searchForm.addEventListener("submit", function(e) {
-        e.preventDefault();
-        if (searchInput && searchInput.value.trim() !== "") {
-            searchByQuery(searchInput.value.trim());
-        }
-    });
-}
+        const otpVerifyBtn = document.getElementById("otpVerifyBtn");
+    if (otpVerifyBtn) {
+        otpVerifyBtn.addEventListener("click", async function() {
+            const code = document.getElementById("otpInput").value.trim();
+            
+            if (code.length !== 6) {
+                document.getElementById("otpMessage").textContent = "Masukkan kode 6 digit!";
+                return;
+            }
+            
+            const verified = await verifyOTP(otpEmail, code);
+            
+            if (verified) {
+                const user = { email: otpEmail };
+                localStorage.setItem("movieMatchCurrentUser", JSON.stringify(user));
+                updateNavAuth();
+                document.getElementById("otpMessage").textContent = "Login berhasil!";
+                setTimeout(() => showPage('home-page'), 500);
+            } else {
+                document.getElementById("otpMessage").textContent = "Kode OTP salah atau kadaluarsa!";
+            }
+        });
+    }
+
+    const resendBtn = document.getElementById("resendOtpBtn");
+    if (resendBtn) {
+        resendBtn.addEventListener("click", async function(e) {
+            e.preventDefault();
+            const sent = await sendOTP(otpEmail);
+            if (sent) {
+                document.getElementById("otpMessage").textContent = "Kode OTP telah dikirim ulang!";
+                startResendTimer();
+            } else {
+                document.getElementById("otpMessage").textContent = "Gagal mengirim ulang OTP. Coba lagi.";
+            }
+        });
+    }
+});
 });
 
 window.open = function(url, name, features) {
@@ -738,18 +780,22 @@ if (loginForm) {
             .eq('email', email)
             .eq('password', password);
         
-        if (error) {
-            document.getElementById("loginMessage").textContent = "Error: " + error.message;
+        if (error || !users || users.length === 0) {
+            document.getElementById("loginMessage").textContent = "Email atau password salah!";
             return;
         }
         
-        if (users && users.length > 0) {
-            localStorage.setItem("movieMatchCurrentUser", JSON.stringify(users[0]));
-            updateNavAuth();
-            document.getElementById("loginMessage").textContent = "Login berhasil!";
-            showPage('home-page');
+        otpEmail = email;
+        const sent = await sendOTP(email);
+        
+        if (sent) {
+            document.getElementById("loginMessage").textContent = "Kode OTP telah dikirim ke email Anda!";
+            showPage('otp-page');
+            document.getElementById("otpMessage").textContent = "Kode OTP dikirim ke " + email;
+            document.getElementById("otpInput").value = "";
+            startResendTimer();
         } else {
-            document.getElementById("loginMessage").textContent = "Email atau password salah!";
+            document.getElementById("loginMessage").textContent = "Gagal mengirim OTP. Coba lagi.";
         }
     });
 }
@@ -786,6 +832,79 @@ if (registerForm) {
         document.getElementById("registerMessage").textContent = "Registrasi berhasil!";
         showPage('home-page');
     });
+}
+
+async function sendOTP(email) {
+    try {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+        const { error } = await supabaseClient
+            .from('otp')
+            .insert([{
+                email: email,
+                code: code,
+                expires_at: new Date(Date.now() + 5 * 60000)
+            }]);
+        
+        if (error) {
+            console.error("Gagal simpan OTP:", error);
+            return false;
+        }
+
+        await emailjs.send("service_m3kjfyn", "template_fbc5!", {
+            to_email: email,
+            otp_code: code
+        });
+        
+        return true;
+    } catch (err) {
+        console.error("Error send OTP:", err);
+        return false;
+    }
+}
+
+async function verifyOTP(email, code) {
+    const { data, error } = await supabaseClient
+        .from('otp')
+        .select('*')
+        .eq('email', email)
+        .eq('code', code)
+        .eq('used', false)
+        .gt('expires_at', new Date().toISOString());
+    
+    if (error || !data || data.length === 0) {
+        return false;
+    }
+
+    await supabaseClient
+        .from('otp')
+        .update({ used: true })
+        .eq('id', data[0].id);
+    
+    return true;
+}
+
+function startResendTimer() {
+    let seconds = 60;
+    const btn = document.getElementById("resendOtpBtn");
+    if (!btn) return;
+    
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.5';
+    
+    if (otpTimer) clearInterval(otpTimer);
+    
+    otpTimer = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) {
+            clearInterval(otpTimer);
+            btn.textContent = 'Kirim ulang';
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
+        } else {
+            btn.textContent = `Kirim ulang (${seconds}s)`;
+        }
+    }, 1000);
 }
 
 async function recommendMood(mood, page = 1) {
