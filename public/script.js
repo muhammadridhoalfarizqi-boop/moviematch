@@ -150,9 +150,9 @@ function toggleMenu() {
 
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+    page.classList.remove('active');
     const targetPage = document.getElementById(pageId);
     if (targetPage) targetPage.classList.add('active');
-    window.scrollTo(0, 0);
 
     if (pageId === 'home-page') {
         currentGenreId = '';
@@ -168,6 +168,7 @@ function showPage(pageId) {
         }
         loadContent('popular', 1);
     }
+    window.scrollTo(0, 0);
 }
 
 function scrollToSection(sectionId) {
