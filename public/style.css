@@ -573,8 +573,11 @@ footer {
 }
 
 #otp-page {
-    display: none;
+    display: none !important;
+    pointer-events: none !important;
 }
+
 #otp-page.active {
-    display: block;
+    display: block !important;
+    pointer-events: auto !important;
 }
