@@ -281,7 +281,7 @@ function displayItems(items, container = movieContainer, showPagination = true) 
         card.className = "movie-card";
         card.onclick = () => openModal(item);
 
-        const poster = item.poster_path 
+        const poster = item.poster_path && item.poster_path.length > 3
             ? `${IMAGE_URL}${item.poster_path}` 
             : 'https://via.placeholder.com/300x450?text=No+Image';
         
@@ -307,13 +307,13 @@ function displayItems(items, container = movieContainer, showPagination = true) 
         else countryText = lang ? lang.toUpperCase() : "";
 
         card.innerHTML = `
-            <img src="${poster}" alt="${title}" loading="lazy">
-            <div class="movie-info">
-                <h3>${title}</h3>
-                ${displaySubTitle}
-                <p style="margin-top: 4px;">${year} ${countryText ? `| ${countryText}` : ""} | &#9733; ${rating}</p>
-            </div>
-        `;
+    <img src="${poster}" alt="${title}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+    <div class="movie-info">
+        <h3>${title}</h3>
+        ${displaySubTitle}
+        <p style="margin-top: 4px;">${year} ${countryText ? `| ${countryText}` : ""} | &#9733; ${rating}</p>
+    </div>
+`;
         container.appendChild(card);
     });
 }
