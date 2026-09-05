@@ -702,3 +702,46 @@ async function loadHistory() {
 
     displayItems(historyItems, container, false);
             }
+
+async function recommendMood(mood) {
+    const genreMap = {
+        happy: [35, 10751, 16], 
+        scary: [27, 53],
+        action: [28, 12, 878],  
+        sad: [18, 10749],       
+        chill: [10751, 35]    
+    };
+
+    const genreIds = genreMap[mood] || [35, 10751];
+    const genreId = genreIds.join(',');
+
+    if (movieTitle) {
+        const moodNames = {
+            happy: 'Happy / Senang',
+            scary: 'Scary / Takut',
+            action: 'Exciting / Seru',
+            sad: 'Emotional / Perasaan',
+            chill: 'Relaxed / Rileks'
+        };
+        movieTitle.textContent = `Mood: ${moodNames[mood] || mood}`;
+    }
+
+    if (movieContainer) {
+        movieContainer.innerHTML = '<div class="loading">Memuat rekomendasi...</div>';
+    }
+
+    let url = `${BASE_URL}/discover/${currentMediaType}?api_key=${API_KEY}&with_genres=${genreId}&language=id-ID&page=1&sort_by=popularity.desc`;
+
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        displayItems(data.results, movieContainer, true);
+        
+        const oldPagination = document.getElementById('genrePagination');
+        if (oldPagination) oldPagination.remove();
+    } catch (err) {
+        if (movieContainer) {
+            movieContainer.innerHTML = '<div class="loading">Gagal memuat rekomendasi mood.</div>';
+        }
+    }
+}
