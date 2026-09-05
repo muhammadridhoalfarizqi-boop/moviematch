@@ -3,6 +3,7 @@ const BASE_URL = "https://api.themoviedb.org/3";
 const IMAGE_URL = "https://image.tmdb.org/t/p/w500";
 const SUPABASE_URL = "https://yratvqvtlixcvyciqrsg.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable___KN08wXZeXaPpHU6z-DAQ_JbZXIoyj";
+const OPENSUBTITLES_API_KEY = "C3oTYqRkJtvkZFVR4r361m0zFfInJcom";
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -387,6 +388,55 @@ window.addEventListener("click", function(event) {
         closeMovieModal();
     }
 });
+
+async function getSubtitle(imdbId, lang = 'id') {
+    if (!imdbId) return null;
+    
+    const url = `https://api.opensubtitles.com/api/v1/subtitles?imdb_id=${imdbId}&languages=${lang}`;
+    
+    try {
+        const res = await fetch(url, {
+            headers: {
+                'Api-Key': OPENSUBTITLES_API_KEY,
+                'User-Agent': 'MovieMatchApp v1.0'
+            }
+        });
+        
+        if (!res.ok) {
+            console.warn("Gagal ambil subtitle:", res.status);
+            return null;
+        }
+        
+        const data = await res.json();
+        return data;
+    } catch (err) {
+        console.warn("Error subtitle:", err);
+        return null;
+    }
+}
+
+async function downloadSubtitle(fileId) {
+    if (!fileId) return null;
+    
+    const url = `https://api.opensubtitles.com/api/v1/download/${fileId}`;
+    
+    try {
+        const res = await fetch(url, {
+            headers: {
+                'Api-Key': OPENSUBTITLES_API_KEY,
+                'User-Agent': 'MovieMatchApp v1.0'
+            }
+        });
+        
+        if (!res.ok) return null;
+        
+        const data = await res.json();
+        return data.link;
+    } catch (err) {
+        console.warn("Error download subtitle:", err);
+        return null;
+    }
+}
 
 async function toggleFavoriteCurrent(item) {
     const user = getCurrentUser();
