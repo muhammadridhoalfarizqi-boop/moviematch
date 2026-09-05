@@ -193,6 +193,9 @@ async function loadContent(filterParam, page = 1) {
     currentGenrePage = 1;
     currentFilterParam = filterParam;
     currentPage = page;
+
+    history.pushState({ category: filterParam, page: page }, "", `?category=${filterParam}&page=${page}`);
+    
     if (movieContainer) {
         movieContainer.innerHTML = '<div class="loading">Loading content...</div>';
     }
@@ -239,18 +242,25 @@ async function searchByQuery(query) {
     }
 }
 
-window.addEventListener("popstate", (event) => {
-    const searchInputEl = document.getElementById("searchInput");
+window.addEventListener("popstate", function(event) {
+    if (event.state && event.state.genre) {
+        showPage('home-page');
+        return;
+    }
+
     if (event.state && event.state.search) {
+        const searchInputEl = document.getElementById("searchInput");
         if (searchInputEl) searchInputEl.value = event.state.search;
         searchByQuery(event.state.search);
-    } else {
-        if (searchInputEl) searchInputEl.value = "";
-        if (movieTitle) {
-            movieTitle.textContent = currentMediaType === 'movie' ? "Popular Movies" : "Popular Series";
-        }
-        loadContent('popular', 1);
+        return;
     }
+
+    if (event.state && event.state.category) {
+        loadContent(event.state.category, event.state.page || 1);
+        return;
+    }
+
+    showPage('home-page');
 });
 
 function scrollToMovies() {
@@ -361,6 +371,8 @@ async function getMoviesByGenre(genreId, genreName, page = 1) {
     currentGenreId = genreId;
     currentGenreName = genreName;
     currentGenrePage = page;
+
+    history.pushState({ genre: genreId, genreName: genreName, page: page }, "", `?genre=${genreId}&page=${page}`);
 
     if (movieContainer) {
         movieContainer.innerHTML = '<div class="loading">Memuat genre...</div>';
@@ -723,6 +735,8 @@ async function recommendMood(mood, page = 1) {
     currentGenreId = genreId;
     currentGenreName = mood;
     currentGenrePage = page;
+
+    history.pushState({ genre: mood, page: page }, "", `?mood=${mood}&page=${page}`);
 
     if (movieTitle) {
         const moodNames = {
