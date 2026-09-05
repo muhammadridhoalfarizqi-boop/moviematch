@@ -355,6 +355,30 @@ async function openModal(item) {
             </div>
         </div>
     `;
+    const imdbId = item.imdb_id;
+    if (imdbId) {
+        try {
+            const subData = await getSubtitle(imdbId);
+            if (subData && subData.data && subData.data.length > 0) {
+                const firstSub = subData.data[0];
+                const subFileId = firstSub.attributes.files[0].file_id;
+                const subLink = await downloadSubtitle(subFileId);
+                
+                if (subLink) {
+                    console.log("Subtitle siap:", subLink);
+                    const playerWrapper = document.querySelector('#playerFrame')?.parentElement;
+                    if (playerWrapper) {
+                        const subElement = document.createElement('div');
+                        subElement.style.cssText = 'color: #aaa; font-size: 12px; margin-top: 8px; text-align: center;';
+                        subElement.textContent = `Subtitle tersedia: ${firstSub.attributes.language}`;
+                        playerWrapper.parentElement.insertBefore(subElement, playerWrapper.nextSibling);
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn("Gagal ambil subtitle:", err);
+        }
+    }
 
     movieModal.style.display = "flex";
 }
