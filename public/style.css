@@ -581,3 +581,47 @@ footer {
     display: block !important;
     pointer-events: auto !important;
 }
+
+.password-strength {
+    margin-top: 8px;
+}
+
+.strength-bars {
+    display: flex;
+    gap: 6px;
+    height: 4px;
+}
+
+.strength-bars .bar {
+    flex: 1;
+    background: #333;
+    border-radius: 2px;
+    transition: background 0.3s;
+}
+
+.strength-bars .bar.weak { background: #e74c3c; }
+.strength-bars .bar.medium { background: #f39c12; }
+.strength-bars .bar.strong { background: #2ecc71; }
+.strength-bars .bar.very-strong { background: #27ae60; }
+
+.strength-text {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+
+.suggest-pass-btn {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+.suggest-pass-btn:hover {
+    background: #444;
+}
