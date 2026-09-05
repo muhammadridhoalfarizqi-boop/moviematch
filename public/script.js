@@ -50,11 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 });
 
-window.addEventListener('beforeunload', function (e) {
-    e.preventDefault();
-    e.returnValue = '';
-});
-
 window.open = function(url, name, features) {
     console.warn("Ngeblokir bukaan tab baru:", url);
     return null;
