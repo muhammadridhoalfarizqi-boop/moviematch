@@ -374,8 +374,23 @@ async function getMoviesByGenre(genreId, genreName, page = 1) {
     if (movieContainer) {
         movieContainer.innerHTML = '<div class="loading">Memuat genre...</div>';
     }
+
+    const moodNames = ['happy', 'scary', 'action', 'sad', 'chill'];
+    const isMood = moodNames.includes(genreName.toLowerCase());
+
     if (movieTitle) {
-        movieTitle.textContent = `Genre: ${genreName} - Halaman ${page}`;
+        if (isMood) {
+            const moodDisplay = {
+                happy: 'Happy / Senang',
+                scary: 'Scary / Takut',
+                action: 'Exciting / Seru',
+                sad: 'Emotional / Perasaan',
+                chill: 'Relaxed / Rileks'
+            };
+            movieTitle.textContent = `Mood: ${moodDisplay[genreName.toLowerCase()] || genreName} - Halaman ${page}`;
+        } else {
+            movieTitle.textContent = `Genre: ${genreName} - Halaman ${page}`;
+        }
     }
 
     if (genreId === 'bl' || genreId === 'gl') {
@@ -388,7 +403,6 @@ async function getMoviesByGenre(genreId, genreName, page = 1) {
         const res = await fetch(url);
         const data = await res.json();
         displayItems(data.results, movieContainer, true);
-        
         addGenrePagination(data.total_pages, page);
     } catch (err) {
         if (movieContainer) {
@@ -396,7 +410,6 @@ async function getMoviesByGenre(genreId, genreName, page = 1) {
         }
     }
 }
-
 async function openModal(item) {
     activeItemId = item.id;
     currentMediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
