@@ -206,37 +206,6 @@ async function loadContent(filterParam, page = 1) {
     }
 }
 
-async function getMoviesByGenre(genreId, genreName) {
-    if (!genreId) {
-        loadContent(currentFilterParam, 1);
-        return;
-    }
-
-    if (movieContainer) {
-        movieContainer.innerHTML = '<div class="loading">Memuat genre...</div>';
-    }
-    if (movieTitle) {
-        movieTitle.textContent = `Genre: ${genreName}`;
-    }
-
-    if (genreId === 'bl' || genreId === 'gl') {
-        searchByQuery(genreId === 'bl' ? 'Boys Love' : 'Girls Love');
-        return;
-    }
-
-    let url = `${BASE_URL}/discover/${currentMediaType}?api_key=${API_KEY}&with_genres=${genreId}&language=id-ID&page=1`;
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        displayItems(data.results, movieContainer, true);
-        scrollToMovies();
-    } catch (err) {
-        if (movieContainer) {
-            movieContainer.innerHTML = '<div class="loading">Gagal memuat genre.</div>';
-        }
-    }
-}
-
 async function searchByQuery(query) {
     if (movieContainer) {
         movieContainer.innerHTML = '<div class="loading">Mencari...</div>';
