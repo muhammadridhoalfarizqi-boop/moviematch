@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log('User baru daftar:', payload.new);
         }
     )
-    .subscribe():
+    .subscribe();
 
         const otpVerifyBtn = document.getElementById("otpVerifyBtn");
     if (otpVerifyBtn) {
@@ -152,7 +152,6 @@ function showPage(pageId) {
     document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
     page.classList.remove('active');
     const targetPage = document.getElementById(pageId);
-    if (targetPage) targetPage.classList.add('active');
 
     if (pageId === 'home-page') {
         currentGenreId = '';
@@ -768,6 +767,35 @@ async function loadHistory() {
     displayItems(historyItems, container, false);
             }
 
+async function sendOTP(email) {
+    try {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+        const { error } = await supabaseClient
+            .from('otp')
+            .insert([{
+                email: email,
+                code: code,
+                expires_at: new Date(Date.now() + 5 * 60000)
+            }]);
+        
+        if (error) {
+            console.error("Gagal simpan OTP:", error);
+            return false;
+        }
+
+        await emailjs.send("service_m3kjfyn", "template_fbc5!", {
+            to_email: email,
+            otp_code: code
+        });
+        
+        return true;
+    } catch (err) {
+        console.error("Error send OTP:", err);
+        return false;
+    }
+}
+
 if (loginForm) {
     loginForm.addEventListener("submit", async function(e) {
         e.preventDefault();
@@ -835,35 +863,6 @@ if (registerForm) {
     });
 }
 
-async function sendOTP(email) {
-    try {
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-
-        const { error } = await supabaseClient
-            .from('otp')
-            .insert([{
-                email: email,
-                code: code,
-                expires_at: new Date(Date.now() + 5 * 60000)
-            }]);
-        
-        if (error) {
-            console.error("Gagal simpan OTP:", error);
-            return false;
-        }
-
-        await emailjs.send("service_m3kjfyn", "template_fbc5!", {
-            to_email: email,
-            otp_code: code
-        });
-        
-        return true;
-    } catch (err) {
-        console.error("Error send OTP:", err);
-        return false;
-    }
-}
-
 async function verifyOTP(email, code) {
     const { data, error } = await supabaseClient
         .from('otp')
@@ -882,21 +881,18 @@ async function verifyOTP(email, code) {
         .update({ used: true })
         .eq('id', data[0].id);
 
-    if (verified) {
-        const user = { email: email };
-        localStorage.setItem("movieMatchCurrentUser", JSON.stringify(user));
-        updateNavAuth();
+    const user = { email: email };
+    localStorage.setItem("movieMatchCurrentUser", JSON.stringify(user));
+    updateNavAuth();
 
-        currentGenreId = '';
-        currentGenreName = '';
-        currentGenrePage = 1;
+    currentGenreId = '';
+    currentGenreName = '';
+    currentGenrePage = 1;
 
-        showPage('home-page');
-        loadContent('popular', 1);
+    showPage('home-page');
+    loadContent('popular', 1);
 
-        return true;
-    }
-    return false;
+    return true;
 }
 
 function startResendTimer() {
