@@ -40,6 +40,17 @@ document.addEventListener("DOMContentLoaded", () => {
     updateNavAuth();
     loadContent('popular', 1);
 
+    const subscription = supabaseClient
+    .channel('users-channel')
+    .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'users' },
+        (payload) => {
+            console.log('User baru daftar:', payload.new);
+            // Bisa update UI atau kasih notifikasi
+        }
+    )
+    .subscribe();
+
     if (searchForm) {
     searchForm.addEventListener("submit", function(e) {
         e.preventDefault();
