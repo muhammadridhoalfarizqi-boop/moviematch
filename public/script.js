@@ -715,6 +715,69 @@ async function loadHistory() {
     displayItems(historyItems, container, false);
             }
 
+if (loginForm) {
+    loginForm.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+        
+        const { data: users, error } = await supabaseClient
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .eq('password', password);
+        
+        if (error) {
+            document.getElementById("loginMessage").textContent = "Error: " + error.message;
+            return;
+        }
+        
+        if (users && users.length > 0) {
+            localStorage.setItem("movieMatchCurrentUser", JSON.stringify(users[0]));
+            updateNavAuth();
+            document.getElementById("loginMessage").textContent = "Login berhasil!";
+            showPage('home-page');
+        } else {
+            document.getElementById("loginMessage").textContent = "Email atau password salah!";
+        }
+    });
+}
+
+if (registerForm) {
+    registerForm.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById("registerName").value;
+        const email = document.getElementById("registerEmail").value;
+        const password = document.getElementById("registerPassword").value;
+        
+        const { data: existing } = await supabaseClient
+            .from('users')
+            .select('*')
+            .eq('email', email);
+        
+        if (existing && existing.length > 0) {
+            document.getElementById("registerMessage").textContent = "Email sudah terdaftar!";
+            return;
+        }
+        
+        const { error } = await supabaseClient
+            .from('users')
+            .insert([{ name, email, password }]);
+        
+        if (error) {
+            document.getElementById("registerMessage").textContent = "Error: " + error.message;
+            return;
+        }
+        
+        localStorage.setItem("movieMatchCurrentUser", JSON.stringify({ name, email, password }));
+        updateNavAuth();
+        document.getElementById("registerMessage").textContent = "Registrasi berhasil!";
+        showPage('home-page');
+    });
+}
+
 async function recommendMood(mood, page = 1) {
     const genreMap = {
         happy: [35, 10751, 16],
