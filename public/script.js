@@ -5,6 +5,7 @@ const SUPABASE_URL = "https://yratvqvtlixcvyciqrsg.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable___KN08wXZeXaPpHU6z-DAQ_JbZXIoyj";
 const OPENSUBTITLES_API_KEY = "C3oTYqRkJtvkZFVR4r361m0zFfInJcom";
 
+emailjs.init("ZDbFZUevZv9Hfi1xo");
 const supabaseClient = window.supabase.createClient("https://yratvqvtlixcvyciqrsg.supabase.co", "sb_publishable___KN08wXZeXaPpHU6z-DAQ_JbZXIoyj");
 
 const movieContainer = document.getElementById("movieContainer");
@@ -756,7 +757,7 @@ async function sendOTP(email) {
             console.error("Gagal simpan OTP:", error);
             return false;
         }
-        await emailjs.send("service_m3kjfyn", "template_fbc55ps!", {
+        await emailjs.send("service_m3kjfyn", "template_fbc55ps", {
             to_email: email,
             otp_code: code
         });
