@@ -198,6 +198,7 @@ async function loadContent(filterParam, page = 1) {
         const res = await fetch(url);
         const data = await res.json();
         displayItems(data.results, movieContainer, true);
+        scrollToMovies();
     } catch (err) {
         if (movieContainer) {
             movieContainer.innerHTML = '<div class="loading">Gagal memuat data film. Coba periksa koneksi.</div>';
@@ -228,6 +229,7 @@ async function getMoviesByGenre(genreId, genreName) {
         const res = await fetch(url);
         const data = await res.json();
         displayItems(data.results, movieContainer, true);
+        scrollToMovies();
     } catch (err) {
         if (movieContainer) {
             movieContainer.innerHTML = '<div class="loading">Gagal memuat genre.</div>';
@@ -250,6 +252,7 @@ async function searchByQuery(query) {
         const res = await fetch(url);
         const data = await res.json();
         displayItems(data.results, movieContainer, true);
+        scrollToMovies();
     } catch (err) {
         if (movieContainer) {
             movieContainer.innerHTML = '<div class="loading">Terjadi kesalahan saat mencari.</div>';
@@ -270,6 +273,15 @@ window.addEventListener("popstate", (event) => {
         loadContent('popular', 1);
     }
 });
+
+function scrollToMovies() {
+    const moviesSection = document.getElementById('movies');
+    if (moviesSection) {
+        setTimeout(() => {
+            moviesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+    }
+}
 
 function displayItems(items, container = movieContainer, showPagination = true) {
     if (!container) return;
@@ -404,6 +416,7 @@ async function getMoviesByGenre(genreId, genreName, page = 1) {
         const data = await res.json();
         displayItems(data.results, movieContainer, true);
         addGenrePagination(data.total_pages, page);
+        scrollToMovies();
     } catch (err) {
         if (movieContainer) {
             movieContainer.innerHTML = '<div class="loading">Gagal memuat genre.</div>';
@@ -753,8 +766,8 @@ async function recommendMood(mood, page = 1) {
         const res = await fetch(url);
         const data = await res.json();
         displayItems(data.results, movieContainer, true);
-
         addGenrePagination(data.total_pages, page);
+        scrollToMovies();
     } catch (err) {
         if (movieContainer) {
             movieContainer.innerHTML = '<div class="loading">Gagal memuat rekomendasi mood.</div>';
