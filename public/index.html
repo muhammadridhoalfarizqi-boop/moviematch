@@ -217,7 +217,30 @@
                     <p class="auth-switch">Already have an account? <a onclick="showPage('login-page')">Login</a></p>
                 </div>
             </div>
-        </div>
+        </div
+            <div id="otp-page" class="page">
+                <div class="auth-page">
+                    <div class="auth-box">
+                        <h1>Verifikasi OTP</h1>
+                        <p class="auth-description">Masukkan kode OTP yang telah dikirim ke email Anda.</p>
+                        
+                        <div id="otpMessage" class="auth-message"></div>
+                        
+                        <div class="form-group">
+                            <label for="otpInput">Kode OTP</label>
+                            <input type="text" id="otpInput" placeholder="Masukkan kode 6 digit" maxlength="6" autocomplete="off">
+                        </div>
+                        <button id="otpVerifyBtn" class="auth-button">Verifikasi</button>
+                        
+                        <p class="otp-resend">
+                            Belum dapat kode? <a href="#" id="resendOtpBtn">Kirim ulang</a>
+                        </p>
+                        <p class="auth-switch">
+                            <a onclick="showPage('login-page')">Kembali ke Login</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
     </main>
 
     <div id="movieModal" class="modal">
