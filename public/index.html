@@ -210,7 +210,19 @@
                         <div class="form-group">
                             <label for="registerPassword">Password</label>
                             <input type="password" id="registerPassword" placeholder="Create a password" required>
+                            <div class="password-strength">
+                                <div class="strength-bars">
+                                    <div class="bar" id="strBar1"></div>
+                                    <div class="bar" id="strBar2"></div>
+                                    <div class="bar" id="strBar3"></div>
+                                    <div class="bar" id="strBar4"></div>
+                                </div>
+                                <p class="strength-text" id="strText">Ketik password...</p>
+                            </div>
+                            <button type="button" class="suggest-pass-btn" id="suggestPassBtn">Suggest Strong Password</button>
+                        
                         </div>
+                        
                         <button type="submit" class="auth-button">Create Account</button>
                     </form>
                     <p id="registerMessage" class="auth-message"></p>
