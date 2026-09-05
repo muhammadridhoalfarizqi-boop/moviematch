@@ -149,9 +149,14 @@ function toggleMenu() {
 }
 
 function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-    page.classList.remove('active');
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+
     const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.classList.add('active');
+    }
 
     if (pageId === 'home-page') {
         currentGenreId = '';
@@ -161,12 +166,15 @@ function showPage(pageId) {
         if (movieTitle) {
             movieTitle.textContent = currentMediaType === 'movie' ? "Popular Movies" : "Popular Series";
         }
+        
         const searchInputEl = document.getElementById("searchInput");
         if (searchInputEl) {
             searchInputEl.value = "";
         }
+        
         loadContent('popular', 1);
     }
+
     window.scrollTo(0, 0);
 }
 
