@@ -544,5 +544,30 @@ footer {
     .movie-poster, .movie-card img {
         height: 230px;
     }
-    }
-    
+}
+
+#otp-page .auth-box {
+    max-width: 400px;
+}
+
+#otpInput {
+    text-align: center;
+    font-size: 24px;
+    letter-spacing: 8px;
+}
+
+.otp-resend {
+    margin-top: 15px;
+    font-size: 13px;
+    color: #888;
+}
+
+.otp-resend a {
+    color: #e50914;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.otp-resend a:hover {
+    text-decoration: underline;
+}
