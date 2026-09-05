@@ -45,79 +45,78 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             if (searchInput && searchInput.value.trim() !== "") {
                 searchByQuery(searchInput.value.trim());
-                
-                const passInput = document.getElementById("registerPassword");
-                const strBar1 = document.getElementById("strBar1");
-                const strBar2 = document.getElementById("strBar2");
-                const strBar3 = document.getElementById("strBar3");
-                const strBar4 = document.getElementById("strBar4");
-                const strText = document.getElementById("strText");
-                
-                if (passInput) {
-                    passInput.addEventListener("input", function() {
-                        const password = this.value;
-                        const strength = checkPasswordStrength(password);
-                        updateStrengthUI(strength);
-                    });
-                }
-                
-                const suggestBtn = document.getElementById("suggestPassBtn");
-                if (suggestBtn) {
-                    suggestBtn.addEventListener("click", function() {
-                        const password = generateStrongPassword();
-                        if (passInput) {
-                            passInput.value = password;
-                            passInput.dispatchEvent(new Event('input'));
-                        }
-                    });
-                }
-            });
-        const subscription = supabaseClient
-            .channel('users-channel')
-            .on('postgres_changes', 
-                { event: 'INSERT', schema: 'public', table: 'users' },           
-                (payload) => {
-                    console.log('User baru daftar:', payload.new);
-                }
-               )
-            .subscribe();
-        
-        const otpVerifyBtn = document.getElementById("otpVerifyBtn");
-        if (otpVerifyBtn) {
-            otpVerifyBtn.addEventListener("click", async function() {
-                const code = document.getElementById("otpInput").value.trim();
-                if (code.length !== 6) {
-                    document.getElementById("otpMessage").textContent = "Masukkan kode 6 digit!";
-                    return;
-                }
-                const verified = await verifyOTP(otpEmail, code);
-                if (verified) {
-                    document.getElementById("otpMessage").textContent = "Login berhasil!";
-                    setTimeout(() => showPage('home-page'), 500);
-                } else {
-                    document.getElementById("otpMessage").textContent = "Kode OTP salah atau kadaluarsa!";
-                }
-            });
-        }
-        
-        const resendBtn = document.getElementById("resendOtpBtn");
-        if (resendBtn) {
-            resendBtn.addEventListener("click", async function(e) {
-                e.preventDefault();
-                const sent = await sendOTP(otpEmail);
-                if (sent) {
-                    document.getElementById("otpMessage").textContent = "Kode OTP telah dikirim ulang!";
-                    startResendTimer();
-                } else {
-                    document.getElementById("otpMessage").textContent = "Gagal mengirim ulang OTP. Coba lagi.";
-                }
-            });
-        }
-    });
-window.open = function(url, name, features) {
-    console.warn("Ngeblokir bukaan tab baru:", url);
-    return null;
-};
+            }
+        });
+    }
+
+    const subscription = supabaseClient
+        .channel('users-channel')
+        .on('postgres_changes', 
+            { event: 'INSERT', schema: 'public', table: 'users' },
+            (payload) => {
+                console.log('User baru daftar:', payload.new);
+            }
+        )
+        .subscribe();
+
+    const otpVerifyBtn = document.getElementById("otpVerifyBtn");
+    if (otpVerifyBtn) {
+        otpVerifyBtn.addEventListener("click", async function() {
+            const code = document.getElementById("otpInput").value.trim();
+            if (code.length !== 6) {
+                document.getElementById("otpMessage").textContent = "Masukkan kode 6 digit!";
+                return;
+            }
+            const verified = await verifyOTP(otpEmail, code);
+            if (verified) {
+                document.getElementById("otpMessage").textContent = "Login berhasil!";
+                setTimeout(() => showPage('home-page'), 500);
+            } else {
+                document.getElementById("otpMessage").textContent = "Kode OTP salah atau kadaluarsa!";
+            }
+        });
+    }
+
+    const resendBtn = document.getElementById("resendOtpBtn");
+    if (resendBtn) {
+        resendBtn.addEventListener("click", async function(e) {
+            e.preventDefault();
+            const sent = await sendOTP(otpEmail);
+            if (sent) {
+                document.getElementById("otpMessage").textContent = "Kode OTP telah dikirim ulang!";
+                startResendTimer();
+            } else {
+                document.getElementById("otpMessage").textContent = "Gagal mengirim ulang OTP. Coba lagi.";
+            }
+        });
+    }
+
+    const passInput = document.getElementById("registerPassword");
+    const strBar1 = document.getElementById("strBar1");
+    const strBar2 = document.getElementById("strBar2");
+    const strBar3 = document.getElementById("strBar3");
+    const strBar4 = document.getElementById("strBar4");
+    const strText = document.getElementById("strText");
+
+    if (passInput) {
+        passInput.addEventListener("input", function() {
+            const password = this.value;
+            const strength = checkPasswordStrength(password);
+            updateStrengthUI(strength);
+        });
+    }
+
+    const suggestBtn = document.getElementById("suggestPassBtn");
+    if (suggestBtn) {
+        suggestBtn.addEventListener("click", function() {
+            const password = generateStrongPassword();
+            if (passInput) {
+                passInput.value = password;
+                passInput.dispatchEvent(new Event('input'));
+            }
+        });
+    }
+});
 
 const originalFetch = window.fetch;
 window.fetch = function(input, init) {
