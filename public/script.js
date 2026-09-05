@@ -46,6 +46,35 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 });
 
+window.addEventListener('beforeunload', function (e) {
+    e.preventDefault();
+    e.returnValue = '';
+});
+
+window.open = function(url, name, features) {
+    console.warn("Ngeblokir bukaan tab baru:", url);
+    return null;
+};
+
+const originalFetch = window.fetch;
+window.fetch = function(input, init) {
+    const url = typeof input === 'string' ? input : input.url;
+    if (url && (url.includes('ads') || url.includes('doubleclick') || url.includes('googlead'))) {
+        console.warn("Ngeblokir fetch iklan:", url);
+        return Promise.reject(new Error("Blokir iklan"));
+    }
+    return originalFetch.call(this, input, init);
+};
+
+const originalXHROpen = XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+    if (url && (url.includes('ads') || url.includes('doubleclick') || url.includes('googlead'))) {
+        console.warn("Ngeblokir XHR iklan:", url);
+        return;
+    }
+    return originalXHROpen.apply(this, arguments);
+};
+
 function getCurrentUser() {
     return JSON.parse(localStorage.getItem("movieMatchCurrentUser"));
 }
