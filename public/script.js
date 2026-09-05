@@ -5,7 +5,7 @@ const SUPABASE_URL = "https://yratvqvtlixcvyciqrsg.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable___KN08wXZeXaPpHU6z-DAQ_JbZXIoyj";
 const OPENSUBTITLES_API_KEY = "C3oTYqRkJtvkZFVR4r361m0zFfInJcom";
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient("https://yratvqvtlixcvyciqrsg.supabase.co", "sb_publishable___KN08wXZeXaPpHU6z-DAQ_JbZXIoyj");
 
 const movieContainer = document.getElementById("movieContainer");
 const favoritesContainer = document.getElementById("favoritesContainer");
@@ -35,7 +35,6 @@ let currentOverviewId = "";
 let otpEmail = '';
 let otpTimer = null;
 
-// ===== DOMContentLoaded =====
 document.addEventListener("DOMContentLoaded", () => {
     updateNavAuth();
     loadContent('popular', 1);
@@ -49,7 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Subscription Realtime
     const subscription = supabaseClient
         .channel('users-channel')
         .on('postgres_changes', 
@@ -60,7 +58,6 @@ document.addEventListener("DOMContentLoaded", () => {
         )
         .subscribe();
 
-    // OTP Verifikasi
     const otpVerifyBtn = document.getElementById("otpVerifyBtn");
     if (otpVerifyBtn) {
         otpVerifyBtn.addEventListener("click", async function() {
@@ -79,7 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Resend OTP
     const resendBtn = document.getElementById("resendOtpBtn");
     if (resendBtn) {
         resendBtn.addEventListener("click", async function(e) {
@@ -95,7 +91,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// ===== ANTI IKLAN =====
 window.open = function(url, name, features) {
     console.warn("Ngeblokir bukaan tab baru:", url);
     return null;
@@ -120,7 +115,6 @@ XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
     return originalXHROpen.apply(this, arguments);
 };
 
-// ===== AUTH =====
 function getCurrentUser() {
     return JSON.parse(localStorage.getItem("movieMatchCurrentUser"));
 }
@@ -235,7 +229,6 @@ function setMediaType(type) {
     loadContent('popular', 1);
 }
 
-// ===== LOAD CONTENT =====
 async function loadContent(filterParam, page = 1) {
     currentGenreId = '';
     currentGenreName = '';
@@ -268,7 +261,6 @@ async function loadContent(filterParam, page = 1) {
     }
 }
 
-// ===== SEARCH =====
 async function searchByQuery(query) {
     if (movieContainer) {
         movieContainer.innerHTML = '<div class="loading">Mencari...</div>';
@@ -292,7 +284,6 @@ async function searchByQuery(query) {
     }
 }
 
-// ===== POPSTATE =====
 window.addEventListener("popstate", function(event) {
     if (event.state && event.state.genre) {
         showPage('home-page');
@@ -314,7 +305,6 @@ window.addEventListener("popstate", function(event) {
     showPage('home-page');
 });
 
-// ===== SCROLL =====
 function scrollToMovies() {
     const moviesSection = document.getElementById('movies');
     if (moviesSection) {
@@ -324,7 +314,6 @@ function scrollToMovies() {
     }
 }
 
-// ===== DISPLAY ITEMS =====
 function displayItems(items, container = movieContainer, showPagination = true) {
     if (!container) return;
     container.innerHTML = "";
@@ -376,7 +365,6 @@ function displayItems(items, container = movieContainer, showPagination = true) 
     });
 }
 
-// ===== PAGINATION =====
 function addGenrePagination(totalPages, currentPage) {
     const oldPagination = document.getElementById('genrePagination');
     if (oldPagination) oldPagination.remove();
@@ -416,7 +404,6 @@ function addGenrePagination(totalPages, currentPage) {
     container.appendChild(paginationDiv);
 }
 
-// ===== GET MOVIES BY GENRE =====
 async function getMoviesByGenre(genreId, genreName, page = 1) {
     if (!genreId) {
         loadContent(currentFilterParam, 1);
@@ -470,7 +457,6 @@ async function getMoviesByGenre(genreId, genreName, page = 1) {
     }
 }
 
-// ===== OPEN MODAL =====
 async function openModal(item) {
     activeItemId = item.id;
     currentMediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
@@ -595,14 +581,13 @@ window.addEventListener("click", function(event) {
     }
 });
 
-// ===== SUBTITLE =====
 async function getSubtitle(imdbId, lang = 'id') {
     if (!imdbId) return null;
     const url = `https://api.opensubtitles.com/api/v1/subtitles?imdb_id=${imdbId}&languages=${lang}`;
     try {
         const res = await fetch(url, {
             headers: {
-                'Api-Key': OPENSUBTITLES_API_KEY,
+                'Api-Key': C3oTYqRkJtvkZFVR4r361m0zFfInJcom,
                 'User-Agent': 'MovieMatchApp v1.0'
             }
         });
@@ -637,7 +622,6 @@ async function downloadSubtitle(fileId) {
     }
 }
 
-// ===== FAVORITES =====
 async function toggleFavoriteCurrent(item) {
     const user = getCurrentUser();
     if (!user) {
@@ -758,7 +742,6 @@ async function loadHistory() {
     displayItems(historyItems, container, false);
 }
 
-// ===== OTP =====
 async function sendOTP(email) {
     try {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -792,21 +775,33 @@ async function verifyOTP(email, code) {
         .eq('code', code)
         .eq('used', false)
         .gt('expires_at', new Date().toISOString());
+    
     if (error || !data || data.length === 0) {
         return false;
     }
+
     await supabaseClient
         .from('otp')
         .update({ used: true })
         .eq('id', data[0].id);
-    const user = { email: email };
-    localStorage.setItem("movieMatchCurrentUser", JSON.stringify(user));
+
+    const { data: users } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('email', email);
+    
+    const userData = users && users.length > 0 ? users[0] : { email: email };
+    
+    localStorage.setItem("movieMatchCurrentUser", JSON.stringify(userData));
     updateNavAuth();
+
     currentGenreId = '';
     currentGenreName = '';
     currentGenrePage = 1;
+
     showPage('home-page');
     loadContent('popular', 1);
+
     return true;
 }
 
@@ -830,7 +825,6 @@ function startResendTimer() {
     }, 1000);
 }
 
-// ===== LOGIN =====
 if (loginForm) {
     loginForm.addEventListener("submit", async function(e) {
         e.preventDefault();
@@ -859,36 +853,49 @@ if (loginForm) {
     });
 }
 
-// ===== REGISTER =====
 if (registerForm) {
     registerForm.addEventListener("submit", async function(e) {
         e.preventDefault();
+        
         const name = document.getElementById("registerName").value;
         const email = document.getElementById("registerEmail").value;
         const password = document.getElementById("registerPassword").value;
+
         const { data: existing } = await supabaseClient
             .from('users')
             .select('*')
             .eq('email', email);
+        
         if (existing && existing.length > 0) {
             document.getElementById("registerMessage").textContent = "Email sudah terdaftar!";
             return;
         }
+
         const { error } = await supabaseClient
             .from('users')
             .insert([{ name, email, password }]);
+        
         if (error) {
             document.getElementById("registerMessage").textContent = "Error: " + error.message;
             return;
         }
-        localStorage.setItem("movieMatchCurrentUser", JSON.stringify({ name, email, password }));
-        updateNavAuth();
-        document.getElementById("registerMessage").textContent = "Registrasi berhasil!";
-        showPage('home-page');
+
+        otpEmail = email;
+        const sent = await sendOTP(email);
+        
+        if (sent) {
+            document.getElementById("registerMessage").textContent = "Registrasi berhasil! Kode OTP telah dikirim ke email Anda.";
+            showPage('otp-page');
+            document.getElementById("otpMessage").textContent = "Kode OTP dikirim ke " + email;
+            document.getElementById("otpInput").value = "";
+            startResendTimer();
+        } else {
+            document.getElementById("registerMessage").textContent = "Registrasi berhasil, tapi gagal mengirim OTP. Silakan login.";
+            showPage('login-page');
+        }
     });
 }
 
-// ===== RECOMMEND MOOD =====
 async function recommendMood(mood, page = 1) {
     const genreMap = {
         happy: [35, 10751, 16],
