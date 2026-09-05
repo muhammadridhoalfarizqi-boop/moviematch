@@ -881,8 +881,22 @@ async function verifyOTP(email, code) {
         .from('otp')
         .update({ used: true })
         .eq('id', data[0].id);
-    
-    return true;
+
+    if (verified) {
+        const user = { email: email };
+        localStorage.setItem("movieMatchCurrentUser", JSON.stringify(user));
+        updateNavAuth();
+
+        currentGenreId = '';
+        currentGenreName = '';
+        currentGenrePage = 1;
+
+        showPage('home-page');
+        loadContent('popular', 1);
+
+        return true;
+    }
+    return false;
 }
 
 function startResendTimer() {
