@@ -24,6 +24,10 @@ let currentMediaType = 'movie';
 let currentFilterType = 'category';
 let currentFilterParam = 'popular';
 
+let currentGenrePage = 1;
+let currentGenreId = '';
+let currentGenreName = '';
+
 let activeItemId = null;
 let activeSeason = 1;
 let activeEpisode = 1;
@@ -316,6 +320,81 @@ function displayItems(items, container = movieContainer, showPagination = true) 
 `;
         container.appendChild(card);
     });
+}
+
+function addGenrePagination(totalPages, currentPage) {
+    const oldPagination = document.getElementById('genrePagination');
+    if (oldPagination) oldPagination.remove();
+
+    if (totalPages <= 1) return;
+
+    const container = movieContainer.parentNode;
+    const paginationDiv = document.createElement('div');
+    paginationDiv.id = 'genrePagination';
+    paginationDiv.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; font-size: 14px; color: #aaa;';
+
+    if (currentPage > 1) {
+        const prevBtn = document.createElement('button');
+        prevBtn.innerHTML = '‹';
+        prevBtn.style.cssText = 'background: none; border: none; color: #888; font-size: 24px; cursor: pointer; padding: 0 8px; transition: 0.2s;';
+        prevBtn.onmouseover = () => prevBtn.style.color = '#fff';
+        prevBtn.onmouseout = () => prevBtn.style.color = '#888';
+        prevBtn.onclick = () => getMoviesByGenre(currentGenreId, currentGenreName, currentPage - 1);
+        paginationDiv.appendChild(prevBtn);
+    }
+
+    const info = document.createElement('span');
+    info.textContent = `${currentPage} / ${totalPages}`;
+    info.style.cssText = 'color: #888; font-size: 13px;';
+    paginationDiv.appendChild(info);
+
+    if (currentPage < totalPages) {
+        const nextBtn = document.createElement('button');
+        nextBtn.innerHTML = '›';
+        nextBtn.style.cssText = 'background: none; border: none; color: #888; font-size: 24px; cursor: pointer; padding: 0 8px; transition: 0.2s;';
+        nextBtn.onmouseover = () => nextBtn.style.color = '#fff';
+        nextBtn.onmouseout = () => nextBtn.style.color = '#888';
+        nextBtn.onclick = () => getMoviesByGenre(currentGenreId, currentGenreName, currentPage + 1);
+        paginationDiv.appendChild(nextBtn);
+    }
+
+    container.appendChild(paginationDiv);
+}
+
+async function getMoviesByGenre(genreId, genreName, page = 1) {
+    if (!genreId) {
+        loadContent(currentFilterParam, 1);
+        return;
+    }
+
+    currentGenreId = genreId;
+    currentGenreName = genreName;
+    currentGenrePage = page;
+
+    if (movieContainer) {
+        movieContainer.innerHTML = '<div class="loading">Memuat genre...</div>';
+    }
+    if (movieTitle) {
+        movieTitle.textContent = `Genre: ${genreName} - Halaman ${page}`;
+    }
+
+    if (genreId === 'bl' || genreId === 'gl') {
+        searchByQuery(genreId === 'bl' ? 'Boys Love' : 'Girls Love');
+        return;
+    }
+
+    let url = `${BASE_URL}/discover/${currentMediaType}?api_key=${API_KEY}&with_genres=${genreId}&language=id-ID&page=${page}`;
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        displayItems(data.results, movieContainer, true);
+        
+        addGenrePagination(data.total_pages, page);
+    } catch (err) {
+        if (movieContainer) {
+            movieContainer.innerHTML = '<div class="loading">Gagal memuat genre.</div>';
+        }
+    }
 }
 
 async function openModal(item) {
