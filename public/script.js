@@ -756,7 +756,7 @@ async function sendOTP(email) {
             console.error("Gagal simpan OTP:", error);
             return false;
         }
-        await emailjs.send("service_m3kjfyn", "template_fbc5!", {
+        await emailjs.send("service_m3kjfyn", "template_fbc55ps!", {
             to_email: email,
             otp_code: code
         });
