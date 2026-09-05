@@ -108,6 +108,10 @@ function showPage(pageId) {
     window.scrollTo(0, 0);
 
     if (pageId === 'home-page') {
+        currentGenreId = '';
+        currentGenreName = '';
+        currentGenrePage = 1;
+        
         if (movieTitle) {
             movieTitle.textContent = currentMediaType === 'movie' ? "Popular Movies" : "Popular Series";
         }
@@ -154,6 +158,9 @@ function logout() {
 
 function setMediaType(type) {
     currentMediaType = type;
+    currentGenreId = '';
+    currentGenreName = '';
+    currentGenrePage = 1;
     
     const btnMovie = document.getElementById("typeBtnMovie");
     const btnTv = document.getElementById("typeBtnTv");
@@ -181,6 +188,9 @@ function setMediaType(type) {
 }
 
 async function loadContent(filterParam, page = 1) {
+    currentGenreId = '';
+    currentGenreName = '';
+    currentGenrePage = 1;
     currentFilterParam = filterParam;
     currentPage = page;
     if (movieContainer) {
