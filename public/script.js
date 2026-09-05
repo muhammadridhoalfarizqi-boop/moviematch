@@ -45,53 +45,75 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             if (searchInput && searchInput.value.trim() !== "") {
                 searchByQuery(searchInput.value.trim());
-            }
-        });
-    }
-
-    const subscription = supabaseClient
-        .channel('users-channel')
-        .on('postgres_changes', 
-            { event: 'INSERT', schema: 'public', table: 'users' },
-            (payload) => {
-                console.log('User baru daftar:', payload.new);
-            }
-        )
-        .subscribe();
-
-    const otpVerifyBtn = document.getElementById("otpVerifyBtn");
-    if (otpVerifyBtn) {
-        otpVerifyBtn.addEventListener("click", async function() {
-            const code = document.getElementById("otpInput").value.trim();
-            if (code.length !== 6) {
-                document.getElementById("otpMessage").textContent = "Masukkan kode 6 digit!";
-                return;
-            }
-            const verified = await verifyOTP(otpEmail, code);
-            if (verified) {
-                document.getElementById("otpMessage").textContent = "Login berhasil!";
-                setTimeout(() => showPage('home-page'), 500);
-            } else {
-                document.getElementById("otpMessage").textContent = "Kode OTP salah atau kadaluarsa!";
-            }
-        });
-    }
-
-    const resendBtn = document.getElementById("resendOtpBtn");
-    if (resendBtn) {
-        resendBtn.addEventListener("click", async function(e) {
-            e.preventDefault();
-            const sent = await sendOTP(otpEmail);
-            if (sent) {
-                document.getElementById("otpMessage").textContent = "Kode OTP telah dikirim ulang!";
-                startResendTimer();
-            } else {
-                document.getElementById("otpMessage").textContent = "Gagal mengirim ulang OTP. Coba lagi.";
-            }
-        });
-    }
-});
-
+                
+                const passInput = document.getElementById("registerPassword");
+                const strBar1 = document.getElementById("strBar1");
+                const strBar2 = document.getElementById("strBar2");
+                const strBar3 = document.getElementById("strBar3");
+                const strBar4 = document.getElementById("strBar4");
+                const strText = document.getElementById("strText");
+                
+                if (passInput) {
+                    passInput.addEventListener("input", function() {
+                        const password = this.value;
+                        const strength = checkPasswordStrength(password);
+                        updateStrengthUI(strength);
+                    });
+                }
+                
+                const suggestBtn = document.getElementById("suggestPassBtn");
+                if (suggestBtn) {
+                    suggestBtn.addEventListener("click", function() {
+                        const password = generateStrongPassword();
+                        if (passInput) {
+                            passInput.value = password;
+                            passInput.dispatchEvent(new Event('input'));
+                        }
+                    });
+                }
+            });
+        const subscription = supabaseClient
+            .channel('users-channel')
+            .on('postgres_changes', 
+                { event: 'INSERT', schema: 'public', table: 'users' },           
+                (payload) => {
+                    console.log('User baru daftar:', payload.new);
+                }
+               )
+            .subscribe();
+        
+        const otpVerifyBtn = document.getElementById("otpVerifyBtn");
+        if (otpVerifyBtn) {
+            otpVerifyBtn.addEventListener("click", async function() {
+                const code = document.getElementById("otpInput").value.trim();
+                if (code.length !== 6) {
+                    document.getElementById("otpMessage").textContent = "Masukkan kode 6 digit!";
+                    return;
+                }
+                const verified = await verifyOTP(otpEmail, code);
+                if (verified) {
+                    document.getElementById("otpMessage").textContent = "Login berhasil!";
+                    setTimeout(() => showPage('home-page'), 500);
+                } else {
+                    document.getElementById("otpMessage").textContent = "Kode OTP salah atau kadaluarsa!";
+                }
+            });
+        }
+        
+        const resendBtn = document.getElementById("resendOtpBtn");
+        if (resendBtn) {
+            resendBtn.addEventListener("click", async function(e) {
+                e.preventDefault();
+                const sent = await sendOTP(otpEmail);
+                if (sent) {
+                    document.getElementById("otpMessage").textContent = "Kode OTP telah dikirim ulang!";
+                    startResendTimer();
+                } else {
+                    document.getElementById("otpMessage").textContent = "Gagal mengirim ulang OTP. Coba lagi.";
+                }
+            });
+        }
+    });
 window.open = function(url, name, features) {
     console.warn("Ngeblokir bukaan tab baru:", url);
     return null;
@@ -943,4 +965,51 @@ async function recommendMood(mood, page = 1) {
             movieContainer.innerHTML = '<div class="loading">Gagal memuat rekomendasi mood.</div>';
         }
     }
+}
+
+function checkPasswordStrength(password) {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
+    return Math.min(score, 4);
+}
+
+function updateStrengthUI(score) {
+    const bars = [strBar1, strBar2, strBar3, strBar4];
+    const labels = ['Sangat Lemah', 'Lemah', 'Sedang', 'Kuat', 'Sangat Kuat'];
+    const colors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#27ae60'];
+    
+    bars.forEach((bar, index) => {
+        if (index < score) {
+            bar.style.background = colors[score];
+        } else {
+            bar.style.background = '#333';
+        }
+    });
+    
+    strText.textContent = labels[score] || 'Ketik password...';
+    strText.style.color = colors[score] || '#888';
+}
+
+function generateStrongPassword() {
+    const lower = 'abcdefghijklmnopqrstuvwxyz';
+    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const digits = '0123456789';
+    const specials = '!@#$%^&*()_+-=';
+    const all = lower + upper + digits + specials;
+    
+    let pass = '';
+    pass += lower[Math.floor(Math.random() * lower.length)];
+    pass += upper[Math.floor(Math.random() * upper.length)];
+    pass += digits[Math.floor(Math.random() * digits.length)];
+    pass += specials[Math.floor(Math.random() * specials.length)];
+    
+    for (let i = 4; i < 16; i++) {
+        pass += all[Math.floor(Math.random() * all.length)];
+    }
+    
+    return pass.split('').sort(() => Math.random() - 0.5).join('');
 }
