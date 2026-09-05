@@ -46,7 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
         { event: 'INSERT', schema: 'public', table: 'users' },
         (payload) => {
             console.log('User baru daftar:', payload.new);
-            // Bisa update UI atau kasih notifikasi
         }
     )
     .subscribe();
