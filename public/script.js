@@ -1,5 +1,5 @@
 const API_KEY = "c460f7483f7f090ecb7b0ebf0b214d50";
-const ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQi0iJjNDYwZjc0ODNmNzYwOTBlY2I3YjBjYmYwYjIxNGQ1MCIIsIm5ziI6MTc4ODQ3NDYyMi440TysInN1YiI6IjZhoTI1mNGZINTZ10DkxMjg0OTgzZGRkOSIsInNjb3BlcyI6WyJhcGIcfmWhZCJdLCJ2ZXJzaW9uIjoxfQ.ULTfs10802E5c4EXAvaj9uIE4f_tFJMP98SBGGQEdeErE";
+const ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjNDYwZjc0ODNmN2YwOTBlY2I3YjBlYmYwYjIxNGQ1MCIsIm5iZiI6MTc4ODQ3NDYyMi44OTYsInN1YiI6IjZhOTlmNGZlNTZlODkxMjg0OTgzZGRkOSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.ULTfSl002E5c4EXvAj9uIE4f_tFJMP98SBGGQEdEerE";
 const BASE_URL = "https://api.themoviedb.org/3";
 const IMAGE_URL = "https://image.tmdb.org/t/p/w500";
 const SUPABASE_URL = "https://yratvqvtlixcvyciqrsg.supabase.co";
