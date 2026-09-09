@@ -1069,7 +1069,7 @@ function filterByStudio(value) {
     const studioMap = {
         'shudder': ['shudder'],
         'netflix': ['netflix'],
-        'prime': ['prime video', 'amazon'],
+        'prime': ['prime video', 'amazon', 'prime'],
         'blumhouse': ['blumhouse'],
         'a24': ['a24'],
         'marvel': ['marvel'],
@@ -1082,9 +1082,13 @@ function filterByStudio(value) {
 
     cards.forEach(function(card) {
         const companies = card.dataset.companies || '';
+        const title = card.querySelector('.movie-info h3')?.textContent?.toLowerCase() || '';
+        const overview = card.querySelector('.movie-info p:last-child')?.textContent?.toLowerCase() || '';
+        const combined = companies + ' ' + title + ' ' + overview;
+        
         let match = false;
         for (let word of keywords) {
-            if (companies.includes(word)) {
+            if (combined.includes(word)) {
                 match = true;
                 break;
             }
