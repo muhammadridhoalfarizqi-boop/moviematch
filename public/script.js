@@ -1093,68 +1093,40 @@ function filterByYear(value) {
 }
 
 function filterByStudio(value) {
-    const cards = document.querySelectorAll('.movie-card');
-    
-    if (!cards || cards.length === 0) {
+    if (value === 'all') {
         loadContent(currentFilterParam, currentPage);
-        setTimeout(function() { 
-            filterByStudio(value); 
-        }, 600);
         return;
     }
 
-    cards.forEach(function(card) {
-        card.style.display = '';
-    });
-
-    const container = document.getElementById('movieContainer');
-    const oldNoResult = container?.querySelector('.no-result');
-    if (oldNoResult) oldNoResult.remove();
-
-    if (value === 'all') return;
-
-    const studioMap = {
-        'shudder': ['shudder'],
-        'netflix': ['netflix', 'netflix original'],
-        'prime': ['prime video', 'amazon', 'prime', 'amazon prime'],
-        'blumhouse': ['blumhouse', 'blumhouse productions'],
-        'a24': ['a24'],
-        'marvel': ['marvel', 'marvel studios'],
-        'dreamworks': ['dreamworks', 'dreamworks pictures'],
-        'amc': ['amc']
+    const studioIds = {
+        'shudder': 123,      // ID SHUDDER
+        'netflix': 213,      // ID NETFLIX
+        'prime': 1024,       // ID Amazon
+        'blumhouse': 33,     // ID Blumhouse
+        'a24': 110,          // ID A24
+        'marvel': 420,       // ID Marvel
+        'dreamworks': 521,   // ID DreamWorks
+        'amc': 2552          // ID AMC
     };
 
-    const keywords = studioMap[value] || [];
-    let hasVisible = false;
+    const studioId = studioIds[value];
+    if (!studioId) return;
 
-    cards.forEach(function(card) {
-        const companies = card.dataset.companies || '';
-        const title = card.querySelector('.movie-info h3')?.textContent?.toLowerCase() || '';
-        const infoText = card.querySelector('.movie-info p:last-child')?.textContent?.toLowerCase() || '';
-        const combined = companies + ' ' + title + ' ' + infoText;
-        
-        let match = false;
-        for (let word of keywords) {
-            if (combined.includes(word)) {
-                match = true;
-                break;
-            }
+    const url = `${BASE_URL}/discover/${currentMediaType}?with_companies=${studioId}&language=id-ID&page=1&sort_by=popularity.desc`;
+    
+    fetch(url, {
+        headers: {
+            'Authorization': `Bearer ${ACCESS_TOKEN}`
         }
-
-        if (match) {
-            card.style.display = '';
-            hasVisible = true;
-        } else {
-            card.style.display = 'none';
-        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        displayItems(data.results, movieContainer, true);
+    })
+    .catch(err => {
+        console.error("Error filter studio:", err);
+        movieContainer.innerHTML = '<div class="loading">Gagal memuat data studio.</div>';
     });
-
-    if (!hasVisible) {
-        const msg = document.createElement('div');
-        msg.className = 'no-result';
-        msg.textContent = '🎬 Tidak ada film dari studio / network ini.';
-        if (container) container.appendChild(msg);
-    }
 }
 
 function shareMovie(title, overview, poster) {
