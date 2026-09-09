@@ -1014,3 +1014,22 @@ body.light-mode .server-btn {
     margin-top: 5px;
     color: #aaa;
 }
+
+.studio-select {
+    padding: 10px;
+    border-radius: 8px;
+    background: #222;
+    color: #fff;
+    border: 1px solid #444;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.studio-select:hover {
+    border-color: #e50914;
+}
+
+.studio-select:focus {
+    outline: none;
+    border-color: #e50914;
+}
