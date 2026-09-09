@@ -1279,54 +1279,83 @@ body.light-mode .no-result {
     overflow: hidden;
     cursor: pointer;
     transition: 0.3s;
+    background: #181818;
+    border: 1px solid #292930;
 }
 
 .top-ten-item:hover {
-    transform: scale(1.05);
+    transform: scale(1.03);
+    border-color: #e50914;
     z-index: 2;
 }
 
 .top-ten-item .number {
     position: absolute;
-    bottom: -10px;
-    left: -5px;
-    font-size: 60px;
+    top: 0;
+    left: 0;
+    font-size: 48px;
     font-weight: 900;
-    color: rgba(0,0,0,0.8);
-    text-shadow: -1px -1px 0 rgba(255,255,255,0.3), 1px 1px 0 rgba(0,0,0,0.8);
+    color: rgba(255,255,255,0.15);
     z-index: 1;
     line-height: 1;
+    padding: 8px 12px;
+    text-shadow: 0 0 20px rgba(0,0,0,0.8);
 }
 
-.top-ten-item img {
+.top-ten-item .poster-wrapper {
+    position: relative;
     width: 100%;
     aspect-ratio: 2/3;
-    object-fit: cover;
-    display: block;
-    border-radius: 8px;
+    overflow: hidden;
 }
 
-.top-ten-item .title-overlay {
+.top-ten-item .poster-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.top-ten-item .info-overlay {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 30px 10px 10px;
-    background: linear-gradient(0deg, rgba(0,0,0,0.9), transparent);
+    padding: 40px 12px 12px;
+    background: linear-gradient(0deg, rgba(0,0,0,0.95), transparent);
     opacity: 0;
     transition: 0.3s;
 }
 
-.top-ten-item:hover .title-overlay {
+.top-ten-item:hover .info-overlay {
     opacity: 1;
 }
 
-.top-ten-item .title-overlay span {
-    font-size: 12px;
-    font-weight: 600;
-    display: block;
-    text-align: center;
+.top-ten-item .info-overlay .title {
+    font-size: 14px;
+    font-weight: 700;
     color: #fff;
+    display: block;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.top-ten-item .info-overlay .director {
+    font-size: 11px;
+    color: #aaa;
+    display: block;
+}
+
+.top-ten-item .info-overlay .stars {
+    font-size: 10px;
+    color: #888;
+    display: block;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 @media (max-width: 900px) {
@@ -1457,9 +1486,29 @@ body.light-mode .landing-nav:hover {
     color: #fff;
 }
 
+body.light-mode .top-ten-item {
+    background: #fff;
+    border-color: #ddd;
+}
+
 body.light-mode .top-ten-item .number {
-    color: rgba(255,255,255,0.8);
-    text-shadow: -1px -1px 0 rgba(0,0,0,0.3), 1px 1px 0 rgba(255,255,255,0.5);
+    color: rgba(0,0,0,0.1);
+}
+
+body.light-mode .top-ten-item .info-overlay {
+    background: linear-gradient(0deg, rgba(255,255,255,0.95), transparent);
+}
+
+body.light-mode .top-ten-item .info-overlay .title {
+    color: #111;
+}
+
+body.light-mode .top-ten-item .info-overlay .director {
+    color: #555;
+}
+
+body.light-mode .top-ten-item .info-overlay .stars {
+    color: #777;
 }
 
 body.light-mode .notification {
