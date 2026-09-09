@@ -48,6 +48,10 @@ let currentStudioName = '';
 let isStudioLoading = false;
 let studioTotalPages = 1;
 
+let currentDetailItem = null;
+let playerItemId = null;
+let playerMediaType = 'movie';
+
 document.addEventListener("DOMContentLoaded", () => {
     updateNavAuth();
     loadContent('popular', 1);
@@ -427,7 +431,7 @@ async function displayItems(items, container = movieContainer, showPagination = 
     for (const item of items) {
         const card = document.createElement("article");
         card.className = "movie-card";
-        card.onclick = () => openModal(item);
+        card.onclick = () => openDetail(item);
 
         let companies = [];
         if (!isFromSupabase) {
@@ -825,7 +829,7 @@ async function createItemElements(items) {
                 <p>${year} | &#9733; ${rating}</p>
             </div>
         `;
-        card.onclick = () => openModal(item);
+        card.onclick = () => openDetail(item);
         elements.push(card);
     }
     
@@ -1662,7 +1666,7 @@ async function loadLandingSlider() {
                     <div class="btn-group">
                         <button class="btn-play" onclick="playNow(${item.id}, '${mediaType}')">▶ Tonton</button>
                         <button class="btn-trailer" onclick="playTrailer(${item.id}, '${mediaType}', this)">▶ Trailer</button>
-                        <button class="btn-details" onclick="openModal(${JSON.stringify(item).replace(/'/g, "&#39;")})">Detail</button>
+                        <button class="btn-details" onclick="openDetail(${JSON.stringify(item).replace(/'/g, "&#39;")})">Detail</button>
                     </div>
                 </div>
             `;
@@ -1735,7 +1739,7 @@ function playNow(id, mediaType) {
     .then(res => res.json())
     .then(item => {
         item.media_type = mediaType;
-        openModal(item);
+        openDetail(item);
     })
     .catch(err => console.error("Error:", err));
 }
@@ -1869,7 +1873,7 @@ async function loadTopTen() {
                 .then(res => res.json())
                 .then(fullItem => {
                     fullItem.media_type = mediaType;
-                    openModal(fullItem);
+                    openDetail(fullItem);
                 })
                 .catch(err => console.error("Error:", err));
             };
@@ -1925,7 +1929,7 @@ async function loadTopRated() {
                 .then(res => res.json())
                 .then(fullItem => {
                     fullItem.media_type = mediaType;
-                    openModal(fullItem);
+                    openDetail(fullItem);
                 })
                 .catch(err => console.error("Error:", err));
             };
@@ -2011,7 +2015,7 @@ async function loadContinueWatching() {
                 .then(res => res.json())
                 .then(fullItem => {
                     fullItem.media_type = mediaType;
-                    openModal(fullItem);
+                    openDetail(fullItem);
                 })
                 .catch(err => console.error("Error:", err));
             };
@@ -2043,4 +2047,174 @@ function scrollToContinueWatching() {
             }, 500);
         }
     }, 400);
+}
+
+async function openDetail(item) {
+    currentDetailItem = item;
+    const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+
+    const url = `${BASE_URL}/${mediaType}/${item.id}?language=en-US`;
+    const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+    });
+    const data = await res.json();
+
+    const poster = data.poster_path ? `${IMAGE_URL}${data.poster_path}` : 'https://via.placeholder.com/300x450?text=No+Image';
+    const title = data.title || data.name || 'Untitled';
+    const year = (data.release_date || data.first_air_date || '').substring(0, 4) || 'N/A';
+    const rating = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
+    const runtime = data.runtime ? `${data.runtime}m` : data.episode_run_time ? `${data.episode_run_time[0]}m` : 'N/A';
+    const overview = data.overview || 'Tidak ada sinopsis.';
+    const genres = data.genres ? data.genres.map(g => g.name).join(', ') : '';
+
+    document.getElementById('detailsPoster').src = poster;
+    document.getElementById('detailsTitle').textContent = title;
+    document.getElementById('detailsYear').textContent = year;
+    document.getElementById('detailsRating').textContent = `⭐ ${rating}`;
+    document.getElementById('detailsRuntime').textContent = runtime;
+    document.getElementById('detailsGenre').textContent = genres;
+    document.getElementById('detailsOverview').textContent = overview;
+    document.getElementById('detailsOverviewText').textContent = overview;
+
+    currentDetailItem = { ...item, ...data, mediaType };
+
+    showPage('detail-page');
+    await addToHistory(item);
+}
+
+function goToPlayer() {
+    if (!currentDetailItem) return;
+
+    const id = currentDetailItem.id;
+    const mediaType = currentDetailItem.mediaType || currentMediaType;
+    const title = currentDetailItem.title || currentDetailItem.name || 'Untitled';
+
+    document.getElementById('playerTitle').textContent = title;
+
+    setupPlayer(id, mediaType);
+    showPage('player-page');
+}
+
+function goBackToDetail() {
+    if (currentDetailItem) {
+        showPage('detail-page');
+    } else {
+        showPage('home-page');
+    }
+}
+
+function setupPlayer(id, mediaType) {
+    playerItemId = id;
+    playerMediaType = mediaType;
+
+    const servers = [
+        { name: "VidSrc XYZ", url: `https://vidsrc.xyz/embed/${mediaType}?tmdb=${id}` },
+        { name: "VidSrc ME", url: `https://vidsrc.me/embed/${mediaType}?tmdb=${id}` },
+        { name: "Embed SU", url: `https://embed.su/embed/${mediaType}/${id}` },
+        { name: "VidSrc CC", url: `https://vidsrc.cc/v2/embed/${mediaType}/${id}` },
+        { name: "MultiEmbed", url: `https://multiembed.mov/?video_id=${id}&tmdb=1${mediaType === 'tv' ? '&s=1&e=1' : ''}` },
+        { name: "Main Server 1", url: mediaType === 'movie' ? `https://vidstuck.xyz/embed/movie/${id}?branding=zxcstream&subtitle=english` : `https://vidstuck.xyz/embed/tv/${id}/1/1?branding=zxcstream&subtitle=english` },
+        { name: "Main Server 2", url: mediaType === 'movie' ? `https://zxcstream.xyz/player/movie/${id}?server=0&subLang=english,indonesian` : `https://zxcstream.xyz/player/tv/${id}/1/1?server=0&subLang=english,indonesian` },
+        { name: "Server Alpha", url: mediaType === 'movie' ? `https://vidup.to/movie/${id}?autoPlay=true&theme=FF0000` : `https://vidup.to/tv/${id}/1/1?autoPlay=true&theme=FF0000` },
+        { name: "Server Beta", url: mediaType === 'movie' ? `https://mappletv.uk/watch/movie/${id}` : `https://mappletv.uk/watch/tv/${id}-1-1` },
+        { name: "Server Delta", url: mediaType === 'movie' ? `https://111movies.com/movie/${id}` : `https://111movies.com/tv/${id}/1/1` },
+        { name: "Server Zeta", url: mediaType === 'movie' ? `https://vidsrc.xyz/embed/movie/${id}` : `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=1&episode=1` }
+    ];
+
+    const serversContainer = document.getElementById('playerServers');
+    const existingButtons = serversContainer.querySelectorAll('.server-btn');
+    existingButtons.forEach(btn => btn.remove());
+
+    servers.forEach((server, index) => {
+        const btn = document.createElement('button');
+        btn.className = `server-btn ${index === 0 ? 'working' : ''}`;
+        btn.textContent = server.name;
+        btn.onclick = () => switchPlayerServer(server.url, btn);
+        serversContainer.appendChild(btn);
+    });
+
+    const iframe = document.getElementById('playerFrame');
+    const loader = document.querySelector('#playerSourceContainer .loader');
+    iframe.style.display = 'none';
+    loader.style.display = 'block';
+    iframe.src = servers[0].url;
+    iframe.onload = () => {
+        loader.style.display = 'none';
+        iframe.style.display = 'block';
+    };
+
+    const sandboxToggle = document.getElementById('sandboxToggle');
+    sandboxToggle.onchange = function() {
+        if (this.checked) {
+            iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+            document.querySelector('.adsLabel').textContent = 'Disable Sandbox';
+        } else {
+            iframe.removeAttribute('sandbox');
+            document.querySelector('.adsLabel').textContent = 'Enable Sandbox';
+        }
+        const currentSrc = iframe.src;
+        iframe.src = 'about:blank';
+        setTimeout(() => { iframe.src = currentSrc; }, 100);
+    };
+}
+
+function switchPlayerServer(url, btn) {
+    const iframe = document.getElementById('playerFrame');
+    const loader = document.querySelector('#playerSourceContainer .loader');
+
+    document.querySelectorAll('.server-btn').forEach(b => {
+        b.classList.remove('working');
+    });
+    btn.classList.add('working');
+
+    iframe.style.display = 'none';
+    loader.style.display = 'block';
+    iframe.src = url;
+    iframe.onload = () => {
+        loader.style.display = 'none';
+        iframe.style.display = 'block';
+    };
+}
+
+function showOverview() {
+    if (!currentDetailItem) return;
+    const content = document.getElementById('detailsContent');
+    content.innerHTML = `<p id="detailsOverviewText">${currentDetailItem.overview || 'Tidak ada sinopsis.'}</p>`;
+
+    document.querySelectorAll('.detailsButtonWrapper button').forEach(b => b.classList.remove('red'));
+    document.querySelector('.detailsOverviewbutton').classList.add('red');
+}
+
+async function showTrailer() {
+    if (!currentDetailItem) return;
+
+    const id = currentDetailItem.id;
+    const mediaType = currentDetailItem.mediaType || 'movie';
+    const content = document.getElementById('detailsContent');
+
+    try {
+        const url = `${BASE_URL}/${mediaType}/${id}/videos?api_key=${API_KEY}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const trailer = data.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+
+        if (trailer) {
+            content.innerHTML = `
+                <div class="detailsTrailer">
+                    <iframe src="https://www.youtube.com/embed/${trailer.key}" allowfullscreen></iframe>
+                </div>
+            `;
+        } else {
+            content.innerHTML = '<p>Trailer tidak tersedia.</p>';
+        }
+    } catch (err) {
+        content.innerHTML = '<p>Gagal memuat trailer.</p>';
+    }
+
+    document.querySelectorAll('.detailsButtonWrapper button').forEach(b => b.classList.remove('red'));
+    document.querySelector('.detailsTrailerbutton').classList.add('red');
+}
+
+function showDownload() {
+    alert('Fitur download akan segera hadir!');
 }
