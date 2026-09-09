@@ -161,6 +161,78 @@
             </footer>
         </div>
 
+        <div id="detail-page" class="page">
+            <div id="detailsContainer">
+                <div class="detailsngi">
+                    <div class="detailsPoster">
+                        <img id="detailsPoster" />
+                    </div>
+                    <div class="detailsWrapper">
+                        <div class="detailsTop">
+                            <h1 id="detailsTitle"></h1>
+                            <div class="detailsTrio">
+                                <span id="detailsYear"></span>
+                                <span id="detailsRating">⭐ N/A</span>
+                                <span id="detailsRuntime"></span>
+                                <span id="detailsGenre"></span>
+                            </div>
+                            <p id="detailsOverview"></p>
+                        </div>
+                        <div class="playDownload">
+                            <button class="playDetails" onclick="goToPlayer()">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:6px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                                </svg>
+                                Play Now
+                            </button>
+                            <button class="downloadMovie" onclick="showDownload()">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:6px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                </svg>
+                                Download
+                            </button>
+                        </div>
+                        <div class="detailsButtonWrapper">
+                            <button class="detailsOverviewbutton red" onclick="showOverview()">Overview</button>
+                            <button class="detailsTrailerbutton" onclick="showTrailer()">Trailer</button>
+                        </div>
+                        <div id="detailsContent">
+                            <p id="detailsOverviewText"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="player-page" class="page">
+            <div class="player-container">
+                <div class="player-header">
+                    <button class="player-back-btn" onclick="goBackToDetail()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:6px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                        </svg>
+                        Back
+                    </button>
+                    <span id="playerTitle">Now Playing</span>
+                </div>
+                <div id="playerSourceContainer">
+                    <div class="iframeContainer">
+                        <div class="iframeWrapper">
+                            <div class="loader"></div>
+                            <iframe id="playerFrame" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <div class="serversContainer" id="playerServers">
+                        <label class="switch">
+                            <input type="checkbox" id="sandboxToggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="adsLabel">Disable ads</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="search-page" class="page">
             <section class="search-section">
                 <div class="section-title">
