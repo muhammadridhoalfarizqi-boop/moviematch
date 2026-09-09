@@ -1525,3 +1525,11 @@ body.light-mode .watchlist-btn {
 body.light-mode .watchlist-btn.active {
     color: #e50914;
 }
+
+#catalog-page .search-section {
+    padding: 35px 8%;
+}
+
+#catalog-page .movies-section {
+    padding: 0 8% 35px;
+}
