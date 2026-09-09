@@ -133,6 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadLandingSlider();
         loadTopTen();
         loadTopRated();
+        loadContinueWatching();
     }, 500);
 });
 
@@ -177,6 +178,11 @@ function toggleMenu() {
     }
 }
 
+function goToCatalog() {
+    showPage('catalog-page');
+    loadContent('popular', 1);
+}
+
 function goTosearch() {
     showPage('search-page');
     loadContent('popular', 1);
@@ -217,6 +223,7 @@ function showPage(pageId) {
             loadLandingSlider();
             loadTopTen();
             loadTopRated();
+            loadContinueWatching();
         }, 300);
     }
 
@@ -1929,5 +1936,93 @@ async function loadTopRated() {
     } catch (err) {
         console.error("Error loading Top Rated:", err);
         container.innerHTML = '<div class="loading">Gagal memuat Top Rated.</div>';
+    }
+}
+
+async function loadContinueWatching() {
+    const container = document.getElementById("continueWatchingContainer");
+    if (!container) return;
+    
+    const user = getCurrentUser();
+    if (!user) {
+        container.innerHTML = '<div class="loading">Login untuk melihat riwayat tontonan.</div>';
+        return;
+    }
+    
+    container.innerHTML = '<div class="loading">Memuat riwayat tontonan...</div>';
+    
+    try {
+        const { data: historyItems, error } = await supabaseClient
+            .from('history')
+            .select('*')
+            .eq('user_email', user.email)
+            .order('created_at', { ascending: false })
+            .limit(10);
+        
+        if (error) {
+            console.error("Supabase error:", error);
+            container.innerHTML = '<div class="loading">Gagal memuat riwayat tontonan.</div>';
+            return;
+        }
+        
+        if (!historyItems || historyItems.length === 0) {
+            container.innerHTML = '<div class="loading">Belum ada riwayat tontonan.</div>';
+            return;
+        }
+        
+        container.innerHTML = "";
+        
+        const continueWatchingGrid = document.createElement("div");
+        continueWatchingGrid.className = "continue-watching-grid";
+        
+        for (const item of historyItems) {
+            const card = document.createElement("div");
+            card.className = "continue-watching-item";
+            
+            const poster = item.poster_path 
+                ? `${IMAGE_URL}${item.poster_path}` 
+                : "https://via.placeholder.com/300x450?text=No+Image";
+            
+            const title = item.title || "Untitled";
+            const mediaType = item.media_type || "movie";
+            const year = item.release_date ? item.release_date.substring(0, 4) : "N/A";
+            const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
+
+            const isTv = mediaType === 'tv';
+            const episodeInfo = isTv ? 'S1E1' : '';
+            
+            card.innerHTML = `
+                <img src="${poster}" alt="${title}" loading="lazy">
+                <div class="continue-info">
+                    <span class="continue-title">${title}</span>
+                    <span class="continue-meta">${year} ${rating !== "N/A" ? `⭐ ${rating}` : ""}</span>
+                    ${isTv ? `<span class="continue-episode">${episodeInfo}</span>` : ''}
+                    <div class="continue-progress">
+                        <div class="progress-bar" style="width: 30%;"></div>
+                    </div>
+                    <button class="continue-play-btn" onclick="playNow(${item.movie_id}, '${mediaType}')">▶ Continue Watching</button>
+                </div>
+            `;
+            
+            card.onclick = () => {
+                fetch(`${BASE_URL}/${mediaType}/${item.movie_id}?language=en-US`, {
+                    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                })
+                .then(res => res.json())
+                .then(fullItem => {
+                    fullItem.media_type = mediaType;
+                    openModal(fullItem);
+                })
+                .catch(err => console.error("Error:", err));
+            };
+            
+            continueWatchingGrid.appendChild(card);
+        }
+        
+        container.appendChild(continueWatchingGrid);
+        
+    } catch (err) {
+        console.error("Error loadContinueWatching:", err);
+        container.innerHTML = '<div class="loading">Gagal memuat riwayat tontonan.</div>';
     }
 }
