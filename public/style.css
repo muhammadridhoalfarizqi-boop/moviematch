@@ -1638,12 +1638,13 @@ body.light-mode .watchlist-btn.active {
     height: 28px;
     width: auto;
     object-fit: contain;
-    filter: brightness(0) invert(1);
+    filter: none !important;
     transition: 0.3s;
 }
 
 .platform-item:hover img {
-    filter: brightness(0) invert(1) drop-shadow(0 0 6px rgba(229, 9, 20, 0.4));
+    filter: none !important;
+    transform: scale(1.05);
 }
 
 .platform-item span {
@@ -1673,11 +1674,11 @@ body.light-mode .platform-container {
 }
 
 body.light-mode .platform-item img {
-    filter: brightness(0) invert(0);
+    filter: none !important;
 }
 
 body.light-mode .platform-item:hover img {
-    filter: brightness(0) invert(0) drop-shadow(0 0 6px rgba(229, 9, 20, 0.4));
+    filter: none !important;
 }
 
 body.light-mode .platform-item span {
