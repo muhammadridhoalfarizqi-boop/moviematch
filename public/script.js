@@ -1012,3 +1012,75 @@ function generateStrongPassword() {
     
     return pass.split('').sort(() => Math.random() - 0.5).join('');
 }
+
+document.addEventListener('click', function(event) {
+    const iframe = document.getElementById('playerFrame');
+    if (iframe && iframe.contains(event.target)) {
+        event.stopPropagation();
+    }
+}, true);
+
+window.open = function(url) {
+    console.warn("Pop-up iklan berhasil ditahan:", url);
+    return null;
+};
+
+function filterByYear(value) {
+    const cards = document.querySelectorAll('.movie-card');
+    if (!cards || cards.length === 0) {
+        loadContent(currentFilterParam, currentPage);
+        setTimeout(function() { filterByYear(value); }, 500);
+        return;
+    }
+    cards.forEach(function(card) {
+        card.style.display = '';
+    });
+    if (value === 'all') return;
+    cards.forEach(function(card) {
+        const yearText = card.querySelector('.movie-info p')?.textContent || '';
+        const match = yearText.match(/\b(19|20)\d{2}\b/);
+        const year = match ? parseInt(match[0]) : 0;
+        if (year !== parseInt(value)) {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function shareMovie(title, overview, poster) {
+    const url = window.location.href;
+    const shareData = {
+        title: title,
+        text: title + '\n' + overview.substring(0, 100) + '...\n\nWatch on MovieMatch',
+        url: url
+    };
+    if (navigator.share) {
+        navigator.share(shareData).catch(function() {});
+    } else {
+        const shareUrl = 'https://wa.me/?text=' + encodeURIComponent(shareData.text + ' ' + shareData.url);
+        window.open(shareUrl, '_blank');
+    }
+}
+
+const themeToggle = document.getElementById('themeToggle');
+if (themeToggle) {
+    themeToggle.addEventListener('click', function() {
+        document.body.classList.toggle('light-mode');
+        const isLight = document.body.classList.contains('light-mode');
+        this.textContent = isLight ? '\u2600' : '\u263E';
+        localStorage.setItem('movieMatchTheme', isLight ? 'light' : 'dark');
+    });
+    const savedTheme = localStorage.getItem('movieMatchTheme');
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        themeToggle.textContent = '\u2600';
+    }
+}
+
+document.addEventListener('click', function(e) {
+    if (e.target.textContent === 'Watch Trailer') {
+        const container = document.getElementById('trailerContainer');
+        if (container) {
+            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+});
