@@ -557,40 +557,138 @@ function filterByStudio(value) {
         return;
     }
 
-    const studioIds = {
-        'netflix': 213,
-        'prime': 1024,
-        'blumhouse': 33,
-        'a24': 110,
-        'marvel': 420,
-        'dreamworks': 521,
-        'amc': 2552,
-        'shudder': 123
+    const studioData = {
+        'netflix': { id: 213, type: 'network' },
+        'prime': { id: 1024, type: 'network' },
+        'shudder': { id: 521, type: 'network' },
+        'amc': { id: 174, type: 'network' },
+        'cn': { id: 56, type: 'network' },
+        'blumhouse': { id: 33, type: 'company' },
+        'marvel': { id: 420, type: 'company' },
+        'dreamworks': { id: 521, type: 'company' },
+        'pixar': { id: 3, type: 'company' },
+        'a24': { id: 110, type: 'company' }
     };
 
-    const studioId = studioIds[value];
-    if (!studioId) {
+    const data = studioData[value];
+    if (!data) {
         loadContent(currentFilterParam, currentPage);
         return;
     }
 
-    const url = `${BASE_URL}/discover/${currentMediaType}?with_companies=${studioId}&language=id-ID&page=1&sort_by=popularity.desc`;
+    // Tentukan parameter API berdasarkan tipe
+    const filterParam = data.type === 'network' ? 'with_networks' : 'with_companies';
     
-    movieContainer.innerHTML = '<div class="loading">Memuat film dari studio...</div>';
+    // Tentukan media type (movie atau tv)
+    // Network biasanya untuk TV, Company untuk Movie
+    const mediaType = data.type === 'network' ? 'tv' : 'movie';
     
+    const url = `${BASE_URL}/discover/${mediaType}?${filterParam}=${data.id}&language=id-ID&page=1&sort_by=popularity.desc`;
+    
+    movieContainer.innerHTML = '<div class="loading">Memuat konten dari platform...</div>';
+    
+    // Update judul
+    const displayName = {
+        'netflix': 'NETFLIX',
+        'prime': 'Prime Video',
+        'shudder': 'SHUDDER',
+        'amc': 'AMC',
+        'cn': 'Cartoon Network',
+        'blumhouse': 'BLUMHOUSE PRODUCTIONS',
+        'marvel': 'MARVEL STUDIOS',
+        'dreamworks': 'DREAMWORKS PICTURES',
+        'pixar': 'PIXAR',
+        'a24': 'A24'
+    };
+    
+    if (movieTitle) {
+        movieTitle.textContent = `${displayName[value] || value} - Exclusive Content`;
+    }
+
     fetch(url, {
         headers: {
             'Authorization': `Bearer ${ACCESS_TOKEN}`
         }
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    })
     .then(data => {
+        if (!data.results || data.results.length === 0) {
+            movieContainer.innerHTML = '<div class="loading">Tidak ada konten dari platform ini.</div>';
+            return;
+        }
         displayItems(data.results, movieContainer, true);
+        
+        // Tambahan: ambil halaman 2 juga untuk lebih banyak hasil
+        if (data.total_pages > 1) {
+            fetchMorePages(url, 2, data.total_pages);
+        }
     })
     .catch(err => {
         console.error("Error:", err);
-        movieContainer.innerHTML = '<div class="loading">Gagal memuat data.</div>';
+        movieContainer.innerHTML = '<div class="loading">Gagal memuat data: ' + err.message + '</div>';
     });
+}
+
+async function fetchMorePages(baseUrl, currentPage, totalPages) {
+    if (currentPage > totalPages || currentPage > 3) return; // Maksimal 3 halaman
+    
+    try {
+        const url = baseUrl.replace('&page=1', `&page=${currentPage}`);
+        const res = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${ACCESS_TOKEN}`
+            }
+        });
+        const data = await res.json();
+        
+        if (data.results && data.results.length > 0) {
+            const existingItems = movieContainer.querySelectorAll('.movie-card');
+            const newItems = await createItemElements(data.results);
+            
+            newItems.forEach(item => {
+                movieContainer.appendChild(item);
+            });
+        }
+        
+        if (currentPage < totalPages && currentPage < 3) {
+            fetchMorePages(baseUrl, currentPage + 1, totalPages);
+        }
+    } catch (err) {
+        console.error("Error fetching more pages:", err);
+    }
+}
+
+async function createItemElements(items) {
+    const elements = [];
+    const container = document.createElement('div');
+    
+    for (const item of items) {
+        const card = document.createElement("article");
+        card.className = "movie-card";
+        
+        const poster = item.poster_path 
+            ? `${IMAGE_URL}${item.poster_path}` 
+            : 'https://via.placeholder.com/300x450?text=No+Image';
+        
+        const title = item.title || item.name || "Untitled";
+        const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
+        const year = (item.release_date || item.first_air_date || "").substring(0, 4) || "N/A";
+
+        card.innerHTML = `
+            <img src="${poster}" alt="${title}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+            <div class="movie-info">
+                <h3>${title}</h3>
+                <p>${year} | &#9733; ${rating}</p>
+            </div>
+        `;
+        card.onclick = () => openModal(item);
+        elements.push(card);
+    }
+    
+    return elements;
 }
 
 async function openModal(item) {
