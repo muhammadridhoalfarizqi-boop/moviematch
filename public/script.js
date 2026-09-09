@@ -41,6 +41,13 @@ let otpEmail = '';
 let otpTimer = null;
 let isMoodSearch = false;
 
+let currentStudioPage = 1;
+let currentStudioId = '';
+let currentStudioType = '';
+let currentStudioName = '';
+let isStudioLoading = false;
+let studioTotalPages = 1;
+
 document.addEventListener("DOMContentLoaded", () => {
     updateNavAuth();
     loadContent('popular', 1);
@@ -594,16 +601,16 @@ function filterByStudio(value) {
     }
 
     const studioData = {
-        'netflix': { id: 213, type: 'network' },
-        'prime': { id: 1024, type: 'network' },
-        'shudder': { id: 521, type: 'network' },
-        'amc': { id: 174, type: 'network' },
-        'cn': { id: 56, type: 'network' },
-        'blumhouse': { id: 33, type: 'company' },
-        'marvel': { id: 420, type: 'company' },
-        'dreamworks': { id: 521, type: 'company' },
-        'pixar': { id: 3, type: 'company' },
-        'a24': { id: 110, type: 'company' }
+        'netflix': { id: 213, type: 'network', name: 'NETFLIX' },
+        'prime': { id: 1024, type: 'network', name: 'Prime Video' },
+        'shudder': { id: 521, type: 'network', name: 'SHUDDER' },
+        'amc': { id: 174, type: 'network', name: 'AMC' },
+        'cn': { id: 56, type: 'network', name: 'Cartoon Network' },
+        'blumhouse': { id: 33, type: 'company', name: 'BLUMHOUSE PRODUCTIONS' },
+        'marvel': { id: 420, type: 'company', name: 'MARVEL STUDIOS' },
+        'dreamworks': { id: 521, type: 'company', name: 'DREAMWORKS PICTURES' },
+        'pixar': { id: 3, type: 'company', name: 'PIXAR' },
+        'a24': { id: 110, type: 'company', name: 'A24' }
     };
 
     const data = studioData[value];
@@ -612,27 +619,99 @@ function filterByStudio(value) {
         return;
     }
 
+    currentStudioId = data.id;
+    currentStudioType = data.type;
+    currentStudioName = data.name;
+    currentStudioPage = 1;
+    isStudioLoading = false;
+
     const filterParam = data.type === 'network' ? 'with_networks' : 'with_companies';
     const mediaType = data.type === 'network' ? 'tv' : 'movie';
     const url = `${BASE_URL}/discover/${mediaType}?${filterParam}=${data.id}&language=id-ID&page=1&sort_by=popularity.desc`;
     
     movieContainer.innerHTML = '<div class="loading">Memuat konten dari platform...</div>';
     
-    const displayName = {
-        'netflix': 'NETFLIX',
-        'prime': 'Prime Video',
-        'shudder': 'SHUDDER',
-        'amc': 'AMC',
-        'cn': 'Cartoon Network',
-        'blumhouse': 'BLUMHOUSE PRODUCTIONS',
-        'marvel': 'MARVEL STUDIOS',
-        'dreamworks': 'DREAMWORKS PICTURES',
-        'pixar': 'PIXAR',
-        'a24': 'A24'
-    };
+    if (movieTitle) {
+        movieTitle.textContent = `${data.name} - Exclusive Content`;
+    }
+
+    fetch(url, {
+        headers: {
+            'Authorization': `Bearer ${ACCESS_TOKEN}`
+        }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    })
+    .then(data => {
+        if (!data.results || data.results.length === 0) {
+            movieContainer.innerHTML = '<div class="loading">Tidak ada konten dari platform ini.</div>';
+            return;
+        }
+        studioTotalPages = Math.min(data.total_pages, 10);
+        displayItems(data.results, movieContainer, true);
+        addStudioPagination(studioTotalPages, currentStudioPage);
+        scrollToMovies();
+    })
+    .catch(err => {
+        console.error("Error:", err);
+        movieContainer.innerHTML = '<div class="loading">Gagal memuat data: ' + err.message + '</div>';
+    });
+}
+
+function addStudioPagination(totalPages, currentPage) {
+    const oldPagination = document.getElementById('studioPagination');
+    if (oldPagination) oldPagination.remove();
+
+    if (totalPages <= 1) return;
+
+    const container = movieContainer.parentNode;
+    const paginationDiv = document.createElement('div');
+    paginationDiv.id = 'studioPagination';
+    paginationDiv.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; font-size: 14px; color: #aaa;';
+
+    if (currentPage > 1) {
+        const prevBtn = document.createElement('button');
+        prevBtn.innerHTML = '‹';
+        prevBtn.style.cssText = 'background: none; border: none; color: #888; font-size: 24px; cursor: pointer; padding: 0 8px; transition: 0.2s;';
+        prevBtn.onmouseover = () => prevBtn.style.color = '#fff';
+        prevBtn.onmouseout = () => prevBtn.style.color = '#888';
+        prevBtn.onclick = () => loadStudioPage(currentPage - 1);
+        paginationDiv.appendChild(prevBtn);
+    }
+
+    const info = document.createElement('span');
+    info.textContent = `${currentPage} / ${totalPages}`;
+    info.style.cssText = 'color: #888; font-size: 13px;';
+    paginationDiv.appendChild(info);
+
+    if (currentPage < totalPages) {
+        const nextBtn = document.createElement('button');
+        nextBtn.innerHTML = '›';
+        nextBtn.style.cssText = 'background: none; border: none; color: #888; font-size: 24px; cursor: pointer; padding: 0 8px; transition: 0.2s;';
+        nextBtn.onmouseover = () => nextBtn.style.color = '#fff';
+        nextBtn.onmouseout = () => nextBtn.style.color = '#888';
+        nextBtn.onclick = () => loadStudioPage(currentPage + 1);
+        paginationDiv.appendChild(nextBtn);
+    }
+
+    container.appendChild(paginationDiv);
+}
+
+function loadStudioPage(page) {
+    if (isStudioLoading) return;
+    isStudioLoading = true;
+    currentStudioPage = page;
+
+    const filterParam = currentStudioType === 'network' ? 'with_networks' : 'with_companies';
+    const mediaType = currentStudioType === 'network' ? 'tv' : 'movie';
+    const url = `${BASE_URL}/discover/${mediaType}?${filterParam}=${currentStudioId}&language=id-ID&page=${page}&sort_by=popularity.desc`;
+    
+    movieContainer.innerHTML = '<div class="loading">Memuat konten...</div>';
     
     if (movieTitle) {
-        movieTitle.textContent = `${displayName[value] || value} - Exclusive Content`;
+        movieTitle.textContent = `${currentStudioName} - Exclusive Content - Halaman ${page}`;
     }
 
     fetch(url, {
@@ -650,14 +729,14 @@ function filterByStudio(value) {
             return;
         }
         displayItems(data.results, movieContainer, true);
-        
-        if (data.total_pages > 1) {
-            fetchMorePages(url, 2, data.total_pages);
-        }
+        addStudioPagination(studioTotalPages, page);
+        scrollToMovies();
+        isStudioLoading = false;
     })
     .catch(err => {
         console.error("Error:", err);
         movieContainer.innerHTML = '<div class="loading">Gagal memuat data: ' + err.message + '</div>';
+        isStudioLoading = false;
     });
 }
 
