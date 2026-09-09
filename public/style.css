@@ -625,3 +625,115 @@ footer {
 .suggest-pass-btn:hover {
     background: #444;
 }
+
+.filter-container {
+    background: linear-gradient(135deg, #1a1a24 0%, #0b0b0f 100%);
+    padding: 20px 24px;
+    border-radius: 12px;
+    border: 1px solid #2a2a35;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.filter-container .type-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.3s;
+    letter-spacing: 0.5px;
+}
+
+.filter-container .type-btn.active {
+    background: #e50914;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(229, 9, 20, 0.4);
+}
+
+.filter-container .type-btn.inactive {
+    background: #222;
+    color: #aaa;
+}
+
+.filter-container .type-btn.inactive:hover {
+    background: #333;
+    color: #fff;
+}
+
+.filter-container select {
+    padding: 10px 16px;
+    border-radius: 6px;
+    background: #1a1a24;
+    color: #fff;
+    border: 1px solid #333;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.3s;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path fill='white' d='M6 8L1 3h10z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+.filter-container select:hover {
+    border-color: #e50914;
+}
+
+.filter-container select:focus {
+    outline: none;
+    border-color: #e50914;
+    box-shadow: 0 0 12px rgba(229, 9, 20, 0.3);
+}
+
+.search-box {
+    display: flex;
+    max-width: 100%;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.search-box input {
+    flex: 1;
+    padding: 14px 18px;
+    background: #1a1a24;
+    border: 1px solid #333;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.search-box input:focus {
+    border-color: #e50914;
+    box-shadow: 0 0 16px rgba(229, 9, 20, 0.2);
+}
+
+.search-box input::placeholder {
+    color: #666;
+}
+
+.search-box button {
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #e50914, #b20710);
+    border: none;
+    border-radius: 0 8px 8px 0;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.search-box button:hover {
+    background: linear-gradient(135deg, #f6121d, #c40810);
+    box-shadow: 0 0 20px rgba(229, 9, 20, 0.4);
+}
