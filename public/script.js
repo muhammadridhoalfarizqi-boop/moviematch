@@ -817,27 +817,43 @@ async function showFavorites() {
 async function addToHistory(item) {
     const user = getCurrentUser();
     if (!user) return;
+    
     const movieId = item.id;
     const title = item.title || item.name || "Untitled";
     const posterPath = item.poster_path || "";
     const releaseDate = item.release_date || item.first_air_date || "";
     const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    const voteAverage = item.vote_average || 0;
     
-    await supabaseClient
-        .from('history')
-        .delete()
-        .eq('user_email', user.email)
-        .eq('movie_id', movieId);
-    await supabaseClient
-        .from('history')
-        .insert([{
-            user_email: user.email,
-            movie_id: movieId,
-            title: title,
-            poster_path: posterPath,
-            release_date: releaseDate,
-            media_type: mediaType
-        }]);
+    console.log("Menyimpan ke history:", { movieId, title, mediaType });
+    
+    try {
+        await supabaseClient
+            .from('history')
+            .delete()
+            .eq('user_email', user.email)
+            .eq('movie_id', movieId);
+
+        const { error } = await supabaseClient
+            .from('history')
+            .insert([{
+                user_email: user.email,
+                movie_id: movieId,
+                title: title,
+                poster_path: posterPath,
+                release_date: releaseDate,
+                media_type: mediaType,
+                vote_average: voteAverage
+            }]);
+        
+        if (error) {
+            console.error("Error insert history:", error);
+        } else {
+            console.log("History berhasil disimpan");
+        }
+    } catch (err) {
+        console.error("Error addToHistory:", err);
+    }
 }
 
 function searchMovies() {
@@ -856,23 +872,43 @@ function handleSearch(event) {
 async function loadHistory() {
     const user = getCurrentUser();
     const container = document.getElementById("historyContainer");
-    if (!container || !user) return;
-    container.innerHTML = '<div class="loading">Memuat riwayat...</div>';
-    const { data: historyItems, error } = await supabaseClient
-        .from('history')
-        .select('*')
-        .eq('user_email', user.email)
-        .order('created_at', { ascending: false });
-    if (error) {
-        container.innerHTML = '<div class="loading">Gagal memuat riwayat tayangan.</div>';
+    if (!container || !user) {
+        console.log("Tidak ada user atau container");
         return;
     }
-
-    if (historyItems && historyItems.length > 0 && historyItems[0].media_type) {
-        currentMediaType = historyItems[0].media_type;
-    }
     
-    await displayItems(historyItems, container, false);
+    container.innerHTML = '<div class="loading">Memuat riwayat...</div>';
+    
+    try {
+        const { data: historyItems, error } = await supabaseClient
+            .from('history')
+            .select('*')
+            .eq('user_email', user.email)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error("Supabase error:", error);
+            container.innerHTML = '<div class="loading">Gagal memuat riwayat tayangan: ' + error.message + '</div>';
+            return;
+        }
+        
+        console.log("History items:", historyItems); 
+        
+        if (!historyItems || historyItems.length === 0) {
+            container.innerHTML = '<div class="loading">Belum ada riwayat tayangan.</div>';
+            return;
+        }
+        
+        if (historyItems[0].media_type) {
+            currentMediaType = historyItems[0].media_type;
+        }
+        
+        await displayItems(historyItems, container, false);
+        
+    } catch (err) {
+        console.error("Error loadHistory:", err);
+        container.innerHTML = '<div class="loading">Gagal memuat riwayat tayangan: ' + err.message + '</div>';
+    }
 }
 
 async function sendOTP(email) {
