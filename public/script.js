@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = "sb_publishable___KN08wXZeXaPpHU6z-DAQ_JbZXIoyj";
 const OPENSUBTITLES_API_KEY = "C3oTYqRkJtvkZFVR4r361m0zFfInJcom";
 
 emailjs.init("ZDbFZUevZv9Hfi1xo");
-const supabaseClient = window.supabase.createClient("https://yratvqvtlixcvyciqrsg.supabase.co", "sb_publishable___KN08wXZeXaPpHU6z-DAQ_JbZXIoyj");
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const movieContainer = document.getElementById("movieContainer");
 const favoritesContainer = document.getElementById("favoritesContainer");
@@ -20,6 +20,8 @@ const modalBody = document.getElementById("modalBody");
 const navAuth = document.getElementById("nav-auth");
 const searchInput = document.getElementById("searchInput");
 const searchForm = document.getElementById("searchForm");
+
+const companyCache = new Map();
 
 let currentPage = 1;
 let currentMediaType = 'movie';
@@ -362,10 +364,17 @@ async function displayItems(items, container = movieContainer, showPagination = 
         card.className = "movie-card";
         card.onclick = () => openModal(item);
 
-        let companies = item.production_companies || [];
-        if (!companies || companies.length === 0) {
-            companies = await fetchMovieDetails(item.id, currentMediaType);
+        let companies = [];
+        if (companyCache.has(item.id)) {
+            companies = companyCache.get(item.id);
+        } else {
+            companies = item.production_companies || [];
+            if (!companies || companies.length === 0) {
+                companies = await fetchMovieDetails(item.id, currentMediaType);
+            }
+            companyCache.set(item.id, companies);
         }
+        
         const companyNames = companies.map(c => c.name.toLowerCase()).join(',');
         card.dataset.companies = companyNames;
 
@@ -409,6 +418,10 @@ async function displayItems(items, container = movieContainer, showPagination = 
 }
 
 async function fetchMovieDetails(itemId, mediaType) {
+    if (companyCache.has(itemId)) {
+        return companyCache.get(itemId);
+    }
+
     const url = `${BASE_URL}/${mediaType}/${itemId}?language=id-ID`;
     try {
         const res = await fetch(url, {
@@ -417,7 +430,9 @@ async function fetchMovieDetails(itemId, mediaType) {
             }
         });
         const data = await res.json();
-        return data.production_companies || [];
+        const companies = data.production_companies || [];
+        companyCache.set(itemId, companies);
+        return companies;
     } catch (err) {
         console.error("Error fetch detail:", err);
         return [];
@@ -518,6 +533,48 @@ async function getMoviesByGenre(genreId, genreName, page = 1) {
             movieContainer.innerHTML = '<div class="loading">Gagal memuat genre.</div>';
         }
     }
+}
+
+function filterByStudio(value) {
+    if (value === 'all') {
+        loadContent(currentFilterParam, currentPage);
+        return;
+    }
+
+    const studioIds = {
+        'netflix': 213,
+        'prime': 1024,
+        'blumhouse': 33,
+        'a24': 110,
+        'marvel': 420,
+        'dreamworks': 521,
+        'amc': 2552,
+        'shudder': 123
+    };
+
+    const studioId = studioIds[value];
+    if (!studioId) {
+        loadContent(currentFilterParam, currentPage);
+        return;
+    }
+
+    const url = `${BASE_URL}/discover/${currentMediaType}?with_companies=${studioId}&language=id-ID&page=1&sort_by=popularity.desc`;
+    
+    movieContainer.innerHTML = '<div class="loading">Memuat film dari studio...</div>';
+    
+    fetch(url, {
+        headers: {
+            'Authorization': `Bearer ${ACCESS_TOKEN}`
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        displayItems(data.results, movieContainer, true);
+    })
+    .catch(err => {
+        console.error("Error:", err);
+        movieContainer.innerHTML = '<div class="loading">Gagal memuat data.</div>';
+    });
 }
 
 async function openModal(item) {
@@ -651,7 +708,7 @@ async function getSubtitle(imdbId, lang = 'id') {
     try {
         const res = await fetch(url, {
             headers: {
-                'Api-Key': C3oTYqRkJtvkZFVR4r361m0zFfInJcom,
+                'Api-Key': OPENSUBTITLES_API_KEY,
                 'User-Agent': 'MovieMatchApp v1.0'
             }
         });
@@ -772,8 +829,7 @@ async function addToHistory(item) {
             title: title,
             poster_path: posterPath,
             release_date: releaseDate,
-            media_type: currentMediaType
-        }]);
+            media_type: currentMediaType        }]);
 }
 
 function searchMovies() {
@@ -1089,48 +1145,6 @@ function filterByYear(value) {
         if (year !== parseInt(value)) {
             card.style.display = 'none';
         }
-    });
-}
-
-function filterByStudio(value) {
-    if (value === 'all') {
-        loadContent(currentFilterParam, currentPage);
-        return;
-    }
-
-    const studioIds = {
-        'netflix': 213,
-        'prime': 1024,
-        'blumhouse': 33,
-        'a24': 110,
-        'marvel': 420,
-        'dreamworks': 521,
-        'amc': 2552,
-        'shudder': 123
-    };
-
-    const studioId = studioIds[value];
-    if (!studioId) {
-        loadContent(currentFilterParam, currentPage);
-        return;
-    }
-
-    const url = `${BASE_URL}/discover/${currentMediaType}?with_companies=${studioId}&language=id-ID&page=1&sort_by=popularity.desc`;
-    
-    movieContainer.innerHTML = '<div class="loading">Memuat film dari studio...</div>';
-    
-    fetch(url, {
-        headers: {
-            'Authorization': `Bearer ${ACCESS_TOKEN}`
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-        displayItems(data.results, movieContainer, true);
-    })
-    .catch(err => {
-        console.error("Error:", err);
-        movieContainer.innerHTML = '<div class="loading">Gagal memuat data.</div>';
     });
 }
 
