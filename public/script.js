@@ -265,11 +265,11 @@ async function loadContent(filterParam, page = 1) {
         movieContainer.innerHTML = '<div class="loading">Loading content...</div>';
     }
 
-    let url = `${BASE_URL}/trending/${currentMediaType}/day?page=${page}&language=id-ID&append_to_response=production_companies`;
+    let url = `${BASE_URL}/trending/${currentMediaType}/day?page=${page}&language=id-ID`;
     if (filterParam === 'popular') {
-        url = `${BASE_URL}/${currentMediaType}/popular?page=${page}&language=id-ID&append_to_response=production_companies`;
+        url = `${BASE_URL}/${currentMediaType}/popular?page=${page}&language=id-ID`;
     } else if (filterParam === 'top_rated') {
-        url = `${BASE_URL}/${currentMediaType}/top_rated?page=${page}&language=id-ID&append_to_response=production_companies`;
+        url = `${BASE_URL}/${currentMediaType}/top_rated?page=${page}&language=id-ID`;
     }
 
     try {
@@ -281,7 +281,7 @@ async function loadContent(filterParam, page = 1) {
         console.log("Response status:", res.status);
         const data = await res.json();
         console.log("Data:", data);
-        displayItems(data.results, movieContainer, true);
+        await displayItems(data.results, movieContainer, true); 
         scrollToMovies();
     } catch (err) {
         console.error("Error:", err);
@@ -309,7 +309,7 @@ async function searchByQuery(query) {
             }
         });
         const data = await res.json();
-        displayItems(data.results, movieContainer, true);
+        await displayItems(data.results, movieContainer, true);
         scrollToMovies();
     } catch (err) {
         if (movieContainer) {
@@ -407,6 +407,7 @@ async function displayItems(items, container = movieContainer, showPagination = 
         container.appendChild(card);
     }
 }
+
 async function fetchMovieDetails(itemId, mediaType) {
     const url = `${BASE_URL}/${mediaType}/${itemId}?language=id-ID`;
     try {
@@ -509,7 +510,7 @@ async function getMoviesByGenre(genreId, genreName, page = 1) {
             }
         });
         const data = await res.json();
-        displayItems(data.results, movieContainer, true);
+        await displayItems(data.results, movieContainer, true);
         addGenrePagination(data.total_pages, page);
         scrollToMovies();
     } catch (err) {
@@ -748,7 +749,7 @@ async function showFavorites() {
         if (container) container.innerHTML = '<div class="loading">Gagal memuat data dari server.</div>';
         return;
     }
-    displayItems(favs, container, false);
+    await displayItems(favs, container, false);
 }
 
 async function addToHistory(item) {
@@ -802,7 +803,7 @@ async function loadHistory() {
         container.innerHTML = '<div class="loading">Gagal memuat riwayat tayangan.</div>';
         return;
     }
-    displayItems(historyItems, container, false);
+    await displayItems(historyItems, container, false);
 }
 
 async function sendOTP(email) {
@@ -1001,7 +1002,7 @@ async function recommendMood(mood, page = 1) {
             }
         });
         const data = await res.json();
-        displayItems(data.results, movieContainer, true);
+        await displayItems(data.results, movieContainer, true);
         addGenrePagination(data.total_pages, page);
         scrollToMovies();
     } catch (err) {
