@@ -359,20 +359,25 @@ async function displayItems(items, container = movieContainer, showPagination = 
         return;
     }
 
+    const isFromSupabase = items[0]?.user_email !== undefined;
+
     for (const item of items) {
         const card = document.createElement("article");
         card.className = "movie-card";
         card.onclick = () => openModal(item);
 
         let companies = [];
-        if (companyCache.has(item.id)) {
-            companies = companyCache.get(item.id);
-        } else {
-            companies = item.production_companies || [];
-            if (!companies || companies.length === 0) {
-                companies = await fetchMovieDetails(item.id, currentMediaType);
+        if (!isFromSupabase) {
+            if (companyCache.has(item.id)) {
+                companies = companyCache.get(item.id);
+            } else {
+                companies = item.production_companies || [];
+                if (!companies || companies.length === 0) {
+                    const mediaType = item.media_type || currentMediaType;
+                    companies = await fetchMovieDetails(item.id, mediaType);
+                }
+                companyCache.set(item.id, companies);
             }
-            companyCache.set(item.id, companies);
         }
         
         const companyNames = companies.map(c => c.name.toLowerCase()).join(',');
@@ -816,6 +821,8 @@ async function addToHistory(item) {
     const title = item.title || item.name || "Untitled";
     const posterPath = item.poster_path || "";
     const releaseDate = item.release_date || item.first_air_date || "";
+    const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    
     await supabaseClient
         .from('history')
         .delete()
@@ -829,7 +836,8 @@ async function addToHistory(item) {
             title: title,
             poster_path: posterPath,
             release_date: releaseDate,
-            media_type: currentMediaType        }]);
+            media_type: mediaType
+        }]);
 }
 
 function searchMovies() {
@@ -859,6 +867,11 @@ async function loadHistory() {
         container.innerHTML = '<div class="loading">Gagal memuat riwayat tayangan.</div>';
         return;
     }
+
+    if (historyItems && historyItems.length > 0 && historyItems[0].media_type) {
+        currentMediaType = historyItems[0].media_type;
+    }
+    
     await displayItems(historyItems, container, false);
 }
 
