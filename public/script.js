@@ -193,11 +193,22 @@ function showPage(pageId) {
 }
 
 function scrollToSection(sectionId) {
-    showPage('home-page');
-    setTimeout(() => {
-        const section = document.getElementById(sectionId);
-        if (section) section.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+    const homePage = document.getElementById('home-page');
+    if (homePage) {
+        homePage.classList.add('active');
+    }
+
+    loadContent('popular', 1).then(() => {
+        setTimeout(() => {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 500);
+    });
 }
 
 function showProfile() {
