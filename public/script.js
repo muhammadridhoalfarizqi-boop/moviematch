@@ -493,7 +493,6 @@ async function openModal(item) {
     const releaseDate = item.release_date || item.first_air_date || "N/A";
 
     const servers = [
-        { name: "Zxcstream", url: `https://zxcstream.xyz/embed/${currentMediaType}/${activeItemId}&sub=id,en&sub-source=opensubtitles` },
         { name: "VidSrc XYZ", url: `https://vidsrc.xyz/embed/${currentMediaType}?tmdb=${activeItemId}&sub=id,en&sub-source=opensubtitles` },
         { name: "VidSrc ME", url: `https://vidsrc.me/embed/${currentMediaType}?tmdb=${activeItemId}&sub=id,en&sub-source=opensubtitles` },
         { name: "Embed SU", url: `https://embed.su/embed/${currentMediaType}/${activeItemId}?subtitle=id,en&subtitle-source=opensubtitles` },
@@ -507,10 +506,12 @@ async function openModal(item) {
         { name: "VidSrc NL", url: `https://player.vidsrc.nl/embed/${currentMediaType}/${activeItemId}&sub=id,en&sub-source=opensubtitles` },
         { name: "IDSrc TO", url: `https://idsrc.to/embed/${currentMediaType}/${activeItemId}&sub=id,en&sub-source=opensubtitles` },
         { name: "VidSrc ICU", url: `https://vidsrc.icu/embed/${currentMediaType}/${activeItemId}&sub=id,en&sub-source=opensubtitles` },
-        { name: "Dailymotion", url: `https://www.dailymotion.com/embed/video/${activeItemId}&sub=id,en&sub-source=opensubtitles` },
-        { name: "Rumble", url: `https://rumble.com/embed/${activeItemId}/&sub=id,en&sub-source=opensubtitles` },
-        { name: "Ok.ru", url: `https://ok.ru/videoembed/${activeItemId}&sub=id,en&sub-source=opensubtitles` },
-        { name: "Bstation", url: `https://player.bilibili.com/player.html?bvid=${activeItemId}&high_quality=1&danmaku=0` }
+        { name: "Main Server 1", url: currentMediaType === 'movie' ? `https://vidstuck.xyz/embed/movie/${activeItemId}?branding=zxcstream&subtitle=english` : `https://vidstuck.xyz/embed/tv/${activeItemId}/1/1?branding=zxcstream&subtitle=english` },
+        { name: "Main Server 2", url: currentMediaType === 'movie' ? `https://zxcstream.xyz/player/movie/${activeItemId}?server=0&subLang=english,indonesian` : `https://zxcstream.xyz/player/tv/${activeItemId}/1/1?server=0&subLang=english,indonesian` },
+        { name: "Server Alpha", url: currentMediaType === 'movie' ? `https://vidup.to/movie/${activeItemId}?autoPlay=true&theme=FF0000` : `https://vidup.to/tv/${activeItemId}/1/1?autoPlay=true&theme=FF0000` },
+        { name: "Server Beta", url: currentMediaType === 'movie' ? `https://mappletv.uk/watch/movie/${activeItemId}` : `https://mappletv.uk/watch/tv/${activeItemId}-1-1` },
+        { name: "Server Delta", url: currentMediaType === 'movie' ? `https://111movies.com/movie/${activeItemId}` : `https://111movies.com/tv/${activeItemId}/1/1` },
+        { name: "Server Zeta", url: currentMediaType === 'movie' ? `https://vidsrc.xyz/embed/movie/${activeItemId}` : `https://vidsrc.xyz/embed/tv?tmdb=${activeItemId}&season=1&episode=1` }
     ];
 
     modalBody.innerHTML = `
