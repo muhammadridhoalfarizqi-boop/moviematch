@@ -1099,20 +1099,25 @@ function filterByStudio(value) {
     }
 
     const studioIds = {
-        'shudder': 123,      // ID SHUDDER
-        'netflix': 213,      // ID NETFLIX
-        'prime': 1024,       // ID Amazon
-        'blumhouse': 33,     // ID Blumhouse
-        'a24': 110,          // ID A24
-        'marvel': 420,       // ID Marvel
-        'dreamworks': 521,   // ID DreamWorks
-        'amc': 2552          // ID AMC
+        'netflix': 213,
+        'prime': 1024,
+        'blumhouse': 33,
+        'a24': 110,
+        'marvel': 420,
+        'dreamworks': 521,
+        'amc': 2552,
+        'shudder': 123
     };
 
     const studioId = studioIds[value];
-    if (!studioId) return;
+    if (!studioId) {
+        loadContent(currentFilterParam, currentPage);
+        return;
+    }
 
     const url = `${BASE_URL}/discover/${currentMediaType}?with_companies=${studioId}&language=id-ID&page=1&sort_by=popularity.desc`;
+    
+    movieContainer.innerHTML = '<div class="loading">Memuat film dari studio...</div>';
     
     fetch(url, {
         headers: {
@@ -1124,8 +1129,8 @@ function filterByStudio(value) {
         displayItems(data.results, movieContainer, true);
     })
     .catch(err => {
-        console.error("Error filter studio:", err);
-        movieContainer.innerHTML = '<div class="loading">Gagal memuat data studio.</div>';
+        console.error("Error:", err);
+        movieContainer.innerHTML = '<div class="loading">Gagal memuat data.</div>';
     });
 }
 
