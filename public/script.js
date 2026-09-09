@@ -191,6 +191,13 @@ function showPage(pageId) {
             searchInputEl.value = "";
         }
         
+        setTimeout(() => {
+            loadLandingSlider();
+            loadTopTen();
+        }, 300);
+    }
+
+    if (pageId === 'catalog-page') {
         loadContent('popular', 1);
     }
 
@@ -1680,9 +1687,7 @@ async function loadTopTen() {
             
             const title = item.title || item.name || "Untitled";
             const mediaType = item.media_type || (item.first_air_date ? "tv" : "movie");
-            const voteAverage = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
             
-
             let director = "Unknown";
             let stars = "No cast data";
             
