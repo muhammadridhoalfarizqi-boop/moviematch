@@ -1699,3 +1699,118 @@ body.light-mode .platform-item span {
         font-size: 7px;
     }
 }
+
+.continue-watching-section {
+    padding: 20px 8% 40px;
+}
+
+.continue-watching-container {
+    width: 100%;
+}
+
+.continue-watching-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+}
+
+.continue-watching-item {
+    background: #181818;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: 0.3s;
+    border: 1px solid #292930;
+    position: relative;
+}
+
+.continue-watching-item:hover {
+    transform: scale(1.03);
+    border-color: #e50914;
+    z-index: 2;
+}
+
+.continue-watching-item img {
+    width: 100%;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    display: block;
+}
+
+.continue-watching-item .continue-info {
+    padding: 8px 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.continue-watching-item .continue-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.continue-watching-item .continue-meta {
+    font-size: 11px;
+    color: #888;
+}
+
+.continue-watching-item .continue-episode {
+    font-size: 10px;
+    color: #e50914;
+    font-weight: 600;
+}
+
+.continue-watching-item .continue-progress {
+    width: 100%;
+    height: 3px;
+    background: #333;
+    border-radius: 2px;
+    margin: 4px 0;
+    overflow: hidden;
+}
+
+.continue-watching-item .continue-progress .progress-bar {
+    height: 100%;
+    background: #e50914;
+    border-radius: 2px;
+}
+
+.continue-watching-item .continue-play-btn {
+    margin-top: 6px;
+    padding: 4px 12px;
+    background: #e50914;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.continue-watching-item .continue-play-btn:hover {
+    background: #b80710;
+}
+
+body.light-mode .continue-watching-item {
+    background: #fff;
+    border-color: #ddd;
+}
+
+body.light-mode .continue-watching-item .continue-title {
+    color: #111;
+}
+
+body.light-mode .continue-watching-item .continue-meta {
+    color: #555;
+}
+
+@media (max-width: 600px) {
+    .continue-watching-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
