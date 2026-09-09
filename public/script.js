@@ -1118,21 +1118,6 @@ function filterByStudio(value) {
     }
 }
 
-    const container = document.getElementById('movieContainer');
-    const noResult = container?.querySelector('.no-result');
-    if (!hasVisible) {
-        if (!noResult) {
-            const msg = document.createElement('div');
-            msg.className = 'no-result';
-            msg.style.cssText = 'color: #888; text-align: center; padding: 40px; width: 100%;';
-            msg.textContent = 'Tidak ada film dari studio / network ini.';
-            container.appendChild(msg);
-        }
-    } else {
-        if (noResult) noResult.remove();
-    }
-}
-
 function shareMovie(title, overview, poster) {
     const url = window.location.href;
     const shareData = {
