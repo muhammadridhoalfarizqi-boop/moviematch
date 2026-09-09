@@ -132,6 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
         loadLandingSlider();
         loadTopTen();
+        loadTopRated();
     }, 500);
 });
 
@@ -176,13 +177,13 @@ function toggleMenu() {
     }
 }
 
-function goToCatalog() {
-    showPage('catalog-page');
+function goTosearch() {
+    showPage('search-page');
     loadContent('popular', 1);
 }
 
 function recommendMoodAndGo(mood) {
-    showPage('catalog-page');
+    showPage('search-page');
     isMoodSearch = true;
     recommendMood(mood, 1);
 }
@@ -215,10 +216,11 @@ function showPage(pageId) {
         setTimeout(() => {
             loadLandingSlider();
             loadTopTen();
+            loadTopRated();
         }, 300);
     }
 
-    if (pageId === 'catalog-page') {
+    if (pageId === 'search-page') {
         if (!isMoodSearch) {
             if (catalogTitle) {
                 catalogTitle.textContent = "Pilih Kategori Tayangan";
@@ -596,28 +598,32 @@ async function getMoviesByGenre(genreId, genreName, page = 1) {
 
 function filterByStudio(value) {
     if (value === 'all') {
+        showPage('search-page');
         loadContent(currentFilterParam, currentPage);
         return;
     }
 
     const studioData = {
         'netflix': { id: 213, type: 'network', name: 'NETFLIX' },
-        'prime': { id: 1024, type: 'network', name: 'Prime Video' },
+        'prime': { id: 1024, type: 'network', name: 'PRIME VIDEO' },
         'shudder': { id: 521, type: 'network', name: 'SHUDDER' },
         'amc': { id: 174, type: 'network', name: 'AMC' },
-        'cn': { id: 56, type: 'network', name: 'Cartoon Network' },
-        'blumhouse': { id: 33, type: 'company', name: 'BLUMHOUSE PRODUCTIONS' },
+        'cn': { id: 56, type: 'network', name: 'CARTOON NETWORK' },
+        'blumhouse': { id: 33, type: 'company', name: 'BLUMHOUSE' },
         'marvel': { id: 420, type: 'company', name: 'MARVEL STUDIOS' },
-        'dreamworks': { id: 521, type: 'company', name: 'DREAMWORKS PICTURES' },
+        'dreamworks': { id: 521, type: 'company', name: 'DREAMWORKS' },
         'pixar': { id: 3, type: 'company', name: 'PIXAR' },
         'a24': { id: 110, type: 'company', name: 'A24' }
     };
 
     const data = studioData[value];
     if (!data) {
+        showPage('search-page');
         loadContent(currentFilterParam, currentPage);
         return;
     }
+
+    showPage('search-page');
 
     currentStudioId = data.id;
     currentStudioType = data.type;
@@ -629,10 +635,16 @@ function filterByStudio(value) {
     const mediaType = data.type === 'network' ? 'tv' : 'movie';
     const url = `${BASE_URL}/discover/${mediaType}?${filterParam}=${data.id}&language=id-ID&page=1&sort_by=popularity.desc`;
     
-    movieContainer.innerHTML = '<div class="loading">Memuat konten dari platform...</div>';
+    if (movieContainer) {
+        movieContainer.innerHTML = '<div class="loading">Memuat konten dari platform...</div>';
+    }
     
     if (movieTitle) {
         movieTitle.textContent = `${data.name} - Exclusive Content`;
+    }
+
+    if (catalogTitle) {
+        catalogTitle.textContent = `${data.name} - Exclusive Content`;
     }
 
     fetch(url, {
@@ -646,7 +658,9 @@ function filterByStudio(value) {
     })
     .then(data => {
         if (!data.results || data.results.length === 0) {
-            movieContainer.innerHTML = '<div class="loading">Tidak ada konten dari platform ini.</div>';
+            if (movieContainer) {
+                movieContainer.innerHTML = '<div class="loading">Tidak ada konten dari platform ini.</div>';
+            }
             return;
         }
         studioTotalPages = Math.min(data.total_pages, 10);
@@ -656,7 +670,9 @@ function filterByStudio(value) {
     })
     .catch(err => {
         console.error("Error:", err);
-        movieContainer.innerHTML = '<div class="loading">Gagal memuat data: ' + err.message + '</div>';
+        if (movieContainer) {
+            movieContainer.innerHTML = '<div class="loading">Gagal memuat data: ' + err.message + '</div>';
+        }
     });
 }
 
@@ -708,10 +724,16 @@ function loadStudioPage(page) {
     const mediaType = currentStudioType === 'network' ? 'tv' : 'movie';
     const url = `${BASE_URL}/discover/${mediaType}?${filterParam}=${currentStudioId}&language=id-ID&page=${page}&sort_by=popularity.desc`;
     
-    movieContainer.innerHTML = '<div class="loading">Memuat konten...</div>';
+    if (movieContainer) {
+        movieContainer.innerHTML = '<div class="loading">Memuat konten...</div>';
+    }
     
     if (movieTitle) {
         movieTitle.textContent = `${currentStudioName} - Exclusive Content - Halaman ${page}`;
+    }
+
+    if (catalogTitle) {
+        catalogTitle.textContent = `${currentStudioName} - Exclusive Content - Halaman ${page}`;
     }
 
     fetch(url, {
@@ -725,7 +747,9 @@ function loadStudioPage(page) {
     })
     .then(data => {
         if (!data.results || data.results.length === 0) {
-            movieContainer.innerHTML = '<div class="loading">Tidak ada konten dari platform ini.</div>';
+            if (movieContainer) {
+                movieContainer.innerHTML = '<div class="loading">Tidak ada konten dari platform ini.</div>';
+            }
             return;
         }
         displayItems(data.results, movieContainer, true);
@@ -735,7 +759,9 @@ function loadStudioPage(page) {
     })
     .catch(err => {
         console.error("Error:", err);
-        movieContainer.innerHTML = '<div class="loading">Gagal memuat data: ' + err.message + '</div>';
+        if (movieContainer) {
+            movieContainer.innerHTML = '<div class="loading">Gagal memuat data: ' + err.message + '</div>';
+        }
         isStudioLoading = false;
     });
 }
@@ -1847,5 +1873,61 @@ async function loadTopTen() {
     } catch (err) {
         console.error("Error loading Top 10:", err);
         container.innerHTML = '<div class="loading">Gagal memuat Top 10.</div>';
+    }
+}
+
+async function loadTopRated() {
+    const container = document.getElementById("topRatedContainer");
+    if (!container) return;
+    
+    container.innerHTML = '<div class="loading">Memuat Top Rated...</div>';
+    
+    try {
+        const res = await fetch(`${BASE_URL}/movie/top_rated?language=en-US&page=1`, {
+            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+        });
+        const data = await res.json();
+        const items = (data.results || []).slice(0, 10);
+        
+        container.innerHTML = "";
+        
+        items.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "top-rated-item";
+            
+            const poster = item.poster_path 
+                ? `${IMAGE_URL}${item.poster_path}` 
+                : "https://via.placeholder.com/300x450?text=No+Image";
+            
+            const title = item.title || item.name || "Untitled";
+            const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
+            const mediaType = "movie";
+            
+            div.innerHTML = `
+                <img src="${poster}" alt="${title}" loading="lazy">
+                <div class="info">
+                    <span class="title">${title}</span>
+                    <span class="rating">⭐ ${rating}</span>
+                </div>
+            `;
+            
+            div.onclick = () => {
+                fetch(`${BASE_URL}/${mediaType}/${item.id}?language=en-US`, {
+                    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                })
+                .then(res => res.json())
+                .then(fullItem => {
+                    fullItem.media_type = mediaType;
+                    openModal(fullItem);
+                })
+                .catch(err => console.error("Error:", err));
+            };
+            
+            container.appendChild(div);
+        });
+        
+    } catch (err) {
+        console.error("Error loading Top Rated:", err);
+        container.innerHTML = '<div class="loading">Gagal memuat Top Rated.</div>';
     }
 }
