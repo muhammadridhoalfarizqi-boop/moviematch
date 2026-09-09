@@ -1047,6 +1047,70 @@ function filterByYear(value) {
     });
 }
 
+function filterByStudio(value) {
+    const cards = document.querySelectorAll('.movie-card');
+    if (!cards || cards.length === 0) {
+        loadContent(currentFilterParam, currentPage);
+        setTimeout(function() { filterByStudio(value); }, 500);
+        return;
+    }
+
+    cards.forEach(function(card) {
+        card.style.display = '';
+    });
+
+    if (value === 'all') return;
+
+    const studioMap = {
+        'shudder': ['shudder'],
+        'netflix': ['netflix'],
+        'prime': ['prime', 'amazon'],
+        'blumhouse': ['blumhouse'],
+        'a24': ['a24'],
+        'marvel': ['marvel'],
+        'dreamworks': ['dreamworks'],
+        'amc': ['amc']
+    };
+
+    const keywords = studioMap[value] || [];
+    let hasVisible = false;
+
+    cards.forEach(function(card) {
+        const title = card.querySelector('.movie-info h3')?.textContent?.toLowerCase() || '';
+        const overview = card.querySelector('.movie-info p:last-child')?.textContent?.toLowerCase() || '';
+        const combined = title + ' ' + overview;
+
+        let match = false;
+        for (let word of keywords) {
+            if (combined.includes(word)) {
+                match = true;
+                break;
+            }
+        }
+
+        if (match) {
+            card.style.display = '';
+            hasVisible = true;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const container = document.getElementById('movieContainer');
+    const noResult = container?.querySelector('.no-result');
+    if (!hasVisible) {
+        if (!noResult) {
+            const msg = document.createElement('div');
+            msg.className = 'no-result';
+            msg.style.cssText = 'color: #888; text-align: center; padding: 40px; width: 100%;';
+            msg.textContent = 'Tidak ada film dari studio / network ini.';
+            container.appendChild(msg);
+        }
+    } else {
+        if (noResult) noResult.remove();
+    }
+}
+
 function shareMovie(title, overview, poster) {
     const url = window.location.href;
     const shareData = {
