@@ -350,6 +350,11 @@ function displayItems(items, container = movieContainer, showPagination = true) 
         card.className = "movie-card";
         card.onclick = () => openModal(item);
 
+        // Simpan production_companies ke dataset
+        const companies = item.production_companies || [];
+        const companyNames = companies.map(c => c.name.toLowerCase()).join(',');
+        card.dataset.companies = companyNames;
+
         const poster = item.poster_path && item.poster_path.length > 3
             ? `${IMAGE_URL}${item.poster_path}` 
             : 'https://via.placeholder.com/300x450?text=No+Image';
@@ -1064,7 +1069,7 @@ function filterByStudio(value) {
     const studioMap = {
         'shudder': ['shudder'],
         'netflix': ['netflix'],
-        'prime': ['prime', 'amazon'],
+        'prime': ['prime video', 'amazon'],
         'blumhouse': ['blumhouse'],
         'a24': ['a24'],
         'marvel': ['marvel'],
@@ -1076,13 +1081,10 @@ function filterByStudio(value) {
     let hasVisible = false;
 
     cards.forEach(function(card) {
-        const title = card.querySelector('.movie-info h3')?.textContent?.toLowerCase() || '';
-        const overview = card.querySelector('.movie-info p:last-child')?.textContent?.toLowerCase() || '';
-        const combined = title + ' ' + overview;
-
+        const companies = card.dataset.companies || '';
         let match = false;
         for (let word of keywords) {
-            if (combined.includes(word)) {
+            if (companies.includes(word)) {
                 match = true;
                 break;
             }
