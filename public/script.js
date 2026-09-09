@@ -264,19 +264,26 @@ async function loadContent(filterParam, page = 1) {
         movieContainer.innerHTML = '<div class="loading">Loading content...</div>';
     }
 
-    let url = `${BASE_URL}/trending/${currentMediaType}/day?api_key=${API_KEY}&page=${page}&language=id-ID`;
+    let url = `${BASE_URL}/trending/${currentMediaType}/day?page=${page}&language=id-ID`;
     if (filterParam === 'popular') {
-        url = `${BASE_URL}/${currentMediaType}/popular?api_key=${API_KEY}&page=${page}&language=id-ID`;
+        url = `${BASE_URL}/${currentMediaType}/popular?page=${page}&language=id-ID`;
     } else if (filterParam === 'top_rated') {
-        url = `${BASE_URL}/${currentMediaType}/top_rated?api_key=${API_KEY}&page=${page}&language=id-ID`;
+        url = `${BASE_URL}/${currentMediaType}/top_rated?page=${page}&language=id-ID`;
     }
 
     try {
-        const res = await fetch(url);
+        const res = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${ACCESS_TOKEN}`
+            }
+        });
+        console.log("Response status:", res.status);
         const data = await res.json();
+        console.log("Data:", data);
         displayItems(data.results, movieContainer, true);
         scrollToMovies();
     } catch (err) {
+        console.error("Error:", err);
         if (movieContainer) {
             movieContainer.innerHTML = '<div class="loading">Gagal memuat data film. Coba periksa koneksi.</div>';
         }
@@ -293,9 +300,13 @@ async function searchByQuery(query) {
 
     history.pushState({ search: query }, "", `?search=${encodeURIComponent(query)}`);
 
-    let url = `${BASE_URL}/search/${currentMediaType}?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=id-ID`;
+    let url = `${BASE_URL}/search/${currentMediaType}?query=${encodeURIComponent(query)}&language=id-ID`;
     try {
-        const res = await fetch(url);
+        const res = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${ACCESS_TOKEN}`
+            }
+        });
         const data = await res.json();
         displayItems(data.results, movieContainer, true);
         scrollToMovies();
@@ -471,9 +482,13 @@ async function getMoviesByGenre(genreId, genreName, page = 1) {
         return;
     }
 
-    let url = `${BASE_URL}/discover/${currentMediaType}?api_key=${API_KEY}&with_genres=${genreId}&language=id-ID&page=${page}`;
+    let url = `${BASE_URL}/discover/${currentMediaType}?with_genres=${genreId}&language=id-ID&page=${page}`;
     try {
-        const res = await fetch(url);
+        const res = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${ACCESS_TOKEN}`
+            }
+        });
         const data = await res.json();
         displayItems(data.results, movieContainer, true);
         addGenrePagination(data.total_pages, page);
@@ -958,10 +973,14 @@ async function recommendMood(mood, page = 1) {
         movieContainer.innerHTML = '<div class="loading">Memuat rekomendasi...</div>';
     }
 
-    let url = `${BASE_URL}/discover/${currentMediaType}?api_key=${API_KEY}&with_genres=${genreId}&language=id-ID&page=${page}&sort_by=popularity.desc`;
+    let url = `${BASE_URL}/discover/${currentMediaType}?with_genres=${genreId}&language=id-ID&page=${page}&sort_by=popularity.desc`;
 
     try {
-        const res = await fetch(url);
+        const res = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${ACCESS_TOKEN}`
+            }
+        });
         const data = await res.json();
         displayItems(data.results, movieContainer, true);
         addGenrePagination(data.total_pages, page);
