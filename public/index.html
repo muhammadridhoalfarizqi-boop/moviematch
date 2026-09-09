@@ -19,7 +19,7 @@
 
         <nav id="menuList">
             <a onclick="showPage('home-page'); toggleMenu();">Home</a>
-            <a onclick="showPage('catalog-page'); toggleMenu();">Catalog</a>
+            <a onclick="showPage('search-page'); toggleMenu();">search</a>
             <a onclick="showFavorites(); toggleMenu();">Favorites</a>
             <a id="nav-auth" onclick="handleAuthClick(); toggleMenu();">Login</a>
             <button id="themeToggle" class="theme-toggle">&#9790;</button>
@@ -33,7 +33,7 @@
                     <p class="label">MOVIE & TV RECOMMENDATION</p>
                     <h1>Temukan tayangan yang <span>cocok dengan anda.</span></h1>
                     <p class="hero-description">Temukan film dan series berdasarkan mood, genre, dan preferensi kamu.</p>
-                    <button class="primary-button" onclick="goToCatalog()">Find My Content</button>
+                    <button class="primary-button" onclick="goTosearch()">Find My Content</button>
                 </div>
             </section>
 
@@ -90,11 +90,11 @@
             </footer>
         </div>
 
-        <div id="catalog-page" class="page">
+        <div id="search-page" class="page">
             <section class="search-section">
                 <div class="section-title">
                     <p class="label">EXPLORE & SEARCH</p>
-                    <h2 id="catalogTitle">Pilih Kategori Tayangan</h2>
+                    <h2 id="searchTitle">Pilih Kategori Tayangan</h2>
                 </div>
 
                 <div class="filter-container">
