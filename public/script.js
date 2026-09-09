@@ -119,6 +119,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    setTimeout(() => {
+        loadLandingSlider();
+        loadTopTen();
+    }, 500);
 });
 
 const originalFetch = window.fetch;
@@ -576,18 +581,12 @@ function filterByStudio(value) {
         return;
     }
 
-    // Tentukan parameter API berdasarkan tipe
     const filterParam = data.type === 'network' ? 'with_networks' : 'with_companies';
-    
-    // Tentukan media type (movie atau tv)
-    // Network biasanya untuk TV, Company untuk Movie
     const mediaType = data.type === 'network' ? 'tv' : 'movie';
-    
     const url = `${BASE_URL}/discover/${mediaType}?${filterParam}=${data.id}&language=id-ID&page=1&sort_by=popularity.desc`;
     
     movieContainer.innerHTML = '<div class="loading">Memuat konten dari platform...</div>';
     
-    // Update judul
     const displayName = {
         'netflix': 'NETFLIX',
         'prime': 'Prime Video',
@@ -621,7 +620,6 @@ function filterByStudio(value) {
         }
         displayItems(data.results, movieContainer, true);
         
-        // Tambahan: ambil halaman 2 juga untuk lebih banyak hasil
         if (data.total_pages > 1) {
             fetchMorePages(url, 2, data.total_pages);
         }
@@ -633,7 +631,7 @@ function filterByStudio(value) {
 }
 
 async function fetchMorePages(baseUrl, currentPage, totalPages) {
-    if (currentPage > totalPages || currentPage > 3) return; // Maksimal 3 halaman
+    if (currentPage > totalPages || currentPage > 3) return;
     
     try {
         const url = baseUrl.replace('&page=1', `&page=${currentPage}`);
@@ -784,6 +782,46 @@ async function openModal(item) {
     }
 
     movieModal.style.display = "flex";
+
+    const modalDetail = document.querySelector(".modal-detail");
+    if (modalDetail) {
+        const watchlistBtn = document.createElement("button");
+        const watchlist = getWatchlist();
+        const exists = watchlist.some(w => w.id === item.id);
+        
+        watchlistBtn.className = `watchlist-btn ${exists ? "active" : ""}`;
+        watchlistBtn.innerHTML = exists ? "★" : "☆";
+        watchlistBtn.style.cssText = `
+            position: absolute;
+            top: 8px;
+            right: 50px;
+            background: rgba(0,0,0,0.7);
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            z-index: 5;
+        `;
+        watchlistBtn.onclick = () => {
+            toggleWatchlist(item.id, item.media_type || currentMediaType, watchlistBtn);
+        };
+        
+        const titleElement = modalDetail.querySelector("h2");
+        if (titleElement) {
+            const wrapper = document.createElement("div");
+            wrapper.style.cssText = "display: flex; align-items: center; gap: 12px;";
+            titleElement.parentNode.insertBefore(wrapper, titleElement);
+            wrapper.appendChild(titleElement);
+            wrapper.appendChild(watchlistBtn);
+        }
+    }
 }
 
 function switchServer(url, clickedBtn) {
@@ -1344,3 +1382,330 @@ document.addEventListener('click', function(e) {
         }
     }
 });
+
+function getWatchlist() {
+    return JSON.parse(localStorage.getItem("movieMatchWatchlist")) || [];
+}
+
+function saveWatchlist(watchlist) {
+    localStorage.setItem("movieMatchWatchlist", JSON.stringify(watchlist));
+}
+
+function toggleWatchlist(itemId, mediaType, buttonElement) {
+    let watchlist = getWatchlist();
+    const exists = watchlist.some(w => w.id === itemId);
+    
+    if (exists) {
+        watchlist = watchlist.filter(w => w.id !== itemId);
+        if (buttonElement) {
+            buttonElement.classList.remove("active");
+            buttonElement.innerHTML = "☆";
+        }
+        showNotification("Dihapus dari Watchlist", "error");
+    } else {
+        watchlist.push({ id: itemId, media_type: mediaType });
+        if (buttonElement) {
+            buttonElement.classList.add("active");
+            buttonElement.innerHTML = "★";
+        }
+        showNotification("Ditambahkan ke Watchlist", "success");
+    }
+    
+    saveWatchlist(watchlist);
+}
+
+function showNotification(message, type = "success") {
+    const oldNotif = document.querySelector(".notification");
+    if (oldNotif) oldNotif.remove();
+    
+    const notif = document.createElement("div");
+    notif.className = `notification ${type}`;
+    notif.textContent = message;
+    document.body.appendChild(notif);
+    
+    setTimeout(() => notif.classList.add("show"), 10);
+    
+    setTimeout(() => {
+        notif.classList.remove("show");
+        setTimeout(() => notif.remove(), 400);
+    }, 2500);
+}
+
+async function loadLandingSlider() {
+    const container = document.getElementById("landingSlider");
+    const dotsContainer = document.getElementById("landingDots");
+    if (!container) return;
+    
+    container.innerHTML = '<div class="loading">Memuat rekomendasi...</div>';
+    
+    try {
+        const [trendingRes, popularRes] = await Promise.all([
+            fetch(`${BASE_URL}/trending/all/week?language=en-US`, {
+                headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            }),
+            fetch(`${BASE_URL}/movie/popular?language=en-US&page=1`, {
+                headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            })
+        ]);
+        
+        const trending = await trendingRes.json();
+        const popular = await popularRes.json();
+        
+        const allItems = [...(trending.results || []), ...(popular.results || [])];
+        const unique = [];
+        const seen = new Set();
+        for (const item of allItems) {
+            if (!seen.has(item.id)) {
+                seen.add(item.id);
+                unique.push(item);
+            }
+        }
+        const items = unique.slice(0, 6);
+        
+        container.innerHTML = "";
+        dotsContainer.innerHTML = "";
+        
+        let currentIndex = 0;
+        let slideInterval;
+        
+        items.forEach((item, index) => {
+            const slide = document.createElement("div");
+            slide.className = "landing-slide";
+            slide.style.display = index === 0 ? "flex" : "none";
+            slide.dataset.index = index;
+            
+            const poster = item.poster_path 
+                ? `${IMAGE_URL}${item.poster_path}` 
+                : "https://via.placeholder.com/300x450?text=No+Image";
+            const backdrop = item.backdrop_path 
+                ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` 
+                : poster;
+            
+            const title = item.title || item.name || "Untitled";
+            const year = (item.release_date || item.first_air_date || "").substring(0, 4) || "N/A";
+            const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
+            const overview = item.overview || "Tidak ada sinopsis.";
+            const mediaType = item.media_type || (item.first_air_date ? "tv" : "movie");
+            
+            const genreNames = item.genre_ids && item.genre_ids.length > 0
+                ? item.genre_ids.slice(0, 2).map(id => {
+                    const genres = {
+                        28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy",
+                        80: "Crime", 99: "Documentary", 18: "Drama", 10751: "Family",
+                        14: "Fantasy", 27: "Horror", 10749: "Romance", 878: "Sci-Fi",
+                        53: "Thriller", 10752: "War", 37: "Western"
+                    };
+                    return genres[id] || "";
+                }).filter(Boolean).join(", ")
+                : "";
+            
+            slide.innerHTML = `
+                <img class="backdrop" src="${backdrop}" alt="${title}" loading="lazy">
+                <div class="overlay"></div>
+                <div class="info">
+                    <span class="badge">${mediaType === "tv" ? "TV Series" : "Movie"}</span>
+                    <h2>${title}</h2>
+                    <div class="meta">
+                        <span>${year}</span>
+                        ${rating !== "N/A" ? `<span>⭐ ${rating}</span>` : ""}
+                        ${genreNames ? `<span>${genreNames}</span>` : ""}
+                    </div>
+                    <p class="overview">${overview}</p>
+                    <div class="btn-group">
+                        <button class="btn-play" onclick="playNow(${item.id}, '${mediaType}')">▶ Tonton</button>
+                        <button class="btn-trailer" onclick="playTrailer(${item.id}, '${mediaType}', this)">▶ Trailer</button>
+                        <button class="btn-details" onclick="openModal(${JSON.stringify(item).replace(/'/g, "&#39;")})">Detail</button>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(slide);
+            
+            const dot = document.createElement("span");
+            dot.className = `dot ${index === 0 ? "active" : ""}`;
+            dot.dataset.index = index;
+            dot.onclick = () => goToSlide(index);
+            dotsContainer.appendChild(dot);
+        });
+        
+        function goToSlide(index) {
+            const slides = container.querySelectorAll(".landing-slide");
+            const dots = dotsContainer.querySelectorAll(".dot");
+            
+            slides.forEach((s, i) => {
+                s.style.display = i === index ? "flex" : "none";
+            });
+            dots.forEach((d, i) => {
+                d.classList.toggle("active", i === index);
+            });
+            
+            currentIndex = index;
+            resetTimer();
+        }
+        
+        function nextSlide() {
+            const slides = container.querySelectorAll(".landing-slide");
+            goToSlide((currentIndex + 1) % slides.length);
+        }
+        
+        function prevSlide() {
+            const slides = container.querySelectorAll(".landing-slide");
+            goToSlide((currentIndex - 1 + slides.length) % slides.length);
+        }
+        
+        function resetTimer() {
+            clearInterval(slideInterval);
+            slideInterval = setInterval(nextSlide, 5000);
+        }
+        
+        document.getElementById("landingPrev").onclick = prevSlide;
+        document.getElementById("landingNext").onclick = nextSlide;
+        
+        resetTimer();
+        
+        container.querySelectorAll(".landing-slide .backdrop").forEach(img => {
+            if (img.complete) {
+                img.classList.add("backdrop-loaded");
+            } else {
+                img.onload = () => img.classList.add("backdrop-loaded");
+            }
+        });
+        
+    } catch (err) {
+        console.error("Error loading landing slider:", err);
+        container.innerHTML = '<div class="loading">Gagal memuat rekomendasi.</div>';
+    }
+}
+
+function playNow(id, mediaType) {
+    const watchlist = getWatchlist();
+    const exists = watchlist.some(w => w.id === id);
+    
+    fetch(`${BASE_URL}/${mediaType}/${id}?language=en-US`, {
+        headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+    })
+    .then(res => res.json())
+    .then(item => {
+        item.media_type = mediaType;
+        openModal(item);
+    })
+    .catch(err => console.error("Error:", err));
+}
+
+async function playTrailer(id, mediaType, button) {
+    try {
+        const url = `${BASE_URL}/${mediaType}/${id}/videos?api_key=${API_KEY}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        const trailer = data.results?.find(v => 
+            v.type === "Trailer" && v.site === "YouTube"
+        );
+        
+        if (trailer) {
+            const trailerUrl = `https://www.youtube.com/embed/${trailer.key}?autoplay=1`;
+            const slide = button.closest(".landing-slide");
+            const info = slide.querySelector(".info");
+            
+            const existingTrailer = slide.querySelector(".trailer-container");
+            if (existingTrailer) {
+                existingTrailer.remove();
+                info.style.display = "block";
+                return;
+            }
+            
+            info.style.display = "none";
+            const trailerContainer = document.createElement("div");
+            trailerContainer.className = "trailer-container";
+            trailerContainer.style.cssText = `
+                position: relative;
+                z-index: 2;
+                width: 100%;
+                max-width: 800px;
+                aspect-ratio: 16/9;
+                border-radius: 8px;
+                overflow: hidden;
+            `;
+            trailerContainer.innerHTML = `
+                <iframe src="${trailerUrl}" 
+                    style="width:100%;height:100%;border:none;" 
+                    allowfullscreen 
+                    allow="autoplay; encrypted-media">
+                </iframe>
+                <button onclick="closeTrailer(this)" 
+                    style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.7);border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 12px;border-radius:4px;">
+                    ✕
+                </button>
+            `;
+            slide.appendChild(trailerContainer);
+        } else {
+            showNotification("Trailer tidak tersedia", "error");
+        }
+    } catch (err) {
+        console.error("Error loading trailer:", err);
+        showNotification("Gagal memuat trailer", "error");
+    }
+}
+
+function closeTrailer(btn) {
+    const container = btn.closest(".trailer-container");
+    const slide = container.closest(".landing-slide");
+    const info = slide.querySelector(".info");
+    container.remove();
+    info.style.display = "block";
+}
+
+async function loadTopTen() {
+    const container = document.getElementById("topTenContainer");
+    if (!container) return;
+    
+    container.innerHTML = '<div class="loading">Memuat Top 10...</div>';
+    
+    try {
+        const res = await fetch(`${BASE_URL}/trending/all/week?language=en-US`, {
+            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+        });
+        const data = await res.json();
+        const items = (data.results || []).slice(0, 10);
+        
+        container.innerHTML = "";
+        
+        items.forEach((item, index) => {
+            const div = document.createElement("div");
+            div.className = "top-ten-item";
+            
+            const poster = item.poster_path 
+                ? `${IMAGE_URL}${item.poster_path}` 
+                : "https://via.placeholder.com/300x450?text=No+Image";
+            
+            const title = item.title || item.name || "Untitled";
+            const mediaType = item.media_type || (item.first_air_date ? "tv" : "movie");
+            
+            div.innerHTML = `
+                <span class="number">${index + 1}</span>
+                <img src="${poster}" alt="${title}" loading="lazy">
+                <div class="title-overlay">
+                    <span>${title}</span>
+                </div>
+            `;
+            
+            div.onclick = () => {
+                fetch(`${BASE_URL}/${mediaType}/${item.id}?language=en-US`, {
+                    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                })
+                .then(res => res.json())
+                .then(fullItem => {
+                    fullItem.media_type = mediaType;
+                    openModal(fullItem);
+                })
+                .catch(err => console.error("Error:", err));
+            };
+            
+            container.appendChild(div);
+        });
+        
+    } catch (err) {
+        console.error("Error loading Top 10:", err);
+        container.innerHTML = '<div class="loading">Gagal memuat Top 10.</div>';
+    }
+}
