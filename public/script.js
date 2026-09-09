@@ -2026,3 +2026,21 @@ async function loadContinueWatching() {
         container.innerHTML = '<div class="loading">Gagal memuat riwayat tontonan.</div>';
     }
 }
+
+function scrollToContinueWatching() {
+    showPage('home-page');
+    setTimeout(() => {
+        const section = document.getElementById('continueWatchingSection');
+        if (section) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            loadContinueWatching();
+            setTimeout(() => {
+                const sectionReload = document.getElementById('continueWatchingSection');
+                if (sectionReload) {
+                    sectionReload.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 500);
+        }
+    }, 400);
+}
