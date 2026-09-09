@@ -265,11 +265,11 @@ async function loadContent(filterParam, page = 1) {
         movieContainer.innerHTML = '<div class="loading">Loading content...</div>';
     }
 
-    let url = `${BASE_URL}/trending/${currentMediaType}/day?page=${page}&language=id-ID`;
+    let url = `${BASE_URL}/trending/${currentMediaType}/day?page=${page}&language=id-ID&append_to_response=production_companies`;
     if (filterParam === 'popular') {
-        url = `${BASE_URL}/${currentMediaType}/popular?page=${page}&language=id-ID`;
+        url = `${BASE_URL}/${currentMediaType}/popular?page=${page}&language=id-ID&append_to_response=production_companies`;
     } else if (filterParam === 'top_rated') {
-        url = `${BASE_URL}/${currentMediaType}/top_rated?page=${page}&language=id-ID`;
+        url = `${BASE_URL}/${currentMediaType}/top_rated?page=${page}&language=id-ID&append_to_response=production_companies`;
     }
 
     try {
@@ -348,7 +348,7 @@ function scrollToMovies() {
     }
 }
 
-function displayItems(items, container = movieContainer, showPagination = true) {
+async function displayItems(items, container = movieContainer, showPagination = true) {
     if (!container) return;
     container.innerHTML = "";
 
@@ -357,12 +357,15 @@ function displayItems(items, container = movieContainer, showPagination = true) 
         return;
     }
 
-    items.forEach(item => {
+    for (const item of items) {
         const card = document.createElement("article");
         card.className = "movie-card";
         card.onclick = () => openModal(item);
 
-        const companies = item.production_companies || [];
+        let companies = item.production_companies || [];
+        if (!companies || companies.length === 0) {
+            companies = await fetchMovieDetails(item.id, currentMediaType);
+        }
         const companyNames = companies.map(c => c.name.toLowerCase()).join(',');
         card.dataset.companies = companyNames;
 
@@ -402,7 +405,22 @@ function displayItems(items, container = movieContainer, showPagination = true) 
             </div>
         `;
         container.appendChild(card);
-    });
+    }
+}
+async function fetchMovieDetails(itemId, mediaType) {
+    const url = `${BASE_URL}/${mediaType}/${itemId}?language=id-ID`;
+    try {
+        const res = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${ACCESS_TOKEN}`
+            }
+        });
+        const data = await res.json();
+        return data.production_companies || [];
+    } catch (err) {
+        console.error("Error fetch detail:", err);
+        return [];
+    }
 }
 
 function addGenrePagination(totalPages, currentPage) {
