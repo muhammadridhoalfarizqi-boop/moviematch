@@ -13,6 +13,7 @@ const movieContainer = document.getElementById("movieContainer");
 const favoritesContainer = document.getElementById("favoritesContainer");
 const historyContainer = document.getElementById("historyContainer");
 const movieTitle = document.getElementById("movieTitle");
+const catalogTitle = document.getElementById("catalogTitle");
 const registerForm = document.getElementById("registerForm");
 const loginForm = document.getElementById("loginForm");
 const movieModal = document.getElementById("movieModal");
@@ -38,6 +39,7 @@ let currentOverviewEn = "";
 let currentOverviewId = "";
 let otpEmail = '';
 let otpTimer = null;
+let isMoodSearch = false;
 
 document.addEventListener("DOMContentLoaded", () => {
     updateNavAuth();
@@ -167,6 +169,17 @@ function toggleMenu() {
     }
 }
 
+function goToCatalog() {
+    showPage('catalog-page');
+    loadContent('popular', 1);
+}
+
+function recommendMoodAndGo(mood) {
+    showPage('catalog-page');
+    isMoodSearch = true;
+    recommendMood(mood, 1);
+}
+
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(page => {
         page.classList.remove('active');
@@ -181,6 +194,7 @@ function showPage(pageId) {
         currentGenreId = '';
         currentGenreName = '';
         currentGenrePage = 1;
+        isMoodSearch = false;
         
         if (movieTitle) {
             movieTitle.textContent = currentMediaType === 'movie' ? "Popular Movies" : "Popular Series";
@@ -198,7 +212,12 @@ function showPage(pageId) {
     }
 
     if (pageId === 'catalog-page') {
-        loadContent('popular', 1);
+        if (!isMoodSearch) {
+            if (catalogTitle) {
+                catalogTitle.textContent = "Pilih Kategori Tayangan";
+            }
+            loadContent('popular', 1);
+        }
     }
 
     window.scrollTo(0, 0);
@@ -283,6 +302,11 @@ async function loadContent(filterParam, page = 1) {
     currentGenrePage = 1;
     currentFilterParam = filterParam;
     currentPage = page;
+    isMoodSearch = false;
+
+    if (catalogTitle) {
+        catalogTitle.textContent = "Pilih Kategori Tayangan";
+    }
 
     history.pushState({ category: filterParam, page: page }, "", `?category=${filterParam}&page=${page}`);
     
@@ -1237,14 +1261,19 @@ async function recommendMood(mood, page = 1) {
 
     history.pushState({ genre: mood, page: page }, "", `?mood=${mood}&page=${page}`);
 
+    const moodNames = {
+        happy: 'Happy / Senang',
+        scary: 'Scary / Takut',
+        action: 'Exciting / Seru',
+        sad: 'Emotional / Perasaan',
+        chill: 'Relaxed / Rileks'
+    };
+
+    if (catalogTitle) {
+        catalogTitle.textContent = `Mood: ${moodNames[mood] || mood}`;
+    }
+
     if (movieTitle) {
-        const moodNames = {
-            happy: 'Happy / Senang',
-            scary: 'Scary / Takut',
-            action: 'Exciting / Seru',
-            sad: 'Emotional / Perasaan',
-            chill: 'Relaxed / Rileks'
-        };
         movieTitle.textContent = `Mood: ${moodNames[mood] || mood} - Halaman ${page}`;
     }
 
