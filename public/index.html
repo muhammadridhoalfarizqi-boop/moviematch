@@ -19,8 +19,7 @@
 
         <nav id="menuList">
             <a onclick="showPage('home-page'); toggleMenu();">Home</a>
-            <a onclick="scrollToSection('mood'); toggleMenu();">MoodMatch</a>
-            <a onclick="scrollToSection('movies'); toggleMenu();">Catalog</a>
+            <a onclick="showPage('catalog-page'); toggleMenu();">Catalog</a>
             <a onclick="showFavorites(); toggleMenu();">Favorites</a>
             <a id="nav-auth" onclick="handleAuthClick(); toggleMenu();">Login</a>
             <button id="themeToggle" class="theme-toggle">&#9790;</button>
@@ -85,6 +84,13 @@
                 </div>
             </section>
 
+            <footer id="footer-info">
+                <p>MovieMatch</p>
+                <p>Movie data provided by TMDB</p>
+            </footer>
+        </div>
+
+        <div id="catalog-page" class="page">
             <section class="search-section">
                 <div class="section-title">
                     <p class="label">EXPLORE & SEARCH</p>
@@ -171,14 +177,8 @@
                         <h2 id="movieTitle">Popular Movies</h2>
                     </div>
                 </div>
-
                 <div id="movieContainer" class="movie-container"></div>
             </section>
-
-            <footer id="footer-info">
-                <p>MovieMatch</p>
-                <p>Movie data provided by TMDB</p>
-            </footer>
         </div>
 
         <div id="favorites-page" class="page">
