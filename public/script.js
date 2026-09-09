@@ -350,7 +350,6 @@ function displayItems(items, container = movieContainer, showPagination = true) 
         card.className = "movie-card";
         card.onclick = () => openModal(item);
 
-        // Simpan production_companies ke dataset
         const companies = item.production_companies || [];
         const companyNames = companies.map(c => c.name.toLowerCase()).join(',');
         card.dataset.companies = companyNames;
@@ -362,7 +361,9 @@ function displayItems(items, container = movieContainer, showPagination = true) 
         const title = item.title || item.name || "Untitled";
         const originalTitle = item.original_title || item.original_name || "";
         
-        const displaySubTitle = (originalTitle && originalTitle !== title) ? `<span style="font-size: 11px; color: #888; display: block; margin-top: 2px;">${originalTitle}</span>` : "";
+        const displaySubTitle = (originalTitle && originalTitle !== title) 
+            ? `<span style="font-size: 11px; color: #888; display: block; margin-top: 2px;">${originalTitle}</span>` 
+            : "";
 
         const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
         const releaseDate = item.release_date || item.first_air_date || "";
@@ -1054,9 +1055,12 @@ function filterByYear(value) {
 
 function filterByStudio(value) {
     const cards = document.querySelectorAll('.movie-card');
+    
     if (!cards || cards.length === 0) {
         loadContent(currentFilterParam, currentPage);
-        setTimeout(function() { filterByStudio(value); }, 500);
+        setTimeout(function() { 
+            filterByStudio(value); 
+        }, 600);
         return;
     }
 
@@ -1064,16 +1068,20 @@ function filterByStudio(value) {
         card.style.display = '';
     });
 
+    const container = document.getElementById('movieContainer');
+    const oldNoResult = container?.querySelector('.no-result');
+    if (oldNoResult) oldNoResult.remove();
+
     if (value === 'all') return;
 
     const studioMap = {
         'shudder': ['shudder'],
-        'netflix': ['netflix'],
-        'prime': ['prime video', 'amazon', 'prime'],
-        'blumhouse': ['blumhouse'],
+        'netflix': ['netflix', 'netflix original'],
+        'prime': ['prime video', 'amazon', 'prime', 'amazon prime'],
+        'blumhouse': ['blumhouse', 'blumhouse productions'],
         'a24': ['a24'],
-        'marvel': ['marvel'],
-        'dreamworks': ['dreamworks'],
+        'marvel': ['marvel', 'marvel studios'],
+        'dreamworks': ['dreamworks', 'dreamworks pictures'],
         'amc': ['amc']
     };
 
@@ -1083,8 +1091,8 @@ function filterByStudio(value) {
     cards.forEach(function(card) {
         const companies = card.dataset.companies || '';
         const title = card.querySelector('.movie-info h3')?.textContent?.toLowerCase() || '';
-        const overview = card.querySelector('.movie-info p:last-child')?.textContent?.toLowerCase() || '';
-        const combined = companies + ' ' + title + ' ' + overview;
+        const infoText = card.querySelector('.movie-info p:last-child')?.textContent?.toLowerCase() || '';
+        const combined = companies + ' ' + title + ' ' + infoText;
         
         let match = false;
         for (let word of keywords) {
@@ -1101,6 +1109,14 @@ function filterByStudio(value) {
             card.style.display = 'none';
         }
     });
+
+    if (!hasVisible) {
+        const msg = document.createElement('div');
+        msg.className = 'no-result';
+        msg.textContent = '🎬 Tidak ada film dari studio / network ini.';
+        if (container) container.appendChild(msg);
+    }
+}
 
     const container = document.getElementById('movieContainer');
     const noResult = container?.querySelector('.no-result');
