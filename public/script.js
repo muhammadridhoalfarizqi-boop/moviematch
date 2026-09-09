@@ -1670,7 +1670,7 @@ async function loadTopTen() {
         
         container.innerHTML = "";
         
-        items.forEach((item, index) => {
+        for (const [index, item] of items.entries()) {
             const div = document.createElement("div");
             div.className = "top-ten-item";
             
@@ -1680,12 +1680,39 @@ async function loadTopTen() {
             
             const title = item.title || item.name || "Untitled";
             const mediaType = item.media_type || (item.first_air_date ? "tv" : "movie");
+            const voteAverage = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
+            
+
+            let director = "Unknown";
+            let stars = "No cast data";
+            
+            try {
+                const detailRes = await fetch(`${BASE_URL}/${mediaType}/${item.id}/credits?language=en-US`, {
+                    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                });
+                const detailData = await detailRes.json();
+                
+                const crew = detailData.crew || [];
+                const directorObj = crew.find(c => c.job === "Director");
+                if (directorObj) director = directorObj.name;
+                
+                const cast = detailData.cast || [];
+                const topCast = cast.slice(0, 3).map(c => c.name);
+                stars = topCast.length > 0 ? topCast.join(", ") : "No cast data";
+                
+            } catch (err) {
+                console.warn("Gagal ambil detail credits:", err);
+            }
             
             div.innerHTML = `
                 <span class="number">${index + 1}</span>
-                <img src="${poster}" alt="${title}" loading="lazy">
-                <div class="title-overlay">
-                    <span>${title}</span>
+                <div class="poster-wrapper">
+                    <img src="${poster}" alt="${title}" loading="lazy">
+                    <div class="info-overlay">
+                        <span class="title">${title}</span>
+                        <span class="director">🎬 Director: ${director}</span>
+                        <span class="stars">⭐ Stars: ${stars}</span>
+                    </div>
                 </div>
             `;
             
@@ -1702,7 +1729,7 @@ async function loadTopTen() {
             };
             
             container.appendChild(div);
-        });
+        }
         
     } catch (err) {
         console.error("Error loading Top 10:", err);
