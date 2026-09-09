@@ -23,6 +23,7 @@
             <a onclick="scrollToSection('movies'); toggleMenu();">Catalog</a>
             <a onclick="showFavorites(); toggleMenu();">Favorites</a>
             <a id="nav-auth" onclick="handleAuthClick(); toggleMenu();">Login</a>
+            <button id="themeToggle" class="theme-toggle">&#9790;</button>
         </nav>
     </header>
 
@@ -74,20 +75,20 @@
                     <h2>Pilih Kategori Tayangan</h2>
                 </div>
 
-                <div class="filter-container" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px;">
-                    <div style="display: flex; border: 1px solid #444; border-radius: 8px; overflow: hidden; background: #222;">
-                        <button id="typeBtnMovie" onclick="setMediaType('movie')" style="padding: 10px 18px; background: #e50914; color: #fff; border: none; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s;">MOVIES</button>
-                        <button id="typeBtnTv" onclick="setMediaType('tv')" style="padding: 10px 18px; background: #222; color: #aaa; border: none; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s;">SERIES</button>
+                <div class="filter-container">
+                    <div class="type-btn-group">
+                        <button id="typeBtnMovie" class="type-btn active" onclick="setMediaType('movie')">MOVIES</button>
+                        <button id="typeBtnTv" class="type-btn inactive" onclick="setMediaType('tv')">SERIES</button>
                     </div>
 
-                    <select id="categorySelect" onchange="loadContent(this.value)" style="padding: 10px; border-radius: 8px; background: #222; color: #fff; border: 1px solid #444; font-size: 14px; cursor: pointer;">
+                    <select id="categorySelect" class="filter-select" onchange="loadContent(this.value)">
                         <option value="popular">Popular</option>
                         <option value="trending">Trending Week</option>
                         <option value="top_rated">Top Rated</option>
                         <option value="upcoming">Upcoming / On Air</option>
                     </select>
 
-                    <select id="genreSelect" onchange="getMoviesByGenre(this.value, this.options[this.selectedIndex].text)" style="padding: 10px; border-radius: 8px; background: #222; color: #fff; border: 1px solid #444; font-size: 14px; cursor: pointer;">
+                    <select id="genreSelect" class="filter-select" onchange="getMoviesByGenre(this.value, this.options[this.selectedIndex].text)">
                         <option value="">Semua Genre</option>
                         <option value="28">Action</option>
                         <option value="12">Adventure</option>
@@ -106,17 +107,33 @@
                         <option value="gl">GL (Girls' Love)</option>
                     </select>
 
-                    <select id="runtimeSelect" onchange="filterByRuntime(this.value)" style="padding: 10px; border-radius: 8px; background: #222; color: #fff; border: 1px solid #444; font-size: 14px; cursor: pointer;">
+                    <select id="runtimeSelect" class="filter-select" onchange="filterByRuntime(this.value)">
                         <option value="all">Semua Durasi</option>
                         <option value="short">Singkat (&lt; 90 Menit)</option>
                         <option value="medium">Sedang (90 - 120 Menit)</option>
                         <option value="long">Panjang (&gt; 120 Menit)</option>
                     </select>
+
+                    <select id="yearSelect" class="filter-select" onchange="filterByYear(this.value)">
+                        <option value="all">Semua Tahun</option>
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                        <option value="2020">2020</option>
+                        <option value="2019">2019</option>
+                        <option value="2018">2018</option>
+                        <option value="2017">2017</option>
+                        <option value="2016">2016</option>
+                        <option value="2015">2015</option>
+                    </select>
                 </div>
 
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="Cari judul..." onkeydown="handleSearch(event)">
-                    <button onclick="searchMovies()">Search</button>
+                    <button class="search-btn" onclick="searchMovies()">Search</button>
                 </div>
             </section>
 
@@ -128,9 +145,7 @@
                     </div>
                 </div>
 
-                <div id="movieContainer" class="movie-container">
-                    <div class="loading">Loading content...</div>
-                </div>
+                <div id="movieContainer" class="movie-container"></div>
             </section>
 
             <footer id="footer-info">
@@ -157,14 +172,14 @@
                     <div>
                         <p class="label">USER PROFILE</p>
                         <h2 id="profileWelcome">Welcome, User</h2>
-                        <p id="userStatusBadge" style="font-size: 13px; margin-top: 5px; color: #aaa;"></p>
+                        <p id="userStatusBadge"></p>
                     </div>
-                    <button onclick="logout()" class="primary-button" style="background:#e50914;">Logout</button>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
                 </div>
 
-                <div style="margin-top: 30px;">
+                <div class="history-section">
                     <h3>Riwayat Tayangan Dilihat (Watch History)</h3>
-                    <div id="historyContainer" class="movie-container" style="margin-top: 15px;"></div>
+                    <div id="historyContainer" class="movie-container"></div>
                 </div>
             </section>
         </div>
@@ -220,9 +235,7 @@
                                 <p class="strength-text" id="strText">Ketik password...</p>
                             </div>
                             <button type="button" class="suggest-pass-btn" id="suggestPassBtn">Suggest Strong Password</button>
-                        
                         </div>
-                        
                         <button type="submit" class="auth-button">Create Account</button>
                     </form>
                     <p id="registerMessage" class="auth-message"></p>
@@ -230,29 +243,23 @@
                 </div>
             </div>
         </div>
-            <div id="otp-page" class="page">
-                <div class="auth-page">
-                    <div class="auth-box">
-                        <h1>Verifikasi OTP</h1>
-                        <p class="auth-description">Masukkan kode OTP yang telah dikirim ke email Anda.</p>
-                        
-                        <div id="otpMessage" class="auth-message"></div>
-                        
-                        <div class="form-group">
-                            <label for="otpInput">Kode OTP</label>
-                            <input type="text" id="otpInput" placeholder="Masukkan kode 6 digit" maxlength="6" autocomplete="off">
-                        </div>
-                        <button id="otpVerifyBtn" class="auth-button">Verifikasi</button>
-                        
-                        <p class="otp-resend">
-                            Belum dapat kode? <a href="#" id="resendOtpBtn">Kirim ulang</a>
-                        </p>
-                        <p class="auth-switch">
-                            <a onclick="showPage('login-page')">Kembali ke Login</a>
-                        </p>
+
+        <div id="otp-page" class="page">
+            <div class="auth-page">
+                <div class="auth-box">
+                    <h1>Verifikasi OTP</h1>
+                    <p class="auth-description">Masukkan kode OTP yang telah dikirim ke email Anda.</p>
+                    <div id="otpMessage" class="auth-message"></div>
+                    <div class="form-group">
+                        <label for="otpInput">Kode OTP</label>
+                        <input type="text" id="otpInput" placeholder="Masukkan kode 6 digit" maxlength="6" autocomplete="off">
                     </div>
+                    <button id="otpVerifyBtn" class="auth-button">Verifikasi</button>
+                    <p class="otp-resend">Belum dapat kode? <a href="#" id="resendOtpBtn">Kirim ulang</a></p>
+                    <p class="auth-switch"><a onclick="showPage('login-page')">Kembali ke Login</a></p>
                 </div>
             </div>
+        </div>
     </main>
 
     <div id="movieModal" class="modal">
@@ -261,22 +268,7 @@
             <div id="modalBody"></div>
         </div>
     </div>
-
-    <script>
-    document.addEventListener('click', function(event) {
-        const iframe = document.getElementById('playerFrame');
-        if (iframe && iframe.contains(event.target)) {
-            event.stopPropagation();
-        }
-    }, true);
-
-    window.open = function(url) {
-        console.warn("Pop-up iklan berhasil ditahan:", url);
-        return null;
-    };
-    </script>
-
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="script.js" defer></script>
 </body>
-    </html>
+</html>
