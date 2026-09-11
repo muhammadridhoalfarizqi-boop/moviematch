@@ -299,6 +299,16 @@
                         <div class="player-progress-bar" id="playerProgressBar"></div>
                         <span class="player-progress-text" id="playerProgressText">0%</span>
                     </div>
+                    
+                    <div class="subtitle-offset-container">
+                        <span class="subtitle-offset-label" data-i18n="player.subtitleOffset">Subtitle Delay:</span>
+                        <button class="subtitle-offset-btn" onclick="adjustSubtitleOffset(-5)">-5s</button>
+                        <button class="subtitle-offset-btn" onclick="adjustSubtitleOffset(-1)">-1s</button>
+                        <span class="subtitle-offset-value" id="subtitleOffsetValue">0s</span>
+                        <button class="subtitle-offset-btn" onclick="adjustSubtitleOffset(1)">+1s</button>
+                        <button class="subtitle-offset-btn" onclick="adjustSubtitleOffset(5)">+5s</button>
+                        <button class="subtitle-offset-btn reset" onclick="resetSubtitleOffset()" data-i18n="player.reset">Reset</button>
+                    </div>
                     <div class="serversContainer" id="playerServers">
                         <label class="switch">
                             <input type="checkbox" id="sandboxToggle">
@@ -414,6 +424,16 @@
                         <option value="es">Spanish</option>
                         <option value="fr">French</option>
                     </select>
+                    <div class="actor-filter-container">
+                        <input type="text" id="actorSearchInput" class="actor-search-input" placeholder="Cari aktor/sutradara..." onkeydown="handleActorSearchKey(event)" data-i18n-placeholder="search.actorPlaceholder">
+                        <button class="actor-search-btn" onclick="searchActorByName()" data-i18n="search.actorBtn">Cari</button>
+                    </div>
+                    <div id="actorSearchResults" class="actor-search-results"></div>
+                    <div id="activeActorFilter" class="active-actor-filter" style="display:none;">
+                        <span data-i18n="search.filteringBy">Filter berdasarkan:</span>
+                        <span id="activeActorName" class="active-actor-name"></span>
+                        <button class="clear-actor-btn" onclick="clearActorFilter()">&times;</button>
+                    </div>
                 </div>
 
                 <div class="search-box">
@@ -627,7 +647,22 @@
             </div>
         </div>
     </div>
-
+    
+    <div id="notificationBanner" class="notification-banner" style="display:none;">
+    <div class="notification-banner-content">
+        <span class="notification-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:24px;height:24px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5" />
+            </svg>
+        </span>
+        <div class="notification-text">
+            <span class="notification-title" data-i18n="notif.title">Notifikasi Episode Baru</span>
+            <span class="notification-message" id="notificationMessage"></span>
+        </div>
+        <button class="notification-close" onclick="closeNotificationBanner()">&times;</button>
+    </div>
+</div>
+    
     <div id="toastContainer" class="toast-container"></div>
 
     <button class="scroll-top-btn" id="scrollTopBtn" onclick="scrollToTop()" title="Scroll to top">
