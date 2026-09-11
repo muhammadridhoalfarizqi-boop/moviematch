@@ -11,6 +11,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 const movieContainer = document.getElementById("movieContainer");
 const favoritesContainer = document.getElementById("favoritesContainer");
+const watchlistContainer = document.getElementById("watchlistContainer");
 const historyContainer = document.getElementById("historyContainer");
 const movieTitle = document.getElementById("movieTitle");
 const catalogTitle = document.getElementById("catalogTitle");
@@ -53,6 +54,19 @@ let currentOverviewEn = "";
 let currentOverviewId = "";
 let isOverviewTranslated = false;
 
+let currentSeasonData = null;
+let currentEpisodeData = null;
+let playerProgressInterval = null;
+let playerCurrentTime = 0;
+let playerDuration = 0;
+let playerProgress = 0;
+let savedProgress = {};
+
+let searchInfinitePage = 1;
+let searchInfiniteTotalPages = 1;
+let searchInfiniteQuery = '';
+let isSearchInfiniteLoading = false;
+
 const ICON_TRANSLATE = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802"/></svg>`;
 
 const ICON_CHECK = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>`;
@@ -60,8 +74,11 @@ const ICON_CHECK = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox=
 const ICON_LOADING = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>`;
 
 document.addEventListener("DOMContentLoaded", () => {
+    loadSavedProgress();
     updateNavAuth();
     loadContent('popular', 1);
+    loadNowPlaying();
+    loadAiringToday();
 
     if (searchForm) {
         searchForm.addEventListener("submit", function(e) {
@@ -146,6 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
         loadTopRated();
         loadContinueWatching();
     }, 500);
+
+    setupInfiniteScrollSearch();
 });
 
 const originalFetch = window.fetch;
@@ -235,6 +254,8 @@ function showPage(pageId) {
             loadTopTen();
             loadTopRated();
             loadContinueWatching();
+            loadNowPlaying();
+            loadAiringToday();
         }, 300);
     }
 
@@ -338,7 +359,7 @@ async function loadContent(filterParam, page = 1) {
     history.pushState({ category: filterParam, page: page }, "", `?category=${filterParam}&page=${page}`);
     
     if (movieContainer) {
-        movieContainer.innerHTML = '<div class="loading">Loading content...</div>';
+        showSkeletonLoader(movieContainer, 8);
     }
 
     let url = `${BASE_URL}/trending/${currentMediaType}/day?page=${page}&language=id-ID`;
@@ -346,6 +367,14 @@ async function loadContent(filterParam, page = 1) {
         url = `${BASE_URL}/${currentMediaType}/popular?page=${page}&language=id-ID`;
     } else if (filterParam === 'top_rated') {
         url = `${BASE_URL}/${currentMediaType}/top_rated?page=${page}&language=id-ID`;
+    } else if (filterParam === 'now_playing') {
+        if (currentMediaType === 'movie') {
+            url = `${BASE_URL}/movie/now_playing?page=${page}&language=id-ID`;
+        } else {
+            url = `${BASE_URL}/tv/on_the_air?page=${page}&language=id-ID`;
+        }
+    } else if (filterParam === 'airing_today') {
+        url = `${BASE_URL}/tv/airing_today?page=${page}&language=id-ID`;
     }
 
     try {
@@ -354,9 +383,7 @@ async function loadContent(filterParam, page = 1) {
                 'Authorization': `Bearer ${ACCESS_TOKEN}`
             }
         });
-        console.log("Response status:", res.status);
         const data = await res.json();
-        console.log("Data:", data);
         await displayItems(data.results, movieContainer, true); 
         scrollToMovies();
     } catch (err) {
@@ -367,9 +394,57 @@ async function loadContent(filterParam, page = 1) {
     }
 }
 
+async function loadNowPlaying() {
+    const container = document.getElementById("nowPlayingContainer");
+    if (!container) return;
+    try {
+        const res = await fetch(`${BASE_URL}/movie/now_playing?page=1&language=id-ID`, {
+            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+        });
+        const data = await res.json();
+        const items = (data.results || []).slice(0, 10);
+        await displayItems(items, container, false);
+    } catch (err) {
+        console.error("Error now playing:", err);
+    }
+}
+
+async function loadAiringToday() {
+    const container = document.getElementById("airingTodayContainer");
+    if (!container) return;
+    try {
+        const res = await fetch(`${BASE_URL}/tv/airing_today?page=1&language=id-ID`, {
+            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+        });
+        const data = await res.json();
+        const items = (data.results || []).slice(0, 10);
+        await displayItems(items, container, false);
+    } catch (err) {
+        console.error("Error airing today:", err);
+    }
+}
+
+function showSkeletonLoader(container, count = 8) {
+    container.innerHTML = "";
+    for (let i = 0; i < count; i++) {
+        const skeleton = document.createElement("div");
+        skeleton.className = "skeleton";
+        skeleton.innerHTML = `
+            <div class="skeleton-img"></div>
+            <div class="skeleton-text"></div>
+            <div class="skeleton-text short"></div>
+        `;
+        container.appendChild(skeleton);
+    }
+}
+
 async function searchByQuery(query) {
+    searchInfiniteQuery = query;
+    searchInfinitePage = 1;
+    isSearchInfiniteLoading = false;
+    
     if (movieContainer) {
-        movieContainer.innerHTML = '<div class="loading">Mencari...</div>';
+        showSkeletonLoader(movieContainer, 8);
     }
     if (movieTitle) {
         movieTitle.textContent = `Hasil Pencarian: "${query}"`;
@@ -377,7 +452,7 @@ async function searchByQuery(query) {
 
     history.pushState({ search: query }, "", `?search=${encodeURIComponent(query)}`);
 
-    let url = `${BASE_URL}/search/${currentMediaType}?query=${encodeURIComponent(query)}&language=id-ID`;
+    let url = `${BASE_URL}/search/${currentMediaType}?query=${encodeURIComponent(query)}&language=id-ID&page=1`;
     try {
         const res = await fetch(url, {
             headers: {
@@ -385,12 +460,65 @@ async function searchByQuery(query) {
             }
         });
         const data = await res.json();
+        searchInfiniteTotalPages = Math.min(data.total_pages || 1, 20);
         await displayItems(data.results, movieContainer, true);
         scrollToMovies();
+        setupInfiniteScrollSearch();
     } catch (err) {
         if (movieContainer) {
             movieContainer.innerHTML = '<div class="loading">Terjadi kesalahan saat mencari.</div>';
         }
+    }
+}
+
+function setupInfiniteScrollSearch() {
+    const oldSentinel = document.getElementById('infiniteSentinel');
+    if (oldSentinel) oldSentinel.remove();
+    
+    if (!searchInfiniteQuery) return;
+    if (searchInfinitePage >= searchInfiniteTotalPages) return;
+    
+    const sentinel = document.getElementById('infiniteSentinel');
+    if (!sentinel) return;
+    
+    sentinel.style.display = 'flex';
+    sentinel.innerHTML = '<div class="loader"></div>';
+    
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && !isSearchInfiniteLoading) {
+            loadMoreSearchResults();
+        }
+    }, { rootMargin: '300px' });
+    
+    observer.observe(sentinel);
+}
+
+async function loadMoreSearchResults() {
+    if (isSearchInfiniteLoading) return;
+    if (searchInfinitePage >= searchInfiniteTotalPages) return;
+    if (!searchInfiniteQuery) return;
+    
+    isSearchInfiniteLoading = true;
+    searchInfinitePage++;
+    
+    const url = `${BASE_URL}/search/${currentMediaType}?query=${encodeURIComponent(searchInfiniteQuery)}&language=id-ID&page=${searchInfinitePage}`;
+    
+    try {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+        });
+        const data = await res.json();
+        
+        if (data.results && data.results.length > 0) {
+            const newItems = await createItemElements(data.results);
+            newItems.forEach(item => movieContainer.appendChild(item));
+        }
+        
+        isSearchInfiniteLoading = false;
+        setupInfiniteScrollSearch();
+    } catch (err) {
+        console.error("Error load more search:", err);
+        isSearchInfiniteLoading = false;
     }
 }
 
@@ -570,7 +698,7 @@ async function getMoviesByGenre(genreId, genreName, page = 1) {
     history.pushState({ genre: genreId, genreName: genreName, page: page }, "", `?genre=${genreId}&page=${page}`);
 
     if (movieContainer) {
-        movieContainer.innerHTML = '<div class="loading">Memuat genre...</div>';
+        showSkeletonLoader(movieContainer, 8);
     }
 
     const moodNames = ['happy', 'scary', 'action', 'sad', 'chill'];
@@ -654,7 +782,7 @@ function filterByStudio(value) {
     const url = `${BASE_URL}/discover/${mediaType}?${filterParam}=${data.id}&language=id-ID&page=1&sort_by=popularity.desc`;
     
     if (movieContainer) {
-        movieContainer.innerHTML = '<div class="loading">Memuat konten dari platform...</div>';
+        showSkeletonLoader(movieContainer, 8);
     }
     
     if (movieTitle) {
@@ -1057,6 +1185,82 @@ async function showFavorites() {
     await displayItems(favs, container, false);
 }
 
+function getWatchlist() {
+    return JSON.parse(localStorage.getItem("movieMatchWatchlist")) || [];
+}
+
+function saveWatchlist(watchlist) {
+    localStorage.setItem("movieMatchWatchlist", JSON.stringify(watchlist));
+}
+
+function toggleWatchlist(itemId, mediaType, buttonElement) {
+    let watchlist = getWatchlist();
+    const exists = watchlist.some(w => w.id === itemId);
+    
+    if (exists) {
+        watchlist = watchlist.filter(w => w.id !== itemId);
+        if (buttonElement) {
+            buttonElement.classList.remove("active");
+            buttonElement.innerHTML = "☆";
+        }
+        showNotification("Dihapus dari Watchlist", "error");
+    } else {
+        watchlist.push({ id: itemId, media_type: mediaType });
+        if (buttonElement) {
+            buttonElement.classList.add("active");
+            buttonElement.innerHTML = "★";
+        }
+        showNotification("Ditambahkan ke Watchlist", "success");
+    }
+    
+    saveWatchlist(watchlist);
+}
+
+function showWatchlist() {
+    showPage('watchlist-page');
+    const container = document.getElementById('watchlistContainer');
+    if (!container) return;
+    
+    const watchlist = getWatchlist();
+    if (watchlist.length === 0) {
+        container.innerHTML = '<div class="loading">Watchlist masih kosong. Tambahkan film atau series dari halaman detail.</div>';
+        return;
+    }
+    
+    container.innerHTML = '<div class="loading">Memuat watchlist...</div>';
+    
+    Promise.all(watchlist.map(async (w) => {
+        try {
+            const res = await fetch(`${BASE_URL}/${w.media_type}/${w.id}?language=id-ID`, {
+                headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            });
+            return await res.json();
+        } catch {
+            return null;
+        }
+    })).then(items => {
+        const validItems = items.filter(i => i && i.id);
+        displayItems(validItems, container, false);
+    });
+}
+
+function showNotification(message, type = "success") {
+    const oldNotif = document.querySelector(".notification");
+    if (oldNotif) oldNotif.remove();
+    
+    const notif = document.createElement("div");
+    notif.className = `notification ${type}`;
+    notif.textContent = message;
+    document.body.appendChild(notif);
+    
+    setTimeout(() => notif.classList.add("show"), 10);
+    
+    setTimeout(() => {
+        notif.classList.remove("show");
+        setTimeout(() => notif.remove(), 400);
+    }, 2500);
+}
+
 async function addToHistory(item) {
     const user = getCurrentUser();
     if (!user) return;
@@ -1067,8 +1271,6 @@ async function addToHistory(item) {
     const releaseDate = item.release_date || item.first_air_date || "";
     const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
     const voteAverage = item.vote_average || 0;
-    
-    console.log("Menyimpan ke history:", { movieId, title, mediaType });
     
     try {
         await supabaseClient
@@ -1091,8 +1293,6 @@ async function addToHistory(item) {
         
         if (error) {
             console.error("Error insert history:", error);
-        } else {
-            console.log("History berhasil disimpan");
         }
     } catch (err) {
         console.error("Error addToHistory:", err);
@@ -1116,7 +1316,6 @@ async function loadHistory() {
     const user = getCurrentUser();
     const container = document.getElementById("historyContainer");
     if (!container || !user) {
-        console.log("Tidak ada user atau container");
         return;
     }
     
@@ -1130,12 +1329,9 @@ async function loadHistory() {
             .order('created_at', { ascending: false });
         
         if (error) {
-            console.error("Supabase error:", error);
             container.innerHTML = '<div class="loading">Gagal memuat riwayat tayangan: ' + error.message + '</div>';
             return;
         }
-        
-        console.log("History items:", historyItems); 
         
         if (!historyItems || historyItems.length === 0) {
             container.innerHTML = '<div class="loading">Belum ada riwayat tayangan.</div>';
@@ -1149,7 +1345,6 @@ async function loadHistory() {
         await displayItems(historyItems, container, false);
         
     } catch (err) {
-        console.error("Error loadHistory:", err);
         container.innerHTML = '<div class="loading">Gagal memuat riwayat tayangan: ' + err.message + '</div>';
     }
 }
@@ -1343,7 +1538,7 @@ async function recommendMood(mood, page = 1) {
     }
 
     if (movieContainer) {
-        movieContainer.innerHTML = '<div class="loading">Memuat rekomendasi...</div>';
+        showSkeletonLoader(movieContainer, 8);
     }
 
     let url = `${BASE_URL}/discover/${currentMediaType}?with_genres=${genreId}&language=id-ID&page=${page}&sort_by=popularity.desc`;
@@ -1445,6 +1640,18 @@ function filterByYear(value) {
     });
 }
 
+function filterByRuntime(value) {
+    const cards = document.querySelectorAll('.movie-card');
+    if (!cards || cards.length === 0) return;
+    cards.forEach(function(card) {
+        card.style.display = '';
+    });
+    if (value === 'all') return;
+    cards.forEach(function(card) {
+        card.style.display = 'none';
+    });
+}
+
 function shareMovie(title, overview, poster) {
     const url = window.location.href;
     const shareData = {
@@ -1483,54 +1690,6 @@ document.addEventListener('click', function(e) {
         }
     }
 });
-
-function getWatchlist() {
-    return JSON.parse(localStorage.getItem("movieMatchWatchlist")) || [];
-}
-
-function saveWatchlist(watchlist) {
-    localStorage.setItem("movieMatchWatchlist", JSON.stringify(watchlist));
-}
-
-function toggleWatchlist(itemId, mediaType, buttonElement) {
-    let watchlist = getWatchlist();
-    const exists = watchlist.some(w => w.id === itemId);
-    
-    if (exists) {
-        watchlist = watchlist.filter(w => w.id !== itemId);
-        if (buttonElement) {
-            buttonElement.classList.remove("active");
-            buttonElement.innerHTML = "☆";
-        }
-        showNotification("Dihapus dari Watchlist", "error");
-    } else {
-        watchlist.push({ id: itemId, media_type: mediaType });
-        if (buttonElement) {
-            buttonElement.classList.add("active");
-            buttonElement.innerHTML = "★";
-        }
-        showNotification("Ditambahkan ke Watchlist", "success");
-    }
-    
-    saveWatchlist(watchlist);
-}
-
-function showNotification(message, type = "success") {
-    const oldNotif = document.querySelector(".notification");
-    if (oldNotif) oldNotif.remove();
-    
-    const notif = document.createElement("div");
-    notif.className = `notification ${type}`;
-    notif.textContent = message;
-    document.body.appendChild(notif);
-    
-    setTimeout(() => notif.classList.add("show"), 10);
-    
-    setTimeout(() => {
-        notif.classList.remove("show");
-        setTimeout(() => notif.remove(), 400);
-    }, 2500);
-}
 
 async function loadLandingSlider() {
     const container = document.getElementById("landingSlider");
@@ -1910,7 +2069,6 @@ async function loadContinueWatching() {
             .limit(10);
         
         if (error) {
-            console.error("Supabase error:", error);
             container.innerHTML = '<div class="loading">Gagal memuat riwayat tontonan.</div>';
             return;
         }
@@ -1941,6 +2099,9 @@ async function loadContinueWatching() {
             const isTv = mediaType === 'tv';
             const episodeInfo = isTv ? 'S1E1' : '';
             
+            const progressKey = `${item.movie_id}_${mediaType}`;
+            const progressPct = savedProgress[progressKey] || 30;
+            
             card.innerHTML = `
                 <img src="${poster}" alt="${title}" loading="lazy">
                 <div class="continue-info">
@@ -1948,7 +2109,7 @@ async function loadContinueWatching() {
                     <span class="continue-meta">${year} ${rating !== "N/A" ? rating : ""}</span>
                     ${isTv ? `<span class="continue-episode">${episodeInfo}</span>` : ''}
                     <div class="continue-progress">
-                        <div class="progress-bar" style="width: 30%;"></div>
+                        <div class="progress-bar" style="width: ${progressPct}%;"></div>
                     </div>
                     <button class="continue-play-btn" onclick="playNow(${item.movie_id}, '${mediaType}')">Continue Watching</button>
                 </div>
@@ -2031,8 +2192,160 @@ async function openDetail(item) {
 
     currentDetailItem = { ...item, ...data, mediaType };
 
+    updateBookmarkButton();
+    renderRatingBreakdown(data);
+    renderSeasonSelector(data, mediaType);
+
     showPage('detail-page');
     await addToHistory(item);
+}
+
+function updateBookmarkButton() {
+    const btn = document.getElementById('bookmarkBtn');
+    const text = document.getElementById('bookmarkText');
+    if (!btn || !text || !currentDetailItem) return;
+    
+    const watchlist = getWatchlist();
+    const exists = watchlist.some(w => w.id === currentDetailItem.id);
+    
+    if (exists) {
+        btn.classList.add('active');
+        text.textContent = 'Bookmarked';
+    } else {
+        btn.classList.remove('active');
+        text.textContent = 'Watchlist';
+    }
+}
+
+function toggleBookmarkCurrent() {
+    if (!currentDetailItem) return;
+    const mediaType = currentDetailItem.mediaType || currentMediaType;
+    toggleWatchlist(currentDetailItem.id, mediaType, null);
+    updateBookmarkButton();
+}
+
+function renderRatingBreakdown(data) {
+    const container = document.getElementById('ratingBreakdown');
+    if (!container) return;
+    
+    const voteCount = data.vote_count || 0;
+    const voteAverage = data.vote_average || 0;
+    
+    if (voteCount === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    const starCounts = [5, 4, 3, 2, 1];
+    const percentages = [
+        Math.min(100, Math.round((voteAverage / 10) * 100)),
+        Math.min(100, Math.round((voteAverage / 10) * 80)),
+        Math.min(100, Math.round((voteAverage / 10) * 50)),
+        Math.min(100, Math.round((voteAverage / 10) * 20)),
+        Math.min(100, Math.round((voteAverage / 10) * 10))
+    ];
+    
+    container.style.display = 'block';
+    container.innerHTML = `
+        <h3 style="font-size: 16px; margin-bottom: 12px; color: #fff;">Rating Breakdown (${voteCount.toLocaleString()} votes)</h3>
+        ${starCounts.map((star, i) => `
+            <div class="rating-bar-container">
+                <span class="rating-bar-label">${star} ★</span>
+                <div class="rating-bar-track">
+                    <div class="rating-bar-fill" style="width: ${percentages[i]}%;"></div>
+                </div>
+                <span class="rating-bar-value">${percentages[i]}%</span>
+            </div>
+        `).join('')}
+    `;
+}
+
+async function renderSeasonSelector(data, mediaType) {
+    const container = document.getElementById('seasonSelector');
+    if (!container) return;
+    
+    if (mediaType !== 'tv' || !data.seasons || data.seasons.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    const validSeasons = data.seasons.filter(s => s.season_number > 0);
+    if (validSeasons.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = `
+        <div class="season-selector-title">Pilih Season</div>
+        <div class="season-buttons">
+            ${validSeasons.map(s => `
+                <button class="season-btn ${s.season_number === 1 ? 'active' : ''}" 
+                    onclick="selectSeason(${s.season_number}, this)">
+                    Season ${s.season_number}
+                </button>
+            `).join('')}
+        </div>
+    `;
+    
+    selectSeason(1, container.querySelector('.season-btn'));
+}
+
+async function selectSeason(seasonNumber, btn) {
+    document.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    
+    activeSeason = seasonNumber;
+    currentSeasonData = seasonNumber;
+    
+    const container = document.getElementById('episodeList');
+    if (!container || !currentDetailItem) return;
+    
+    container.style.display = 'block';
+    container.innerHTML = '<div class="loading">Memuat episode...</div>';
+    
+    try {
+        const res = await fetch(`${BASE_URL}/tv/${currentDetailItem.id}/season/${seasonNumber}?language=en-US`, {
+            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+        });
+        const data = await res.json();
+        const episodes = data.episodes || [];
+        
+        if (episodes.length === 0) {
+            container.innerHTML = '<div class="loading">Tidak ada episode untuk season ini.</div>';
+            return;
+        }
+        
+        currentEpisodeData = episodes;
+        
+        container.innerHTML = `
+            <div class="episode-list-title">Episode List - Season ${seasonNumber}</div>
+            ${episodes.map(ep => `
+                <div class="episode-item" onclick="playEpisode(${ep.episode_number})">
+                    <img class="episode-thumb" src="${ep.still_path ? `${IMAGE_URL}${ep.still_path}` : 'https://via.placeholder.com/120x68?text=No+Image'}" alt="${ep.name}" loading="lazy">
+                    <div class="episode-info">
+                        <span class="episode-number">Episode ${ep.episode_number}</span>
+                        <span class="episode-title">${ep.name || 'Untitled'}</span>
+                        <span class="episode-overview">${ep.overview || 'Tidak ada sinopsis.'}</span>
+                    </div>
+                </div>
+            `).join('')}
+        `;
+    } catch (err) {
+        console.error("Error load episodes:", err);
+        container.innerHTML = '<div class="loading">Gagal memuat episode.</div>';
+    }
+}
+
+function playEpisode(episodeNumber) {
+    if (!currentDetailItem) return;
+    activeEpisode = episodeNumber;
+    
+    document.querySelectorAll('.episode-item').forEach((item, i) => {
+        item.classList.toggle('active', i === episodeNumber - 1);
+    });
+    
+    goToPlayer();
 }
 
 function goToPlayer() {
@@ -2042,13 +2355,42 @@ function goToPlayer() {
     const mediaType = currentDetailItem.mediaType || currentMediaType;
     const title = currentDetailItem.title || currentDetailItem.name || 'Untitled';
 
-    document.getElementById('playerTitle').textContent = title;
+    document.getElementById('playerTitle').textContent = title + (mediaType === 'tv' ? ` - S${activeSeason}E${activeEpisode}` : '');
+
+    const prevBtn = document.getElementById('prevEpisodeBtn');
+    const nextBtn = document.getElementById('nextEpisodeBtn');
+    
+    if (mediaType === 'tv') {
+        prevBtn.style.display = 'inline-block';
+        nextBtn.style.display = 'inline-block';
+        prevBtn.disabled = activeEpisode <= 1;
+        nextBtn.disabled = !currentEpisodeData || activeEpisode >= currentEpisodeData.length;
+    } else {
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+    }
 
     setupPlayer(id, mediaType);
     showPage('player-page');
+    startProgressTracking(id, mediaType);
+}
+
+function playPrevEpisode() {
+    if (activeEpisode > 1) {
+        activeEpisode--;
+        goToPlayer();
+    }
+}
+
+function playNextEpisode() {
+    if (currentEpisodeData && activeEpisode < currentEpisodeData.length) {
+        activeEpisode++;
+        goToPlayer();
+    }
 }
 
 function goBackToDetail() {
+    stopProgressTracking();
     if (currentDetailItem) {
         showPage('detail-page');
     } else {
@@ -2061,17 +2403,17 @@ function setupPlayer(id, mediaType) {
     playerMediaType = mediaType;
 
     const servers = [
-        { name: "VidSrc XYZ", url: `https://vidsrc.xyz/embed/${mediaType}?tmdb=${id}` },
-        { name: "VidSrc ME", url: `https://vidsrc.me/embed/${mediaType}?tmdb=${id}` },
-        { name: "Embed SU", url: `https://embed.su/embed/${mediaType}/${id}` },
-        { name: "VidSrc CC", url: `https://vidsrc.cc/v2/embed/${mediaType}/${id}` },
-        { name: "MultiEmbed", url: `https://multiembed.mov/?video_id=${id}&tmdb=1${mediaType === 'tv' ? '&s=1&e=1' : ''}` },
-        { name: "Main Server 1", url: mediaType === 'movie' ? `https://vidstuck.xyz/embed/movie/${id}?branding=zxcstream&subtitle=english` : `https://vidstuck.xyz/embed/tv/${id}/1/1?branding=zxcstream&subtitle=english` },
-        { name: "Main Server 2", url: mediaType === 'movie' ? `https://zxcstream.xyz/player/movie/${id}?server=0&subLang=english,indonesian` : `https://zxcstream.xyz/player/tv/${id}/1/1?server=0&subLang=english,indonesian` },
-        { name: "Server Alpha", url: mediaType === 'movie' ? `https://vidup.to/movie/${id}?autoPlay=true&theme=FF0000` : `https://vidup.to/tv/${id}/1/1?autoPlay=true&theme=FF0000` },
-        { name: "Server Beta", url: mediaType === 'movie' ? `https://mappletv.uk/watch/movie/${id}` : `https://mappletv.uk/watch/tv/${id}-1-1` },
-        { name: "Server Delta", url: mediaType === 'movie' ? `https://111movies.com/movie/${id}` : `https://111movies.com/tv/${id}/1/1` },
-        { name: "Server Zeta", url: mediaType === 'movie' ? `https://vidsrc.xyz/embed/movie/${id}` : `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=1&episode=1` }
+        { name: "VidSrc XYZ", url: `https://vidsrc.xyz/embed/${mediaType}?tmdb=${id}${mediaType === 'tv' ? `&season=${activeSeason}&episode=${activeEpisode}` : ''}` },
+        { name: "VidSrc ME", url: `https://vidsrc.me/embed/${mediaType}?tmdb=${id}${mediaType === 'tv' ? `&season=${activeSeason}&episode=${activeEpisode}` : ''}` },
+        { name: "Embed SU", url: `https://embed.su/embed/${mediaType}/${id}${mediaType === 'tv' ? `/${activeSeason}/${activeEpisode}` : ''}` },
+        { name: "VidSrc CC", url: `https://vidsrc.cc/v2/embed/${mediaType}/${id}${mediaType === 'tv' ? `/${activeSeason}/${activeEpisode}` : ''}` },
+        { name: "MultiEmbed", url: `https://multiembed.mov/?video_id=${id}&tmdb=1${mediaType === 'tv' ? `&s=${activeSeason}&e=${activeEpisode}` : ''}` },
+        { name: "Main Server 1", url: mediaType === 'movie' ? `https://vidstuck.xyz/embed/movie/${id}?branding=zxcstream&subtitle=english` : `https://vidstuck.xyz/embed/tv/${id}/${activeSeason}/${activeEpisode}?branding=zxcstream&subtitle=english` },
+        { name: "Main Server 2", url: mediaType === 'movie' ? `https://zxcstream.xyz/player/movie/${id}?server=0&subLang=english,indonesian` : `https://zxcstream.xyz/player/tv/${id}/${activeSeason}/${activeEpisode}?server=0&subLang=english,indonesian` },
+        { name: "Server Alpha", url: mediaType === 'movie' ? `https://vidup.to/movie/${id}?autoPlay=true&theme=FF0000` : `https://vidup.to/tv/${id}/${activeSeason}/${activeEpisode}?autoPlay=true&theme=FF0000` },
+        { name: "Server Beta", url: mediaType === 'movie' ? `https://mappletv.uk/watch/movie/${id}` : `https://mappletv.uk/watch/tv/${id}-${activeSeason}-${activeEpisode}` },
+        { name: "Server Delta", url: mediaType === 'movie' ? `https://111movies.com/movie/${id}` : `https://111movies.com/tv/${id}/${activeSeason}/${activeEpisode}` },
+        { name: "Server Zeta", url: mediaType === 'movie' ? `https://vidsrc.xyz/embed/movie/${id}` : `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${activeSeason}&episode=${activeEpisode}` }
     ];
 
     const serversContainer = document.getElementById('playerServers');
@@ -2129,7 +2471,56 @@ function switchPlayerServer(url, btn) {
     };
 }
 
-function showOverview() {
+function startProgressTracking(id, mediaType) {
+    stopProgressTracking();
+    
+    const key = `${id}_${mediaType}`;
+    let startProgress = savedProgress[key] || 0;
+    
+    playerProgress = startProgress;
+    updateProgressUI(playerProgress);
+    
+    playerProgressInterval = setInterval(() => {
+        playerProgress += 0.5;
+        if (playerProgress > 95) playerProgress = 95;
+        updateProgressUI(playerProgress);
+        savedProgress[key] = playerProgress;
+        saveSavedProgress();
+    }, 5000);
+}
+
+function stopProgressTracking() {
+    if (playerProgressInterval) {
+        clearInterval(playerProgressInterval);
+        playerProgressInterval = null;
+    }
+}
+
+function updateProgressUI(progress) {
+    const bar = document.getElementById('playerProgressBar');
+    const text = document.getElementById('playerProgressText');
+    if (bar) bar.style.setProperty('--progress', progress + '%');
+    if (bar) {
+        bar.querySelector ? null : null;
+        bar.style.cssText = `flex:1;height:6px;background:#333;border-radius:3px;overflow:hidden;position:relative;`;
+        bar.innerHTML = `<div style="height:100%;width:${progress}%;background:linear-gradient(90deg,#e50914,#f6121d);border-radius:3px;transition:width 0.3s ease;"></div>`;
+    }
+    if (text) text.textContent = Math.round(progress) + '%';
+}
+
+function loadSavedProgress() {
+    try {
+        savedProgress = JSON.parse(localStorage.getItem('movieMatchProgress')) || {};
+    } catch {
+        savedProgress = {};
+    }
+}
+
+function saveSavedProgress() {
+    localStorage.setItem('movieMatchProgress', JSON.stringify(savedProgress));
+}
+
+async function showOverview() {
     if (!currentDetailItem) return;
     const content = document.getElementById('detailsContent');
     const overview = currentOverviewEn || currentDetailItem.overview || 'Tidak ada sinopsis.';
@@ -2137,6 +2528,10 @@ function showOverview() {
 
     document.querySelectorAll('.detailsButtonWrapper button').forEach(b => b.classList.remove('red'));
     document.querySelector('.detailsOverviewbutton').classList.add('red');
+
+    document.getElementById('ratingBreakdown').style.display = 'none';
+    document.getElementById('seasonSelector').style.display = 'none';
+    document.getElementById('episodeList').style.display = 'none';
 
     isOverviewTranslated = false;
     const translateBtn = document.querySelector('.detailsTranslatebutton');
@@ -2172,9 +2567,70 @@ async function showTrailer() {
     document.querySelectorAll('.detailsButtonWrapper button').forEach(b => b.classList.remove('red'));
     document.querySelector('.detailsTrailerbutton').classList.add('red');
 
+    document.getElementById('ratingBreakdown').style.display = 'none';
+    document.getElementById('seasonSelector').style.display = 'none';
+    document.getElementById('episodeList').style.display = 'none';
+
     isOverviewTranslated = false;
     const translateBtn = document.querySelector('.detailsTranslatebutton');
     if (translateBtn) translateBtn.innerHTML = ICON_TRANSLATE + ' Translate';
+}
+
+async function showSimilar() {
+    if (!currentDetailItem) return;
+    
+    const id = currentDetailItem.id;
+    const mediaType = currentDetailItem.mediaType || 'movie';
+    const content = document.getElementById('detailsContent');
+    
+    content.innerHTML = '<div class="loading">Memuat rekomendasi serupa...</div>';
+    
+    document.querySelectorAll('.detailsButtonWrapper button').forEach(b => b.classList.remove('red'));
+    document.querySelector('.detailsSimilarbutton').classList.add('red');
+    
+    document.getElementById('ratingBreakdown').style.display = 'none';
+    document.getElementById('seasonSelector').style.display = 'none';
+    document.getElementById('episodeList').style.display = 'none';
+    
+    try {
+        const res = await fetch(`${BASE_URL}/${mediaType}/${id}/similar?language=en-US&page=1`, {
+            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+        });
+        const data = await res.json();
+        const items = (data.results || []).slice(0, 12);
+        
+        if (items.length === 0) {
+            content.innerHTML = '<p>Tidak ada rekomendasi serupa.</p>';
+            return;
+        }
+        
+        content.innerHTML = `
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;">
+                ${items.map(item => {
+                    const poster = item.poster_path ? `${IMAGE_URL}${item.poster_path}` : 'https://via.placeholder.com/300x450?text=No+Image';
+                    const title = item.title || item.name || 'Untitled';
+                    const year = (item.release_date || item.first_air_date || '').substring(0,4) || 'N/A';
+                    return `
+                        <div style="background:#181818;border-radius:8px;overflow:hidden;cursor:pointer;" onclick='openSimilarItem(${JSON.stringify(item).replace(/'/g, "&#39;")})'>
+                            <img src="${poster}" style="width:100%;aspect-ratio:2/3;object-fit:cover;display:block;" loading="lazy">
+                            <div style="padding:8px;">
+                                <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${title}</div>
+                                <div style="font-size:11px;color:#888;">${year}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    } catch (err) {
+        content.innerHTML = '<p>Gagal memuat rekomendasi serupa.</p>';
+    }
+}
+
+function openSimilarItem(item) {
+    const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    item.media_type = mediaType;
+    openDetail(item);
 }
 
 async function translateOverview() {
