@@ -257,7 +257,9 @@ const COUNTRY_NAMES = {
     KR: 'Korea',
     JP: 'Jepang',
     GB: 'Inggris',
-    IN: 'India'
+    IN: 'India',
+    TH: 'Thailand',
+    CN: 'China'
 };
 
 let currentLang = localStorage.getItem('movieMatchLang') || 'id';
