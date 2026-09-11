@@ -5,7 +5,6 @@ const IMAGE_URL = "https://image.tmdb.org/t/p/w500";
 const SUPABASE_URL = "https://yratvqvtlixcvyciqrsg.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable___KN08wXZeXaPpHU6z-DAQ_JbZXIoyj";
 const OPENSUBTITLES_API_KEY = "C3oTYqRkJtvkZFVR4r361m0zFfInJcom";
-
 const SUB_PARAMS = "&sub=id,en&sub-source=opensubtitles";
 
 let supabaseClient = null;
@@ -97,6 +96,13 @@ let currentUserRating = 0;
 let trailerAutoPlayTimer = null;
 let currentTrailerPlaying = false;
 
+let currentSubtitleOffset = 0;
+let subtitleOffsetSaved = {};
+let actorSearchDebounceTimer = null;
+let currentActorFilter = null;
+let detailTrailerTimer = null;
+let detailTrailerActive = false;
+
 const ICON_TRANSLATE = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802"/></svg>`;
 const ICON_CHECK = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>`;
 const ICON_LOADING = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>`;
@@ -121,9 +127,10 @@ const TRANSLATIONS = {
         'platform.label': 'PLATFORM STREAMING', 'platform.title': 'Tersedia di Platform', 'platform.description': 'Klik logo untuk melihat konten eksklusif dari platform tersebut.',
         'detail.play': 'Tonton', 'detail.download': 'Unduh', 'detail.watchlist': 'Watchlist', 'detail.bookmarked': 'Tersimpan',
         'detail.overview': 'Sinopsis', 'detail.trailer': 'Trailer', 'detail.similar': 'Mirip', 'detail.translate': 'Terjemahkan',
-        'player.back': 'Kembali', 'player.disableAds': 'Matikan iklan',
+        'player.back': 'Kembali', 'player.disableAds': 'Matikan iklan', 'player.subtitleOffset': 'Delay Subtitle:', 'player.reset': 'Reset',
         'search.label': 'JELAJAHI & CARI', 'search.title': 'Pilih Kategori Tayangan', 'search.recent': 'Pencarian Terakhir:',
         'search.clear': 'Hapus', 'search.placeholder': 'Cari judul...', 'search.button': 'Cari',
+        'search.actorPlaceholder': 'Cari aktor/sutradara...', 'search.actorBtn': 'Cari', 'search.filteringBy': 'Filter berdasarkan:',
         'catalog.label': 'KATALOG', 'favorites.label': 'DAFTAR TERSIMPAN', 'favorites.title': 'Favorit Kamu',
         'watchlist.label': 'BOOKMARK', 'watchlist.title': 'Watchlist Kamu',
         'profile.label': 'PROFIL PENGGUNA', 'profile.logout': 'Logout', 'profile.history': 'Riwayat Tayangan Dilihat',
@@ -154,7 +161,8 @@ const TRANSLATIONS = {
         'sort.default': 'Urut: Default', 'sort.popDesc': 'Populer (Tertinggi)', 'sort.popAsc': 'Populer (Terendah)',
         'sort.ratingDesc': 'Rating (Tertinggi)', 'sort.ratingAsc': 'Rating (Terendah)',
         'sort.newest': 'Rilis Terbaru', 'sort.oldest': 'Rilis Terlama', 'sort.az': 'Judul A-Z',
-        'lang.all': 'Semua Bahasa'
+        'lang.all': 'Semua Bahasa',
+        'notif.title': 'Notifikasi Episode Baru'
     },
     en: {
         'nav.home': 'Home', 'nav.search': 'Search', 'nav.favorites': 'Favorites', 'nav.watchlist': 'Watchlist', 'nav.continue': 'Continue',
@@ -175,9 +183,10 @@ const TRANSLATIONS = {
         'platform.label': 'STREAMING PLATFORMS', 'platform.title': 'Available On', 'platform.description': 'Click a logo to see exclusive content.',
         'detail.play': 'Play Now', 'detail.download': 'Download', 'detail.watchlist': 'Watchlist', 'detail.bookmarked': 'Bookmarked',
         'detail.overview': 'Overview', 'detail.trailer': 'Trailer', 'detail.similar': 'Similar', 'detail.translate': 'Translate',
-        'player.back': 'Back', 'player.disableAds': 'Disable ads',
+        'player.back': 'Back', 'player.disableAds': 'Disable ads', 'player.subtitleOffset': 'Subtitle Delay:', 'player.reset': 'Reset',
         'search.label': 'EXPLORE & SEARCH', 'search.title': 'Pick a Category', 'search.recent': 'Recent Searches:',
         'search.clear': 'Clear', 'search.placeholder': 'Search title...', 'search.button': 'Search',
+        'search.actorPlaceholder': 'Search actor/director...', 'search.actorBtn': 'Search', 'search.filteringBy': 'Filtering by:',
         'catalog.label': 'CATALOG', 'favorites.label': 'SAVED LIST', 'favorites.title': 'Your Favorites',
         'watchlist.label': 'BOOKMARK', 'watchlist.title': 'Your Watchlist',
         'profile.label': 'USER PROFILE', 'profile.logout': 'Logout', 'profile.history': 'Watch History',
@@ -208,7 +217,8 @@ const TRANSLATIONS = {
         'sort.default': 'Sort: Default', 'sort.popDesc': 'Popularity (High)', 'sort.popAsc': 'Popularity (Low)',
         'sort.ratingDesc': 'Rating (High)', 'sort.ratingAsc': 'Rating (Low)',
         'sort.newest': 'Newest Release', 'sort.oldest': 'Oldest Release', 'sort.az': 'Title A-Z',
-        'lang.all': 'All Languages'
+        'lang.all': 'All Languages',
+        'notif.title': 'New Episode Notification'
     }
 };
 
@@ -347,6 +357,102 @@ function setupStarHover() {
     });
 }
 
+function loadSubtitleOffsets() {
+    try {
+        subtitleOffsetSaved = JSON.parse(localStorage.getItem('movieMatchSubtitleOffsets')) || {};
+    } catch {
+        subtitleOffsetSaved = {};
+    }
+}
+
+function saveSubtitleOffsets() {
+    try {
+        localStorage.setItem('movieMatchSubtitleOffsets', JSON.stringify(subtitleOffsetSaved));
+    } catch (e) {
+        console.warn('Gagal simpan offset subtitle:', e);
+    }
+}
+
+function getSubtitleOffsetKey() {
+    if (!currentDetailItem) return null;
+    const id = currentDetailItem.id;
+    const mediaType = currentDetailItem.mediaType || currentMediaType;
+    if (mediaType === 'tv') {
+        return `${id}_${mediaType}_s${activeSeason}e${activeEpisode}`;
+    }
+    return `${id}_${mediaType}`;
+}
+
+function adjustSubtitleOffset(seconds) {
+    currentSubtitleOffset += seconds;
+    if (currentSubtitleOffset > 60) currentSubtitleOffset = 60;
+    if (currentSubtitleOffset < -60) currentSubtitleOffset = -60;
+
+    const key = getSubtitleOffsetKey();
+    if (key) {
+        subtitleOffsetSaved[key] = currentSubtitleOffset;
+        saveSubtitleOffsets();
+    }
+
+    updateSubtitleOffsetUI();
+
+    const displayValue = currentSubtitleOffset >= 0 ? `+${currentSubtitleOffset}s` : `${currentSubtitleOffset}s`;
+    showToast(`Subtitle delay: ${displayValue}`, 'info', 1500);
+
+    applySubtitleOffsetToIframe();
+}
+
+function resetSubtitleOffset() {
+    currentSubtitleOffset = 0;
+    const key = getSubtitleOffsetKey();
+    if (key) {
+        delete subtitleOffsetSaved[key];
+        saveSubtitleOffsets();
+    }
+    updateSubtitleOffsetUI();
+    showToast('Subtitle delay direset ke 0s', 'success', 1500);
+    applySubtitleOffsetToIframe();
+}
+
+function updateSubtitleOffsetUI() {
+    const valueEl = document.getElementById('subtitleOffsetValue');
+    if (!valueEl) return;
+    const displayValue = currentSubtitleOffset >= 0 ? `+${currentSubtitleOffset}s` : `${currentSubtitleOffset}s`;
+    valueEl.textContent = currentSubtitleOffset === 0 ? '0s' : displayValue;
+    valueEl.style.color = currentSubtitleOffset === 0 ? '#888' : '#f1c40f';
+}
+
+function loadSubtitleOffsetForCurrent() {
+    const key = getSubtitleOffsetKey();
+    if (key && subtitleOffsetSaved[key] !== undefined) {
+        currentSubtitleOffset = subtitleOffsetSaved[key];
+    } else {
+        currentSubtitleOffset = 0;
+    }
+    updateSubtitleOffsetUI();
+}
+
+function applySubtitleOffsetToIframe() {
+    const iframe = document.getElementById('playerFrame');
+    if (!iframe || !iframe.src) return;
+
+    try {
+        const url = new URL(iframe.src);
+        if (currentSubtitleOffset !== 0) {
+            url.searchParams.set('sub_offset', currentSubtitleOffset);
+            url.searchParams.set('sub_delay', currentSubtitleOffset);
+            url.searchParams.set('subtitle_offset', currentSubtitleOffset);
+        } else {
+            url.searchParams.delete('sub_offset');
+            url.searchParams.delete('sub_delay');
+            url.searchParams.delete('subtitle_offset');
+        }
+        iframe.src = url.toString();
+    } catch (e) {
+        console.warn('Tidak bisa apply offset ke iframe:', e);
+    }
+}
+
 async function loadRecommendations() {
     const container = document.getElementById('recommendationContainer');
     if (!container) return;
@@ -421,6 +527,152 @@ async function filterByPerson(personId, personName) {
         scrollToMovies();
     } catch (err) {
         if (movieContainer) movieContainer.innerHTML = '<div class="loading">Gagal memuat filmografi.</div>';
+    }
+}
+
+function handleActorSearchKey(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        searchActorByName();
+    }
+}
+
+async function searchActorByName() {
+    const input = document.getElementById('actorSearchInput');
+    if (!input) return;
+
+    const query = input.value.trim();
+    if (query.length < 2) {
+        showToast('Minimal 2 karakter untuk mencari', 'error');
+        return;
+    }
+
+    const resultsContainer = document.getElementById('actorSearchResults');
+    if (!resultsContainer) return;
+
+    resultsContainer.classList.add('visible');
+    resultsContainer.innerHTML = '<div class="loading" style="padding: 12px;">Mencari...</div>';
+
+    try {
+        const url = `${BASE_URL}/search/person?query=${encodeURIComponent(query)}&language=en-US&page=1`;
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+        });
+        const data = await res.json();
+        const people = (data.results || []).slice(0, 12);
+
+        if (people.length === 0) {
+            resultsContainer.innerHTML = '<div class="loading" style="padding: 12px;">Tidak ada hasil ditemukan.</div>';
+            return;
+        }
+
+        resultsContainer.innerHTML = people.map(person => {
+            const photo = person.profile_path
+                ? `https://image.tmdb.org/t/p/w200${person.profile_path}`
+                : 'https://via.placeholder.com/100x100?text=?';
+            const dept = person.known_for_department || 'Acting';
+            return `
+                <div class="actor-result-card" onclick="selectActorFilter(${person.id}, '${escapeHtml(person.name).replace(/'/g, "&#39;")}', '${dept}')">
+                    <img class="actor-result-photo" src="${photo}" alt="${escapeHtml(person.name)}" loading="lazy" onerror="this.src='https://via.placeholder.com/100x100?text=?'">
+                    <div class="actor-result-info">
+                        <span class="actor-result-name">${escapeHtml(person.name)}</span>
+                        <span class="actor-result-dept">${dept}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('Actor search error:', err);
+        resultsContainer.innerHTML = '<div class="loading" style="padding: 12px;">Gagal mencari. Coba lagi.</div>';
+    }
+}
+
+function selectActorFilter(personId, personName, department) {
+    currentActorFilter = { id: personId, name: personName, department };
+
+    const resultsContainer = document.getElementById('actorSearchResults');
+    if (resultsContainer) {
+        resultsContainer.classList.remove('visible');
+        resultsContainer.innerHTML = '';
+    }
+
+    const input = document.getElementById('actorSearchInput');
+    if (input) input.value = '';
+
+    const filterBadge = document.getElementById('activeActorFilter');
+    const nameEl = document.getElementById('activeActorName');
+    if (filterBadge && nameEl) {
+        filterBadge.style.display = 'flex';
+        nameEl.textContent = personName;
+    }
+
+    filterByActor(personId, personName, department);
+}
+
+async function filterByActor(personId, personName, department) {
+    showPage('search-page');
+    if (movieTitle) movieTitle.textContent = `Film oleh ${personName}`;
+    if (catalogTitle) catalogTitle.textContent = `${department}: ${personName}`;
+    if (movieContainer) showSkeletonLoader(movieContainer, 8);
+
+    try {
+        const param = department === 'Directing' ? 'with_crew' : 'with_cast';
+        const url = `${BASE_URL}/discover/movie?${param}=${personId}&language=id-ID&page=1&sort_by=popularity.desc`;
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+        });
+        const data = await res.json();
+
+        if (!data.results || data.results.length === 0) {
+            if (movieContainer) {
+                movieContainer.innerHTML = `<div class="loading">Tidak ada film ditemukan untuk ${escapeHtml(personName)}.</div>`;
+            }
+            return;
+        }
+
+        currentActorFilter = { id: personId, name: personName, department, page: 1, totalPages: Math.min(data.total_pages, 20) };
+        await displayItems(data.results, movieContainer, true);
+        scrollToMovies();
+    } catch (err) {
+        console.error('Filter by actor error:', err);
+        if (movieContainer) movieContainer.innerHTML = '<div class="loading">Gagal memuat film.</div>';
+    }
+}
+
+function clearActorFilter() {
+    currentActorFilter = null;
+
+    const filterBadge = document.getElementById('activeActorFilter');
+    if (filterBadge) filterBadge.style.display = 'none';
+
+    const resultsContainer = document.getElementById('actorSearchResults');
+    if (resultsContainer) {
+        resultsContainer.classList.remove('visible');
+        resultsContainer.innerHTML = '';
+    }
+
+    const input = document.getElementById('actorSearchInput');
+    if (input) input.value = '';
+
+    showToast('Filter actor dibersihkan', 'info', 1500);
+    loadContent('popular', 1);
+}
+
+function setupActorSearch() {
+    const input = document.getElementById('actorSearchInput');
+    if (input && !input.dataset.bound) {
+        input.dataset.bound = 'true';
+        input.addEventListener('input', function () {
+            clearTimeout(actorSearchDebounceTimer);
+            const value = this.value.trim();
+            if (value.length === 0) {
+                const resultsContainer = document.getElementById('actorSearchResults');
+                if (resultsContainer) {
+                    resultsContainer.classList.remove('visible');
+                    resultsContainer.innerHTML = '';
+                }
+            }
+        });
     }
 }
 
@@ -549,6 +801,176 @@ function stopAutoTrailer(btn) {
     clearTrailerTimer();
 }
 
+function scheduleDetailTrailerAutoPlay() {
+    clearDetailTrailerTimer();
+    if (detailTrailerActive) return;
+    if (!currentDetailItem) return;
+
+    detailTrailerTimer = setTimeout(async () => {
+        if (detailTrailerActive) return;
+        if (!currentDetailItem) return;
+        if (!document.getElementById('detail-page').classList.contains('active')) return;
+
+        const content = document.getElementById('detailsContent');
+        if (!content) return;
+
+        const overviewBtn = document.querySelector('.detailsOverviewbutton');
+        if (!overviewBtn || !overviewBtn.classList.contains('red')) return;
+
+        try {
+            const id = currentDetailItem.id;
+            const mediaType = currentDetailItem.mediaType || 'movie';
+            const res = await fetch(`${BASE_URL}/${mediaType}/${id}/videos?api_key=${API_KEY}`);
+            const data = await res.json();
+            const trailer = data.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+            if (!trailer) return;
+
+            detailTrailerActive = true;
+
+            content.innerHTML = `
+                <div class="detailsAutoTrailer">
+                    <iframe
+                        src="https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0"
+                        allow="autoplay; encrypted-media"
+                        allowfullscreen>
+                    </iframe>
+                    <button class="trailer-close-btn" onclick="closeDetailTrailer()">Tutup Trailer</button>
+                </div>
+            `;
+        } catch (err) {
+            console.warn('Auto trailer error:', err);
+        }
+    }, 5000);
+}
+
+function clearDetailTrailerTimer() {
+    if (detailTrailerTimer) {
+        clearTimeout(detailTrailerTimer);
+        detailTrailerTimer = null;
+    }
+}
+
+function closeDetailTrailer() {
+    detailTrailerActive = false;
+    clearDetailTrailerTimer();
+
+    if (currentDetailItem) {
+        const overview = currentOverviewEn || currentDetailItem.overview || 'Tidak ada sinopsis.';
+        const content = document.getElementById('detailsContent');
+        if (content) {
+            content.innerHTML = `<p id="detailsOverviewText">${escapeHtml(overview)}</p>`;
+        }
+    }
+}
+
+function checkForNewEpisodes() {
+    const user = getCurrentUser();
+    if (!user || !supabaseClient) return;
+
+    supabaseClient
+        .from('history')
+        .select('*')
+        .eq('user_email', user.email)
+        .eq('media_type', 'tv')
+        .order('created_at', { ascending: false })
+        .limit(5)
+        .then(({ data: historyItems, error }) => {
+            if (error || !historyItems || historyItems.length === 0) return;
+
+            Promise.all(historyItems.map(async (item) => {
+                try {
+                    const res = await fetch(`${BASE_URL}/tv/${item.movie_id}?language=en-US`, {
+                        headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                    });
+                    const data = await res.json();
+
+                    const lastAirDate = data.last_air_date;
+                    const status = data.status;
+
+                    if (status === 'Returning Series' && lastAirDate) {
+                        const daysSince = Math.floor((Date.now() - new Date(lastAirDate).getTime()) / (1000 * 60 * 60 * 24));
+                        if (daysSince >= 0 && daysSince <= 30) {
+                            return {
+                                title: item.title,
+                                lastAirDate: lastAirDate,
+                                daysSince: daysSince,
+                                nextEpisode: data.next_episode_to_air
+                            };
+                        }
+                    }
+                    return null;
+                } catch {
+                    return null;
+                }
+            })).then(activeShows => {
+                const validShows = activeShows.filter(s => s !== null);
+                if (validShows.length === 0) return;
+
+                const lastCheckKey = 'movieMatchLastEpisodeCheck';
+                const lastCheck = localStorage.getItem(lastCheckKey);
+                const todayKey = new Date().toDateString();
+
+                if (lastCheck === todayKey) return;
+                localStorage.setItem(lastCheckKey, todayKey);
+
+                const show = validShows[0];
+                let message = '';
+                if (show.nextEpisode && show.nextEpisode.air_date) {
+                    const airDate = new Date(show.nextEpisode.air_date);
+                    const daysUntil = Math.floor((airDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                    if (daysUntil > 0) {
+                        message = `${show.title}: Episode baru "${show.nextEpisode.name}" tayang dalam ${daysUntil} hari.`;
+                    } else if (daysUntil === 0) {
+                        message = `${show.title}: Episode baru "${show.nextEpisode.name}" tayang hari ini!`;
+                    } else {
+                        message = `${show.title}: Episode baru sudah tersedia!`;
+                    }
+                } else {
+                    message = `${show.title}: Cek episode baru sekarang!`;
+                }
+
+                showNotificationBanner(message);
+
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('MovieMatch - Episode Baru', {
+                        body: message,
+                        icon: 'icons/icon-192.png',
+                        badge: 'icons/icon-192.png',
+                        tag: 'episode-notif'
+                    });
+                }
+            });
+        });
+}
+
+function showNotificationBanner(message) {
+    const banner = document.getElementById('notificationBanner');
+    const messageEl = document.getElementById('notificationMessage');
+    if (!banner || !messageEl) return;
+
+    messageEl.textContent = message;
+    banner.style.display = 'block';
+
+    setTimeout(() => {
+        closeNotificationBanner();
+    }, 10000);
+}
+
+function closeNotificationBanner() {
+    const banner = document.getElementById('notificationBanner');
+    if (banner) banner.style.display = 'none';
+}
+
+function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log('Notification permission granted');
+            }
+        });
+    }
+}
+
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', function(e) {
         const activeTag = document.activeElement.tagName;
@@ -625,6 +1047,7 @@ window.addEventListener('scroll', () => {
 
 document.addEventListener("DOMContentLoaded", () => {
     loadSavedProgress();
+    loadSubtitleOffsets();
     initAutoTheme();
     applyLanguage();
     updateNavAuth();
@@ -719,6 +1142,9 @@ document.addEventListener("DOMContentLoaded", () => {
         loadRecommendations();
         loadTopRated();
         loadContinueWatching();
+        setupActorSearch();
+        requestNotificationPermission();
+        setTimeout(checkForNewEpisodes, 3000);
     }, 500);
 
     setupKeyboardShortcuts();
@@ -769,6 +1195,11 @@ function showPage(pageId) {
     const targetPage = document.getElementById(pageId);
     if (targetPage) targetPage.classList.add('active');
 
+    if (pageId !== 'detail-page') {
+        clearDetailTrailerTimer();
+        detailTrailerActive = false;
+    }
+
     if (pageId === 'home-page') {
         currentGenreId = '';
         currentGenreName = '';
@@ -793,6 +1224,7 @@ function showPage(pageId) {
             if (catalogTitle) catalogTitle.textContent = "Pilih Kategori Tayangan";
             loadContent('popular', 1);
         }
+        setTimeout(() => { setupActorSearch(); }, 200);
     }
 
     window.scrollTo(0, 0);
@@ -1356,40 +1788,39 @@ async function createItemElements(items) {
 
 function buildServersList(mediaType, id, season = 1, episode = 1) {
     const tvParams = mediaType === 'tv' ? `&season=${season}&episode=${episode}` : '';
-    const subParams = '&sub=id,en&sub-source=opensubtitles';
-    
+
     return [
-        { name: "VidSrc XYZ", url: `https://vidsrc.xyz/embed/${mediaType}?tmdb=${id}${tvParams}${subParams}` },
-        { name: "VidSrc ME", url: `https://vidsrc.me/embed/${mediaType}?tmdb=${id}${tvParams}${subParams}` },
+        { name: "VidSrc XYZ", url: `https://vidsrc.xyz/embed/${mediaType}?tmdb=${id}${tvParams}${SUB_PARAMS}` },
+        { name: "VidSrc ME", url: `https://vidsrc.me/embed/${mediaType}?tmdb=${id}${tvParams}${SUB_PARAMS}` },
         { name: "Embed SU", url: `https://embed.su/embed/${mediaType}/${id}${mediaType === 'tv' ? `/${season}/${episode}` : ''}?subtitle=id,en&subtitle-source=opensubtitles` },
-        { name: "VidSrc CC", url: `https://vidsrc.cc/v2/embed/${mediaType}/${id}${mediaType === 'tv' ? `/${season}/${episode}` : ''}${subParams}` },
-        { name: "MultiEmbed", url: `https://multiembed.mov/?video_id=${id}&tmdb=1${mediaType === 'tv' ? `&s=${season}&e=${episode}` : ''}${subParams}` },
-        { name: "AutoEmbed", url: `https://player.autoembed.cc/embed/${mediaType}/${id}${subParams}` },
-        { name: "2Embed", url: `https://2embed.cc/embed/${mediaType}/${id}${subParams}` },
-        { name: "MoviesAPI", url: `https://moviesapi.club/movie/${id}${subParams}` },
-        { name: "VidSrc VIP", url: `https://vidsrc.vip/embed/${mediaType}/${id}${subParams}` },
-        { name: "VidSrc NL", url: `https://player.vidsrc.nl/embed/${mediaType}/${id}${subParams}` },
-        { name: "IDSrc TO", url: `https://idsrc.to/embed/${mediaType}/${id}${subParams}` },
-        { name: "VidSrc ICU", url: `https://vidsrc.icu/embed/${mediaType}/${id}${subParams}` },
-        { name: "Anime-KKI", url: `https://anime-kki.herokuapp.com/embed/${id}${subParams}` },
-        { name: "Main Server 1", url: mediaType === 'movie' 
-            ? `https://vidstuck.xyz/embed/movie/${id}?branding=zxcstream&subtitle=english,indonesian` 
+        { name: "VidSrc CC", url: `https://vidsrc.cc/v2/embed/${mediaType}/${id}${mediaType === 'tv' ? `/${season}/${episode}` : ''}${SUB_PARAMS}` },
+        { name: "MultiEmbed", url: `https://multiembed.mov/?video_id=${id}&tmdb=1${mediaType === 'tv' ? `&s=${season}&e=${episode}` : ''}${SUB_PARAMS}` },
+        { name: "AutoEmbed", url: `https://player.autoembed.cc/embed/${mediaType}/${id}${SUB_PARAMS}` },
+        { name: "2Embed", url: `https://2embed.cc/embed/${mediaType}/${id}${SUB_PARAMS}` },
+        { name: "MoviesAPI", url: `https://moviesapi.club/movie/${id}${SUB_PARAMS}` },
+        { name: "VidSrc VIP", url: `https://vidsrc.vip/embed/${mediaType}/${id}${SUB_PARAMS}` },
+        { name: "VidSrc NL", url: `https://player.vidsrc.nl/embed/${mediaType}/${id}${SUB_PARAMS}` },
+        { name: "IDSrc TO", url: `https://idsrc.to/embed/${mediaType}/${id}${SUB_PARAMS}` },
+        { name: "VidSrc ICU", url: `https://vidsrc.icu/embed/${mediaType}/${id}${SUB_PARAMS}` },
+        { name: "Anime-KKI", url: `https://anime-kki.herokuapp.com/embed/${id}${SUB_PARAMS}` },
+        { name: "Main Server 1", url: mediaType === 'movie'
+            ? `https://vidstuck.xyz/embed/movie/${id}?branding=zxcstream&subtitle=english,indonesian`
             : `https://vidstuck.xyz/embed/tv/${id}/${season}/${episode}?branding=zxcstream&subtitle=english,indonesian` },
-        { name: "Main Server 2", url: mediaType === 'movie' 
-            ? `https://zxcstream.xyz/player/movie/${id}?server=0&subLang=english,indonesian` 
+        { name: "Main Server 2", url: mediaType === 'movie'
+            ? `https://zxcstream.xyz/player/movie/${id}?server=0&subLang=english,indonesian`
             : `https://zxcstream.xyz/player/tv/${id}/${season}/${episode}?server=0&subLang=english,indonesian` },
-        { name: "Server Alpha", url: mediaType === 'movie' 
-            ? `https://vidup.to/movie/${id}?autoPlay=true&theme=FF0000&sub=id,en&sub-source=opensubtitles` 
-            : `https://vidup.to/tv/${id}/${season}/${episode}?autoPlay=true&theme=FF0000&sub=id,en&sub-source=opensubtitles` },
-        { name: "Server Beta", url: mediaType === 'movie' 
-            ? `https://mappletv.uk/watch/movie/${id}?sub=id,en&sub-source=opensubtitles` 
-            : `https://mappletv.uk/watch/tv/${id}-${season}-${episode}?sub=id,en&sub-source=opensubtitles` },
-        { name: "Server Delta", url: mediaType === 'movie' 
-            ? `https://111movies.com/movie/${id}?sub=id,en&sub-source=opensubtitles` 
-            : `https://111movies.com/tv/${id}/${season}/${episode}?sub=id,en&sub-source=opensubtitles` },
-        { name: "Server Zeta", url: mediaType === 'movie' 
-            ? `https://vidsrc.xyz/embed/movie/${id}?sub=id,en&sub-source=opensubtitles` 
-            : `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}&sub=id,en&sub-source=opensubtitles` }
+        { name: "Server Alpha", url: mediaType === 'movie'
+            ? `https://vidup.to/movie/${id}?autoPlay=true&theme=FF0000${SUB_PARAMS}`
+            : `https://vidup.to/tv/${id}/${season}/${episode}?autoPlay=true&theme=FF0000${SUB_PARAMS}` },
+        { name: "Server Beta", url: mediaType === 'movie'
+            ? `https://mappletv.uk/watch/movie/${id}?${SUB_PARAMS.substring(1)}`
+            : `https://mappletv.uk/watch/tv/${id}-${season}-${episode}?${SUB_PARAMS.substring(1)}` },
+        { name: "Server Delta", url: mediaType === 'movie'
+            ? `https://111movies.com/movie/${id}?${SUB_PARAMS.substring(1)}`
+            : `https://111movies.com/tv/${id}/${season}/${episode}?${SUB_PARAMS.substring(1)}` },
+        { name: "Server Zeta", url: mediaType === 'movie'
+            ? `https://vidsrc.xyz/embed/movie/${id}?${SUB_PARAMS.substring(1)}`
+            : `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}${SUB_PARAMS}` }
     ];
 }
 
@@ -2179,8 +2610,13 @@ async function openDetail(item) {
     renderCollection(data, mediaType);
     renderCast(data.id, mediaType);
 
+    clearDetailTrailerTimer();
+    detailTrailerActive = false;
+
     showPage('detail-page');
     await addToHistory(item);
+
+    scheduleDetailTrailerAutoPlay();
 }
 
 function updateBookmarkButton() {
@@ -2371,6 +2807,9 @@ async function renderCast(id, mediaType) {
 
 function goToPlayer() {
     if (!currentDetailItem) return;
+    clearDetailTrailerTimer();
+    detailTrailerActive = false;
+
     const id = currentDetailItem.id;
     const mediaType = currentDetailItem.mediaType || currentMediaType;
     const title = currentDetailItem.title || currentDetailItem.name || 'Untitled';
@@ -2391,6 +2830,10 @@ function goToPlayer() {
     setupPlayer(id, mediaType);
     showPage('player-page');
     startProgressTracking(id, mediaType);
+
+    setTimeout(() => {
+        loadSubtitleOffsetForCurrent();
+    }, 100);
 }
 
 function playPrevEpisode() {
@@ -2459,6 +2902,10 @@ function switchPlayerServer(url, btn) {
     loader.style.display = 'block';
     iframe.src = url;
     iframe.onload = () => { loader.style.display = 'none'; iframe.style.display = 'block'; };
+
+    setTimeout(() => {
+        applySubtitleOffsetToIframe();
+    }, 500);
 }
 
 function startProgressTracking(id, mediaType) {
@@ -2515,10 +2962,15 @@ async function showOverview() {
     isOverviewTranslated = false;
     const translateBtn = document.querySelector('.detailsTranslatebutton');
     if (translateBtn) translateBtn.innerHTML = ICON_TRANSLATE + ' Translate';
+
+    scheduleDetailTrailerAutoPlay();
 }
 
 async function showTrailer() {
     if (!currentDetailItem) return;
+    clearDetailTrailerTimer();
+    detailTrailerActive = false;
+
     const id = currentDetailItem.id;
     const mediaType = currentDetailItem.mediaType || 'movie';
     const content = document.getElementById('detailsContent');
@@ -2547,6 +2999,9 @@ async function showTrailer() {
 
 async function showSimilar() {
     if (!currentDetailItem) return;
+    clearDetailTrailerTimer();
+    detailTrailerActive = false;
+
     const id = currentDetailItem.id;
     const mediaType = currentDetailItem.mediaType || 'movie';
     const content = document.getElementById('detailsContent');
