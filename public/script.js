@@ -3925,20 +3925,16 @@ function loadUserProfile() {
     } catch (e) {
         userProfile = { displayName: user.name, bio: '', avatar: '', favoriteGenres: [] };
     }
+    
     const avatarImg = document.getElementById('profileAvatar');
-    if (avatarImg && userProfile.avatar) avatarImg.src = userProfile.avatar;
-    const nameInput = document.getElementById('profileDisplayName');
-    if (nameInput) nameInput.value = userProfile.displayName || '';
-    const bioInput = document.getElementById('profileBio');
-    if (bioInput) bioInput.value = userProfile.bio || '';
-    document.querySelectorAll('.genre-chip').forEach(chip => {
-        const genre = chip.dataset.genre;
-        if ((userProfile.favoriteGenres || []).includes(genre)) chip.classList.add('active');
-        else chip.classList.remove('active');
-    });
-    isPremiumUser = user.isPremium || false;
-    updatePremiumUI();
-}
+    if (avatarImg) {
+        if (userProfile.avatar) {
+            avatarImg.src = userProfile.avatar;
+        } else {
+            const userName = userProfile.displayName || 'User';
+            avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=e50914&color=fff&size=100`;
+        }
+    }
 
 function toggleFavoriteGenre(btn) {
     if (!userProfile.favoriteGenres) userProfile.favoriteGenres = [];
