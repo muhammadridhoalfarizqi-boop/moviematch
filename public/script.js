@@ -35,8 +35,6 @@ let activeItemId = null;
 let activeSeason = 1;
 let activeEpisode = 1;
 let activeServerIndex = 0;
-let currentOverviewEn = "";
-let currentOverviewId = "";
 let otpEmail = '';
 let otpTimer = null;
 let isMoodSearch = false;
@@ -51,6 +49,15 @@ let studioTotalPages = 1;
 let currentDetailItem = null;
 let playerItemId = null;
 let playerMediaType = 'movie';
+let currentOverviewEn = "";
+let currentOverviewId = "";
+let isOverviewTranslated = false;
+
+const ICON_TRANSLATE = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802"/></svg>`;
+
+const ICON_CHECK = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>`;
+
+const ICON_LOADING = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>`;
 
 document.addEventListener("DOMContentLoaded", () => {
     updateNavAuth();
@@ -674,9 +681,9 @@ function filterByStudio(value) {
             }
             return;
         }
-        studioTotalPages = Math.min(data.total_pages, 10);
+        studioTotalPages = Math.min(data.total_pages, 20);
         displayItems(data.results, movieContainer, true);
-        addStudioPagination(studioTotalPages, currentStudioPage);
+        addStudioInfiniteScroll();
         scrollToMovies();
     })
     .catch(err => {
@@ -687,128 +694,70 @@ function filterByStudio(value) {
     });
 }
 
-function addStudioPagination(totalPages, currentPage) {
-    const oldPagination = document.getElementById('studioPagination');
-    if (oldPagination) oldPagination.remove();
+function addStudioInfiniteScroll() {
+    const oldSentinel = document.getElementById('studioSentinel');
+    if (oldSentinel) oldSentinel.remove();
 
-    if (totalPages <= 1) return;
+    if (currentStudioPage >= studioTotalPages) return;
 
-    const container = movieContainer.parentNode;
-    const paginationDiv = document.createElement('div');
-    paginationDiv.id = 'studioPagination';
-    paginationDiv.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; font-size: 14px; color: #aaa;';
+    const sentinel = document.createElement('div');
+    sentinel.id = 'studioSentinel';
+    sentinel.style.cssText = 'display: flex; justify-content: center; align-items: center; padding: 20px; width: 100%;';
+    sentinel.innerHTML = '<div class="loader" style="width:30px;height:30px;border:3px solid transparent;border-top:3px solid #e50914;border-bottom:3px solid #e50914;border-radius:50%;animation:spin 1s linear infinite;"></div>';
+    movieContainer.parentNode.appendChild(sentinel);
 
-    if (currentPage > 1) {
-        const prevBtn = document.createElement('button');
-        prevBtn.innerHTML = '‹';
-        prevBtn.style.cssText = 'background: none; border: none; color: #888; font-size: 24px; cursor: pointer; padding: 0 8px; transition: 0.2s;';
-        prevBtn.onmouseover = () => prevBtn.style.color = '#fff';
-        prevBtn.onmouseout = () => prevBtn.style.color = '#888';
-        prevBtn.onclick = () => loadStudioPage(currentPage - 1);
-        paginationDiv.appendChild(prevBtn);
-    }
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && !isStudioLoading) {
+            loadMoreStudioContent();
+        }
+    }, { rootMargin: '200px' });
 
-    const info = document.createElement('span');
-    info.textContent = `${currentPage} / ${totalPages}`;
-    info.style.cssText = 'color: #888; font-size: 13px;';
-    paginationDiv.appendChild(info);
-
-    if (currentPage < totalPages) {
-        const nextBtn = document.createElement('button');
-        nextBtn.innerHTML = '›';
-        nextBtn.style.cssText = 'background: none; border: none; color: #888; font-size: 24px; cursor: pointer; padding: 0 8px; transition: 0.2s;';
-        nextBtn.onmouseover = () => nextBtn.style.color = '#fff';
-        nextBtn.onmouseout = () => nextBtn.style.color = '#888';
-        nextBtn.onclick = () => loadStudioPage(currentPage + 1);
-        paginationDiv.appendChild(nextBtn);
-    }
-
-    container.appendChild(paginationDiv);
+    observer.observe(sentinel);
 }
 
-function loadStudioPage(page) {
+function loadMoreStudioContent() {
     if (isStudioLoading) return;
+    if (currentStudioPage >= studioTotalPages) return;
     isStudioLoading = true;
-    currentStudioPage = page;
+    currentStudioPage++;
 
     const filterParam = currentStudioType === 'network' ? 'with_networks' : 'with_companies';
     const mediaType = currentStudioType === 'network' ? 'tv' : 'movie';
-    const url = `${BASE_URL}/discover/${mediaType}?${filterParam}=${currentStudioId}&language=id-ID&page=${page}&sort_by=popularity.desc`;
-    
-    if (movieContainer) {
-        movieContainer.innerHTML = '<div class="loading">Memuat konten...</div>';
-    }
-    
-    if (movieTitle) {
-        movieTitle.textContent = `${currentStudioName} - Exclusive Content - Halaman ${page}`;
-    }
-
-    if (catalogTitle) {
-        catalogTitle.textContent = `${currentStudioName} - Exclusive Content - Halaman ${page}`;
-    }
+    const url = `${BASE_URL}/discover/${mediaType}?${filterParam}=${currentStudioId}&language=id-ID&page=${currentStudioPage}&sort_by=popularity.desc`;
 
     fetch(url, {
         headers: {
             'Authorization': `Bearer ${ACCESS_TOKEN}`
         }
     })
-    .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-    })
+    .then(res => res.json())
     .then(data => {
-        if (!data.results || data.results.length === 0) {
-            if (movieContainer) {
-                movieContainer.innerHTML = '<div class="loading">Tidak ada konten dari platform ini.</div>';
-            }
-            return;
+        if (data.results && data.results.length > 0) {
+            createItemElements(data.results).then(newItems => {
+                const sentinel = document.getElementById('studioSentinel');
+                if (sentinel) sentinel.remove();
+                
+                newItems.forEach(item => {
+                    movieContainer.appendChild(item);
+                });
+                
+                isStudioLoading = false;
+                addStudioInfiniteScroll();
+            });
+        } else {
+            const sentinel = document.getElementById('studioSentinel');
+            if (sentinel) sentinel.remove();
+            isStudioLoading = false;
         }
-        displayItems(data.results, movieContainer, true);
-        addStudioPagination(studioTotalPages, page);
-        scrollToMovies();
-        isStudioLoading = false;
     })
     .catch(err => {
-        console.error("Error:", err);
-        if (movieContainer) {
-            movieContainer.innerHTML = '<div class="loading">Gagal memuat data: ' + err.message + '</div>';
-        }
+        console.error("Error loading more studio content:", err);
         isStudioLoading = false;
     });
 }
 
-async function fetchMorePages(baseUrl, currentPage, totalPages) {
-    if (currentPage > totalPages || currentPage > 3) return;
-    
-    try {
-        const url = baseUrl.replace('&page=1', `&page=${currentPage}`);
-        const res = await fetch(url, {
-            headers: {
-                'Authorization': `Bearer ${ACCESS_TOKEN}`
-            }
-        });
-        const data = await res.json();
-        
-        if (data.results && data.results.length > 0) {
-            const existingItems = movieContainer.querySelectorAll('.movie-card');
-            const newItems = await createItemElements(data.results);
-            
-            newItems.forEach(item => {
-                movieContainer.appendChild(item);
-            });
-        }
-        
-        if (currentPage < totalPages && currentPage < 3) {
-            fetchMorePages(baseUrl, currentPage + 1, totalPages);
-        }
-    } catch (err) {
-        console.error("Error fetching more pages:", err);
-    }
-}
-
 async function createItemElements(items) {
     const elements = [];
-    const container = document.createElement('div');
     
     for (const item of items) {
         const card = document.createElement("article");
@@ -898,7 +847,7 @@ async function openModal(item) {
             <p style="line-height: 1.6; font-size: 14px; color: #ddd; max-height: 90px; overflow-y: auto;">${overview}</p>
             
             <div style="display: flex; gap: 10px; margin-top: 5px;">
-                <button onclick='toggleFavoriteCurrent(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="padding: 8px 16px; background: #e50914; color: #fff; border: none; border-radius: 5px; cursor: pointer;">❤️ Favorit</button>
+                <button onclick='toggleFavoriteCurrent(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="padding: 8px 16px; background: #e50914; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Favorit</button>
                 <button onclick="closeMovieModal()" style="padding: 8px 16px; background: #333; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Tutup</button>
             </div>
         </div>
@@ -1659,13 +1608,13 @@ async function loadLandingSlider() {
                     <h2>${title}</h2>
                     <div class="meta">
                         <span>${year}</span>
-                        ${rating !== "N/A" ? `<span>⭐ ${rating}</span>` : ""}
+                        ${rating !== "N/A" ? `<span>${rating}</span>` : ""}
                         ${genreNames ? `<span>${genreNames}</span>` : ""}
                     </div>
                     <p class="overview">${overview}</p>
                     <div class="btn-group">
-                        <button class="btn-play" onclick="playNow(${item.id}, '${mediaType}')">▶ Tonton</button>
-                        <button class="btn-trailer" onclick="playTrailer(${item.id}, '${mediaType}', this)">▶ Trailer</button>
+                        <button class="btn-play" onclick="playNow(${item.id}, '${mediaType}')">Tonton</button>
+                        <button class="btn-trailer" onclick="playTrailer(${item.id}, '${mediaType}', this)">Trailer</button>
                         <button class="btn-details" onclick="openDetail(${JSON.stringify(item).replace(/'/g, "&#39;")})">Detail</button>
                     </div>
                 </div>
@@ -1730,9 +1679,6 @@ async function loadLandingSlider() {
 }
 
 function playNow(id, mediaType) {
-    const watchlist = getWatchlist();
-    const exists = watchlist.some(w => w.id === id);
-    
     fetch(`${BASE_URL}/${mediaType}/${id}?language=en-US`, {
         headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
     })
@@ -1786,7 +1732,7 @@ async function playTrailer(id, mediaType, button) {
                 </iframe>
                 <button onclick="closeTrailer(this)" 
                     style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.7);border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 12px;border-radius:4px;">
-                    ✕
+                    X
                 </button>
             `;
             slide.appendChild(trailerContainer);
@@ -1860,8 +1806,8 @@ async function loadTopTen() {
                     <img src="${poster}" alt="${title}" loading="lazy">
                     <div class="info-overlay">
                         <span class="title">${title}</span>
-                        <span class="director">🎬 Director: ${director}</span>
-                        <span class="stars">⭐ Stars: ${stars}</span>
+                        <span class="director">Director: ${director}</span>
+                        <span class="stars">Stars: ${stars}</span>
                     </div>
                 </div>
             `;
@@ -1918,7 +1864,7 @@ async function loadTopRated() {
                 <img src="${poster}" alt="${title}" loading="lazy">
                 <div class="info">
                     <span class="title">${title}</span>
-                    <span class="rating">⭐ ${rating}</span>
+                    <span class="rating">${rating}</span>
                 </div>
             `;
             
@@ -1999,12 +1945,12 @@ async function loadContinueWatching() {
                 <img src="${poster}" alt="${title}" loading="lazy">
                 <div class="continue-info">
                     <span class="continue-title">${title}</span>
-                    <span class="continue-meta">${year} ${rating !== "N/A" ? `⭐ ${rating}` : ""}</span>
+                    <span class="continue-meta">${year} ${rating !== "N/A" ? rating : ""}</span>
                     ${isTv ? `<span class="continue-episode">${episodeInfo}</span>` : ''}
                     <div class="continue-progress">
                         <div class="progress-bar" style="width: 30%;"></div>
                     </div>
-                    <button class="continue-play-btn" onclick="playNow(${item.movie_id}, '${mediaType}')">▶ Continue Watching</button>
+                    <button class="continue-play-btn" onclick="playNow(${item.movie_id}, '${mediaType}')">Continue Watching</button>
                 </div>
             `;
             
@@ -2067,14 +2013,21 @@ async function openDetail(item) {
     const overview = data.overview || 'Tidak ada sinopsis.';
     const genres = data.genres ? data.genres.map(g => g.name).join(', ') : '';
 
+    currentOverviewEn = data.overview || '';
+    currentOverviewId = item.id;
+    isOverviewTranslated = false;
+
     document.getElementById('detailsPoster').src = poster;
     document.getElementById('detailsTitle').textContent = title;
     document.getElementById('detailsYear').textContent = year;
-    document.getElementById('detailsRating').textContent = `⭐ ${rating}`;
+    document.getElementById('detailsRating').textContent = `${rating}`;
     document.getElementById('detailsRuntime').textContent = runtime;
     document.getElementById('detailsGenre').textContent = genres;
     document.getElementById('detailsOverview').textContent = overview;
     document.getElementById('detailsOverviewText').textContent = overview;
+
+    const translateBtn = document.querySelector('.detailsTranslatebutton');
+    if (translateBtn) translateBtn.innerHTML = ICON_TRANSLATE + ' Translate';
 
     currentDetailItem = { ...item, ...data, mediaType };
 
@@ -2179,10 +2132,15 @@ function switchPlayerServer(url, btn) {
 function showOverview() {
     if (!currentDetailItem) return;
     const content = document.getElementById('detailsContent');
-    content.innerHTML = `<p id="detailsOverviewText">${currentDetailItem.overview || 'Tidak ada sinopsis.'}</p>`;
+    const overview = currentOverviewEn || currentDetailItem.overview || 'Tidak ada sinopsis.';
+    content.innerHTML = `<p id="detailsOverviewText">${overview}</p>`;
 
     document.querySelectorAll('.detailsButtonWrapper button').forEach(b => b.classList.remove('red'));
     document.querySelector('.detailsOverviewbutton').classList.add('red');
+
+    isOverviewTranslated = false;
+    const translateBtn = document.querySelector('.detailsTranslatebutton');
+    if (translateBtn) translateBtn.innerHTML = ICON_TRANSLATE + ' Translate';
 }
 
 async function showTrailer() {
@@ -2213,6 +2171,53 @@ async function showTrailer() {
 
     document.querySelectorAll('.detailsButtonWrapper button').forEach(b => b.classList.remove('red'));
     document.querySelector('.detailsTrailerbutton').classList.add('red');
+
+    isOverviewTranslated = false;
+    const translateBtn = document.querySelector('.detailsTranslatebutton');
+    if (translateBtn) translateBtn.innerHTML = ICON_TRANSLATE + ' Translate';
+}
+
+async function translateOverview() {
+    const content = document.getElementById('detailsContent');
+    const translateBtn = document.querySelector('.detailsTranslatebutton');
+    const overviewText = document.getElementById('detailsOverviewText');
+    
+    if (!currentOverviewEn) {
+        content.innerHTML = '<p>Tidak ada sinopsis untuk diterjemahkan.</p>';
+        return;
+    }
+
+    if (isOverviewTranslated) {
+        overviewText.textContent = currentOverviewEn;
+        translateBtn.innerHTML = ICON_TRANSLATE + ' Translate';
+        translateBtn.classList.remove('red');
+        isOverviewTranslated = false;
+        return;
+    }
+
+    overviewText.textContent = 'Menerjemahkan...';
+    translateBtn.innerHTML = ICON_LOADING + ' Loading...';
+
+    try {
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(currentOverviewEn)}&langpair=en|id`;
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data.responseData && data.responseData.translatedText) {
+            const translated = data.responseData.translatedText;
+            overviewText.textContent = translated;
+            translateBtn.innerHTML = ICON_CHECK + ' English';
+            translateBtn.classList.add('red');
+            isOverviewTranslated = true;
+        } else {
+            overviewText.textContent = 'Gagal menerjemahkan. Coba lagi nanti.';
+            translateBtn.innerHTML = ICON_TRANSLATE + ' Translate';
+        }
+    } catch (err) {
+        console.error('Translation error:', err);
+        overviewText.textContent = 'Gagal menerjemahkan. Coba lagi nanti.';
+        translateBtn.innerHTML = ICON_TRANSLATE + ' Translate';
+    }
 }
 
 function showDownload() {
