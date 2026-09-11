@@ -4767,3 +4767,225 @@ body.light-mode .admin-stat-card {
         font-size: 80px;
     }
 }
+
+.premium-modal-content {
+    max-width: 800px;
+}
+
+.premium-modal-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #fff;
+}
+
+.premium-modal-subtitle {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 24px;
+}
+
+.premium-plans {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.premium-plan-card {
+    position: relative;
+    padding: 20px;
+    background: #15151b;
+    border: 2px solid #292930;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.premium-plan-card:hover {
+    border-color: #f1c40f;
+    transform: translateY(-4px);
+}
+
+.premium-plan-card.selected {
+    border-color: #f1c40f;
+    background: linear-gradient(135deg, #1a1a24, #1f1a0f);
+    box-shadow: 0 0 24px rgba(241, 196, 15, 0.3);
+}
+
+.premium-plan-card.featured {
+    border-color: #f1c40f;
+    background: linear-gradient(135deg, #1a1a24, #1f1a0f);
+}
+
+.plan-badge {
+    position: absolute;
+    top: -10px;
+    right: 12px;
+    padding: 4px 12px;
+    background: #f1c40f;
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+}
+
+.plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #333;
+}
+
+.plan-header h3 {
+    font-size: 16px;
+    color: #fff;
+    margin: 0;
+}
+
+.plan-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f1c40f;
+}
+
+.plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 12px 0;
+}
+
+.plan-features li {
+    padding: 4px 0;
+    color: #aaa;
+    font-size: 12px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.plan-features li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #f1c40f;
+    font-weight: 700;
+}
+
+.plan-duration {
+    display: block;
+    text-align: center;
+    font-size: 11px;
+    color: #666;
+    padding-top: 8px;
+    border-top: 1px solid #333;
+}
+
+.premium-payment-info {
+    padding: 16px;
+    background: #111;
+    border-radius: 8px;
+    border-left: 3px solid #f1c40f;
+    margin-bottom: 20px;
+}
+
+.premium-payment-info p {
+    color: #aaa;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.premium-action-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.premium-wa-btn,
+.premium-tg-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.premium-wa-btn {
+    background: linear-gradient(135deg, #25D366, #128C7E);
+}
+
+.premium-wa-btn:hover {
+    background: linear-gradient(135deg, #2df177, #179c8a);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
+}
+
+.premium-tg-btn {
+    background: linear-gradient(135deg, #229ED9, #186C99);
+}
+
+.premium-tg-btn:hover {
+    background: linear-gradient(135deg, #2eb5f0, #1e7cb0);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(34, 158, 217, 0.4);
+}
+
+.premium-order-info {
+    margin-top: 20px;
+    padding: 12px 16px;
+    background: #1a1a24;
+    border-radius: 8px;
+    border: 1px solid #f1c40f;
+}
+
+.premium-order-info p {
+    font-size: 12px;
+    color: #aaa;
+    margin: 4px 0;
+}
+
+.premium-order-info strong {
+    color: #f1c40f;
+}
+
+.premium-status-badge {
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f1c40f, #d4ac0d);
+    border-radius: 10px;
+    color: #000;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.premium-status-badge span {
+    font-size: 13px;
+}
+
+#premiumExpiryInfo {
+    font-size: 11px;
+    opacity: 0.8;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .premium-plans {
+        grid-template-columns: 1fr;
+    }
+    
+    .premium-action-buttons {
+        flex-direction: column;
+    }
+}
