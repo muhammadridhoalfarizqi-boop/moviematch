@@ -1194,9 +1194,18 @@ document.addEventListener("DOMContentLoaded", () => {
 const originalFetch = window.fetch;
 window.fetch = function(input, init) {
     const url = typeof input === 'string' ? input : input.url;
-    if (url && (url.includes('ads') || url.includes('doubleclick') || url.includes('googlead'))) {
-        return Promise.reject(new Error("Blokir iklan"));
+    const user = getCurrentUser();
+    const isPremium = user && user.isPremium === true;
+    
+    if (!isPremium && url && (url.includes('ads') || url.includes('doubleclick') || url.includes('googlead'))) {
+        console.log('[AdBlock] Iklan diblokir (user Free)');
+        return Promise.reject(new Error("Iklan diblokir"));
     }
+
+    if (isPremium && url && url.includes('ads')) {
+        console.log('[Premium] Iklan dilewatkan');
+    }
+    
     return originalFetch.call(this, input, init);
 };
 
@@ -1211,6 +1220,38 @@ XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
 function getCurrentUser() {
     try { return JSON.parse(localStorage.getItem("movieMatchCurrentUser")); }
     catch { return null; }
+}
+
+async function verifyPremiumFromServer() {
+    const user = getCurrentUser();
+    if (!user || !supabaseClient) return false;
+    
+    try {
+        const { data } = await supabaseClient
+            .from('users')
+            .select('isPremium, premium_plan, premium_expires_at')
+            .eq('email', user.email)
+            .single();
+        
+        if (data) {
+            const updatedUser = { ...user, ...data };
+            localStorage.setItem('movieMatchCurrentUser', JSON.stringify(updatedUser));
+            
+            if (data.premium_expires_at) {
+                const expiry = new Date(data.premium_expires_at);
+                if (expiry < new Date()) {
+                    updatedUser.isPremium = false;
+                    localStorage.setItem('movieMatchCurrentUser', JSON.stringify(updatedUser));
+                    return false;
+                }
+            }
+            
+            return data.isPremium === true;
+        }
+    } catch (err) {
+        console.error('Verify premium error:', err);
+    }
+    return false;
 }
 
 function updateNavAuth() {
@@ -3137,6 +3178,22 @@ function showDownload() {
         showToast("Pilih film dulu sebelum download", "error");
         return;
     }
+
+    const user = getCurrentUser();
+    const isPremium = user && user.isPremium === true;
+
+    if (!isPremium) {
+        const today = new Date().toDateString();
+        const lastDownload = localStorage.getItem('movieMatchLastDownload');
+        const downloadCount = parseInt(localStorage.getItem('movieMatchDownloadCount') || '0');
+        
+        if (lastDownload === today && downloadCount >= 1) {
+            showToast("Free user hanya bisa download 1x/hari. Upgrade ke Premium!", "error", 4000);
+            openPremiumModal();
+            return;
+        }
+    }
+    
     const modal = document.getElementById('downloadModal');
     if (!modal) return;
     const title = currentDetailItem.title || currentDetailItem.name || 'Untitled';
@@ -3199,8 +3256,18 @@ function renderDownloadServers() {
 }
 
 function openDownloadServer(url, name) {
+    const user = getCurrentUser();
+    const isPremium = user && user.isPremium === true;
+    
+    if (!isPremium) {
+        const today = new Date().toDateString();
+        localStorage.setItem('movieMatchLastDownload', today);
+        const count = parseInt(localStorage.getItem('movieMatchDownloadCount') || '0') + 1;
+        localStorage.setItem('movieMatchDownloadCount', count);
+    }
+    
     const win = window.open(url, '_blank');
-    if (!win) { showToast("Pop-up diblokir. Izinkan pop-up untuk download.", "error"); return; }
+    if (!win) { showToast("Pop-up diblokir.", "error"); return; }
     showToast("Membuka " + name + "...", "success");
     closeDownloadModal();
 }
