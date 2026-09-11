@@ -3292,3 +3292,60 @@ body.light-mode .lang-toggle:hover {
         font-size: 18px;
     }
 }
+
+.install-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #e50914, #b20710);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-left: 10px;
+    box-shadow: 0 2px 8px rgba(229, 9, 20, 0.4);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(229, 9, 20, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 16px rgba(229, 9, 20, 0.8);
+    }
+}
+
+.install-btn:hover {
+    background: linear-gradient(135deg, #f6121d, #c40810);
+    transform: translateY(-2px);
+    animation: none;
+    box-shadow: 0 6px 20px rgba(229, 9, 20, 0.6);
+}
+
+.install-btn:active {
+    transform: translateY(0);
+}
+
+.install-btn::before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='white'><path stroke-linecap='round' stroke-linejoin='round' d='M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3'/></svg>");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+@media (max-width: 768px) {
+    .install-btn {
+        font-size: 14px;
+        padding: 8px 16px;
+        margin-left: 0;
+    }
+}
