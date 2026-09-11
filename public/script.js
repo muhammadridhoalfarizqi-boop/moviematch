@@ -2147,7 +2147,220 @@ async function translateOverview() {
     }
 }
 
-function showDownload() { showToast('Fitur download akan segera hadir!', 'info'); }
+function showDownload() {
+    if (!currentDetailItem) {
+        showToast("Pilih film dulu sebelum download", "error");
+        return;
+    }
+
+    const modal = document.getElementById('downloadModal');
+    if (!modal) return;
+
+    const title = currentDetailItem.title || currentDetailItem.name || 'Untitled';
+    const mediaType = currentDetailItem.mediaType || currentMediaType;
+    const year = (currentDetailItem.release_date || currentDetailItem.first_air_date || '').substring(0, 4);
+
+    document.getElementById('downloadItemTitle').textContent = title + ' (' + year + ') - ' + (mediaType === 'tv' ? 'TV Series' : 'Movie');
+
+    switchDownloadTab('video', document.querySelector('.download-tab'));
+    renderDownloadServers();
+
+    const subStatus = document.getElementById('subtitleStatus');
+    if (subStatus) {
+        subStatus.textContent = '';
+        subStatus.className = 'subtitle-status';
+    }
+
+    modal.style.display = 'flex';
+}
+
+function closeDownloadModal() {
+    const modal = document.getElementById('downloadModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function switchDownloadTab(tabName, btn) {
+    document.querySelectorAll('.download-tab-content').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    document.querySelectorAll('.download-tab').forEach(function(el) {
+        el.classList.remove('active');
+    });
+
+    const target = document.getElementById('downloadTab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+    if (target) target.classList.add('active');
+    if (btn) btn.classList.add('active');
+}
+
+function renderDownloadServers() {
+    const container = document.getElementById('downloadServerList');
+    if (!container || !currentDetailItem) return;
+
+    const id = currentDetailItem.id;
+    const mediaType = currentDetailItem.mediaType || currentMediaType;
+
+    const servers = [
+        { name: 'VidSrc Download', url: 'https://vidsrc.xyz/embed/' + mediaType + '?tmdb=' + id, badge: 'NEW', badgeClass: 'new' },
+        { name: 'VidSrc Me Download', url: 'https://vidsrc.me/embed/' + mediaType + '?tmdb=' + id, badge: 'HD', badgeClass: 'hd' },
+        { name: 'Embed SU Download', url: 'https://embed.su/embed/' + mediaType + '/' + id, badge: '', badgeClass: '' },
+        { name: 'VidSrc CC Download', url: 'https://vidsrc.cc/v2/embed/' + mediaType + '/' + id, badge: '', badgeClass: '' },
+        { name: '2Embed Download', url: 'https://2embed.cc/embed/' + mediaType + '/' + id, badge: '', badgeClass: '' },
+        { name: 'MultiEmbed Download', url: 'https://multiembed.mov/?video_id=' + id + '&tmdb=1', badge: '', badgeClass: '' },
+        { name: 'VidSrc VIP Download', url: 'https://vidsrc.vip/embed/' + mediaType + '/' + id, badge: '', badgeClass: '' },
+        { name: 'VidSrc NL Download', url: 'https://player.vidsrc.nl/embed/' + mediaType + '/' + id, badge: '', badgeClass: '' },
+        { name: 'Server Alpha Download', url: mediaType === 'movie' ? 'https://vidup.to/movie/' + id + '?autoPlay=true&theme=FF0000' : 'https://vidup.to/tv/' + id + '/1/1?autoPlay=true&theme=FF0000', badge: '', badgeClass: '' },
+        { name: 'Server Delta Download', url: mediaType === 'movie' ? 'https://111movies.com/movie/' + id : 'https://111movies.com/tv/' + id + '/1/1', badge: '', badgeClass: '' }
+    ];
+
+    const downloadIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>';
+
+    container.innerHTML = servers.map(function(s) {
+        return '<button class="download-server-btn" onclick="openDownloadServer(\'' + s.url + '\', \'' + escapeHtml(s.name) + '\')">' +
+            '<span class="server-name">' +
+                escapeHtml(s.name) +
+                (s.badge ? '<span class="server-badge ' + s.badgeClass + '">' + s.badge + '</span>' : '') +
+            '</span>' +
+            '<span class="download-arrow">' + downloadIcon + '</span>' +
+        '</button>';
+    }).join('');
+}
+
+function openDownloadServer(url, name) {
+    const win = window.open(url, '_blank');
+
+    if (!win) {
+        showToast("Pop-up diblokir. Izinkan pop-up untuk download.", "error");
+        return;
+    }
+
+    showToast("Membuka " + name + "...", "success");
+    closeDownloadModal();
+}
+
+async function downloadSubtitleFile(lang) {
+    const status = document.getElementById('subtitleStatus');
+    if (!status) return;
+
+    status.className = 'subtitle-status loading';
+    status.textContent = 'Mencari subtitle ' + lang.toUpperCase() + '...';
+
+    let imdbId = currentDetailItem ? currentDetailItem.imdb_id : null;
+
+    if (!imdbId && currentDetailItem) {
+        status.textContent = 'Mengambil data film...';
+        try {
+            const mediaType = currentDetailItem.mediaType || currentMediaType;
+            const res = await fetch(BASE_URL + '/' + mediaType + '/' + currentDetailItem.id + '?append_to_response=external_ids', {
+                headers: { 'Authorization': 'Bearer ' + ACCESS_TOKEN }
+            });
+            const data = await res.json();
+            imdbId = data.imdb_id || (data.external_ids && data.external_ids.imdb_id);
+
+            if (!imdbId) {
+                status.className = 'subtitle-status error';
+                status.textContent = 'IMDb ID tidak ditemukan. Subtitle tidak tersedia.';
+                return;
+            }
+        } catch (err) {
+            status.className = 'subtitle-status error';
+            status.textContent = 'Gagal mengambil data. Coba lagi.';
+            return;
+        }
+    }
+
+    if (!imdbId) {
+        status.className = 'subtitle-status error';
+        status.textContent = 'Data film tidak valid.';
+        return;
+    }
+
+    try {
+        const searchUrl = 'https://api.opensubtitles.com/api/v1/subtitles?imdb_id=' + imdbId + '&languages=' + lang;
+        const res = await fetch(searchUrl, {
+            headers: {
+                'Api-Key': OPENSUBTITLES_API_KEY,
+                'User-Agent': 'MovieMatchApp v1.0'
+            }
+        });
+
+        if (!res.ok) {
+            status.className = 'subtitle-status error';
+            status.textContent = 'Subtitle tidak ditemukan untuk bahasa ini.';
+            return;
+        }
+
+        const data = await res.json();
+        const subs = data.data || [];
+
+        if (subs.length === 0) {
+            status.className = 'subtitle-status error';
+            status.textContent = 'Subtitle tidak tersedia untuk film ini.';
+            return;
+        }
+
+        const best = subs.sort(function(a, b) {
+            return ((b.attributes && b.attributes.download_count) || 0) - ((a.attributes && a.attributes.download_count) || 0);
+        })[0];
+        const fileId = best.attributes && best.attributes.files && best.attributes.files[0] ? best.attributes.files[0].file_id : null;
+
+        if (!fileId) {
+            status.className = 'subtitle-status error';
+            status.textContent = 'File subtitle rusak.';
+            return;
+        }
+
+        status.textContent = 'Mengunduh file subtitle...';
+
+        const downloadRes = await fetch('https://api.opensubtitles.com/api/v1/download', {
+            method: 'POST',
+            headers: {
+                'Api-Key': OPENSUBTITLES_API_KEY,
+                'Content-Type': 'application/json',
+                'User-Agent': 'MovieMatchApp v1.0'
+            },
+            body: JSON.stringify({ file_id: fileId })
+        });
+
+        if (!downloadRes.ok) {
+            status.className = 'subtitle-status error';
+            status.textContent = 'Gagal generate download link.';
+            return;
+        }
+
+        const dlData = await downloadRes.json();
+        const downloadLink = dlData.link;
+
+        if (!downloadLink) {
+            status.className = 'subtitle-status error';
+            status.textContent = 'Link download tidak tersedia.';
+            return;
+        }
+
+        const title = (currentDetailItem.title || currentDetailItem.name || 'subtitle').replace(/[^\w\s-]/g, '').trim();
+        const a = document.createElement('a');
+        a.href = downloadLink;
+        a.download = title + '.' + lang + '.srt';
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        status.className = 'subtitle-status success';
+        status.textContent = 'Subtitle ' + lang.toUpperCase() + ' berhasil diunduh.';
+
+        showToast('Subtitle ' + lang.toUpperCase() + ' diunduh', 'success');
+
+    } catch (err) {
+        console.error('Subtitle error:', err);
+        status.className = 'subtitle-status error';
+        status.textContent = 'Terjadi kesalahan. Coba lagi nanti.';
+    }
+}
+
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('downloadModal');
+    if (event.target === modal) closeDownloadModal();
+});
 
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', function(e) {
