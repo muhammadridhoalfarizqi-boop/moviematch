@@ -38,6 +38,7 @@
     </header>
 
     <main>
+        <!-- HOME PAGE -->
         <div id="home-page" class="page active">
             <section class="hero" id="home">
                 <div class="hero-content">
@@ -217,6 +218,7 @@
             </footer>
         </div>
 
+        <!-- DETAIL PAGE -->
         <div id="detail-page" class="page">
             <div id="detailsContainer">
                 <div class="detailsngi">
@@ -299,6 +301,7 @@
             </div>
         </div>
 
+        <!-- PLAYER PAGE -->
         <div id="player-page" class="page">
             <div class="player-container">
                 <div class="player-header">
@@ -390,6 +393,7 @@
             </div>
         </div>
 
+        <!-- SEARCH PAGE -->
         <div id="search-page" class="page">
             <section class="search-section">
                 <div class="section-title">
@@ -524,6 +528,7 @@
             </section>
         </div>
 
+        <!-- FAVORITES PAGE -->
         <div id="favorites-page" class="page">
             <section class="movies-section">
                 <div class="section-header">
@@ -536,6 +541,7 @@
             </section>
         </div>
 
+        <!-- WATCHLIST PAGE -->
         <div id="watchlist-page" class="page">
             <section class="movies-section">
                 <div class="section-header">
@@ -550,6 +556,7 @@
             </section>
         </div>
 
+        <!-- PROFILE PAGE -->
         <div id="profile-page" class="page">
             <section class="movies-section">
                 <div class="section-header">
@@ -592,7 +599,7 @@
                         </div>
                         <button class="save-profile-btn" onclick="saveProfileCustomization()">Simpan Profil</button>
                         <p id="profileSaveMessage" class="auth-message"></p>
-                        </div>
+                    </div>
                 </div>
                 
                 <div class="premium-section">
@@ -617,6 +624,9 @@
                             <li>Prioritas Support</li>
                         </ul>
                         <button class="premium-upgrade-btn" id="premiumUpgradeBtn" onclick="openPremiumModal()">Upgrade ke Premium</button>
+                        <button class="premium-refresh-btn" onclick="refreshPremiumStatus()" style="margin-top: 10px; padding: 8px 16px; background: #333; border: none; border-radius: 6px; color: #fff; cursor: pointer; font-size: 12px; width: 100%;">
+                            🔄 Cek Status Premium
+                        </button>
                         <div id="premiumStatusInfo" style="margin-top: 16px; display: none;">
                             <div class="premium-status-badge">
                                 <span id="premiumPlanBadge">Premium Member</span>
@@ -635,10 +645,17 @@
                     <h3>Admin Panel</h3>
                     <div class="admin-stats" id="adminStats"></div>
                     <button class="admin-refresh-btn" onclick="loadAdminStats()">Refresh Statistik</button>
+                    
+                    <div id="pendingOrdersSection" style="margin-top: 30px;">
+                        <h3>Order Premium Pending</h3>
+                        <div id="pendingOrdersList"></div>
+                        <button class="admin-refresh-btn" onclick="loadPendingOrders()" style="margin-top: 10px;">Refresh Orders</button>
+                    </div>
                 </div>
             </section>
         </div>
 
+        <!-- LOGIN PAGE -->
         <div id="login-page" class="page">
             <div class="auth-page">
                 <div class="auth-box">
@@ -662,6 +679,7 @@
             </div>
         </div>
 
+        <!-- REGISTER PAGE -->
         <div id="register-page" class="page">
             <div class="auth-page">
                 <div class="auth-box">
@@ -699,6 +717,7 @@
             </div>
         </div>
 
+        <!-- OTP PAGE -->
         <div id="otp-page" class="page">
             <div class="auth-page">
                 <div class="auth-box">
@@ -715,6 +734,8 @@
                 </div>
             </div>
         </div>
+
+        <!-- 404 PAGE -->
         <div id="404-page" class="page">
             <div class="error-page">
                 <h1 class="error-code">404</h1>
@@ -725,6 +746,7 @@
         </div>
     </main>
 
+    <!-- MODAL: Movie -->
     <div id="movieModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal()">&times;</span>
@@ -732,6 +754,7 @@
         </div>
     </div>
 
+    <!-- MODAL: Download -->
     <div id="downloadModal" class="modal">
         <div class="modal-content download-modal-content">
             <span class="close-modal" onclick="closeDownloadModal()">&times;</span>
@@ -799,6 +822,7 @@
         </div>
     </div>
     
+    <!-- MODAL: Premium -->
     <div id="premiumModal" class="modal" style="display:none;">
         <div class="modal-content premium-modal-content">
             <span class="close-modal" onclick="closePremiumModal()">&times;</span>
@@ -873,6 +897,8 @@
             </div>
         </div>
     </div>
+    
+    <!-- MODAL: Premium Activated -->
     <div id="premiumActivatedModal" class="modal" style="display:none;">
         <div class="modal-content" style="max-width: 400px; text-align: center;">
             <div style="color: #f1c40f; margin-bottom: 16px; display: flex; justify-content: center;">
@@ -886,20 +912,21 @@
         </div>
     </div>
     
+    <!-- NOTIFICATION BANNER -->
     <div id="notificationBanner" class="notification-banner" style="display:none;">
-    <div class="notification-banner-content">
-        <span class="notification-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:24px;height:24px;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5" />
-            </svg>
-        </span>
-        <div class="notification-text">
-            <span class="notification-title" data-i18n="notif.title">Notifikasi Episode Baru</span>
-            <span class="notification-message" id="notificationMessage"></span>
+        <div class="notification-banner-content">
+            <span class="notification-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:24px;height:24px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5" />
+                </svg>
+            </span>
+            <div class="notification-text">
+                <span class="notification-title" data-i18n="notif.title">Notifikasi Episode Baru</span>
+                <span class="notification-message" id="notificationMessage"></span>
+            </div>
+            <button class="notification-close" onclick="closeNotificationBanner()">&times;</button>
         </div>
-        <button class="notification-close" onclick="closeNotificationBanner()">&times;</button>
     </div>
-</div>
     
     <div id="toastContainer" class="toast-container"></div>
 
