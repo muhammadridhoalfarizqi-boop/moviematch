@@ -4010,8 +4010,7 @@ function saveProfileCustomization() {
     }
 }
 
-function togglePremiumStatus() {
-    const PREMIUM_PLANS = {
+const PREMIUM_PLANS = {
     monthly: { name: 'Premium Bulanan', price: 20000, days: 30 },
     yearly: { name: 'Premium Tahunan', price: 150000, days: 365 },
     lifetime: { name: 'Premium Lifetime', price: 500000, days: 36500 }
