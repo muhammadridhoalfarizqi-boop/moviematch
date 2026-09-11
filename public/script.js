@@ -103,9 +103,22 @@ let currentActorFilter = null;
 let detailTrailerTimer = null;
 let detailTrailerActive = false;
 
+let playbackSpeedIndex = 0;
+let currentBrightness = 100;
+let currentQuality = 'auto';
+let currentAudioTrack = 'default';
+let currentWatchlistFolder = 'default';
+let watchlistFolders = {};
+let manualSubtitleUrl = null;
+let moodHistory = {};
+let userProfile = {};
+let isPremiumUser = false;
+let currentReviewRating = 0;
+
 const ICON_TRANSLATE = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802"/></svg>`;
 const ICON_CHECK = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>`;
 const ICON_LOADING = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>`;
+const PLAYBACK_SPEEDS = [1, 1.25, 1.5, 1.75, 2, 0.5, 0.75];
 
 const TRANSLATIONS = {
     id: {
@@ -220,6 +233,31 @@ const TRANSLATIONS = {
         'lang.all': 'All Languages',
         'notif.title': 'New Episode Notification'
     }
+};
+
+const QUALITIES = [
+    { label: 'Auto', value: 'auto' },
+    { label: '1080p', value: '1080p' },
+    { label: '720p', value: '720p' },
+    { label: '480p', value: '480p' },
+    { label: '360p', value: '360p' }
+];
+
+const AUDIO_TRACKS = [
+    { label: 'Original', value: 'default' },
+    { label: 'English', value: 'en' },
+    { label: 'Indonesian', value: 'id' },
+    { label: 'Japanese', value: 'ja' },
+    { label: 'Korean', value: 'ko' }
+];
+
+const COUNTRY_NAMES = {
+    ID: 'Indonesia',
+    US: 'Amerika',
+    KR: 'Korea',
+    JP: 'Jepang',
+    GB: 'Inggris',
+    IN: 'India'
 };
 
 let currentLang = localStorage.getItem('movieMatchLang') || 'id';
@@ -3272,6 +3310,906 @@ async function downloadSubtitleFile(lang) {
         status.textContent = 'Terjadi kesalahan.';
     }
 }
+
+function cyclePlaybackSpeed() {
+    playbackSpeedIndex = (playbackSpeedIndex + 1) % PLAYBACK_SPEEDS.length;
+    const speed = PLAYBACK_SPEEDS[playbackSpeedIndex];
+    const label = document.getElementById('speedLabel');
+    if (label) label.textContent = speed + 'x';
+    showToast(`Kecepatan: ${speed}x`, 'info', 1500);
+    applyPlaybackSpeed(speed);
+}
+
+function applyPlaybackSpeed(speed) {
+    const iframe = document.getElementById('playerFrame');
+    if (!iframe || !iframe.src) return;
+    try {
+        const url = new URL(iframe.src);
+        if (speed !== 1) {
+            url.searchParams.set('speed', speed);
+            url.searchParams.set('playback_rate', speed);
+        } else {
+            url.searchParams.delete('speed');
+            url.searchParams.delete('playback_rate');
+        }
+        iframe.src = url.toString();
+    } catch (e) {}
+}
+
+function toggleQualitySelector() {
+    const container = document.getElementById('qualitySelector');
+    if (!container) return;
+    if (container.style.display === 'none') {
+        container.innerHTML = QUALITIES.map(q => `
+            <button class="selector-item ${q.value === currentQuality ? 'active' : ''}" onclick="setQuality('${q.value}', '${q.label}')">
+                ${q.label}
+            </button>
+        `).join('');
+        container.style.display = 'flex';
+        const audioSel = document.getElementById('audioSelector');
+        if (audioSel) audioSel.style.display = 'none';
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+function setQuality(value, label) {
+    currentQuality = value;
+    showToast(`Kualitas: ${label}`, 'success', 1500);
+    const container = document.getElementById('qualitySelector');
+    if (container) container.style.display = 'none';
+    const iframe = document.getElementById('playerFrame');
+    if (iframe && iframe.src) {
+        try {
+            const url = new URL(iframe.src);
+            if (value !== 'auto') url.searchParams.set('quality', value);
+            else url.searchParams.delete('quality');
+            iframe.src = url.toString();
+        } catch (e) {}
+    }
+}
+
+function toggleAudioSelector() {
+    const container = document.getElementById('audioSelector');
+    if (!container) return;
+    if (container.style.display === 'none') {
+        container.innerHTML = AUDIO_TRACKS.map(a => `
+            <button class="selector-item ${a.value === currentAudioTrack ? 'active' : ''}" onclick="setAudioTrack('${a.value}', '${a.label}')">
+                ${a.label}
+            </button>
+        `).join('');
+        container.style.display = 'flex';
+        const qualitySel = document.getElementById('qualitySelector');
+        if (qualitySel) qualitySel.style.display = 'none';
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+function setAudioTrack(value, label) {
+    currentAudioTrack = value;
+    showToast(`Audio: ${label}`, 'success', 1500);
+    const container = document.getElementById('audioSelector');
+    if (container) container.style.display = 'none';
+    const iframe = document.getElementById('playerFrame');
+    if (iframe && iframe.src) {
+        try {
+            const url = new URL(iframe.src);
+            if (value !== 'default') url.searchParams.set('audio', value);
+            else url.searchParams.delete('audio');
+            iframe.src = url.toString();
+        } catch (e) {}
+    }
+}
+
+function changeBrightness(value) {
+    currentBrightness = value;
+    const iframe = document.getElementById('playerFrame');
+    const wrapper = iframe ? iframe.parentElement : null;
+    if (wrapper) wrapper.style.filter = `brightness(${value}%)`;
+    try { localStorage.setItem('movieMatchBrightness', value); } catch (e) {}
+}
+
+function loadBrightness() {
+    try {
+        const saved = localStorage.getItem('movieMatchBrightness');
+        if (saved) {
+            currentBrightness = parseInt(saved);
+            const slider = document.getElementById('brightnessSlider');
+            if (slider) slider.value = currentBrightness;
+        }
+    } catch (e) {}
+}
+
+function enterPiP() {
+    const iframe = document.getElementById('playerFrame');
+    if (!iframe) {
+        showToast('Player tidak tersedia', 'error');
+        return;
+    }
+    try {
+        if (iframe.requestPictureInPicture) {
+            iframe.requestPictureInPicture();
+        } else if (document.pictureInPictureEnabled) {
+            showToast('PiP tidak didukung untuk iframe ini', 'error');
+        } else {
+            showToast('Browser tidak mendukung PiP', 'error');
+        }
+    } catch (e) {
+        showToast('PiP tidak didukung', 'error');
+    }
+}
+
+function showSubtitleUploadModal() {
+    const modal = document.getElementById('subtitleUploadModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function toggleSubtitleUpload() {
+    showSubtitleUploadModal();
+}
+
+function closeSubtitleUploadModal() {
+    const modal = document.getElementById('subtitleUploadModal');
+    if (modal) modal.style.display = 'none';
+    const status = document.getElementById('subtitleUploadStatus');
+    if (status) status.textContent = '';
+}
+
+function handleSubtitleUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('subtitleUploadStatus');
+    if (!status) return;
+    if (file.size > 5 * 1024 * 1024) {
+        status.style.color = '#e50914';
+        status.textContent = 'File terlalu besar (max 5MB)';
+        return;
+    }
+    const allowedExts = ['.srt', '.vtt', '.ass'];
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+    if (!allowedExts.includes(ext)) {
+        status.style.color = '#e50914';
+        status.textContent = 'Format harus .srt, .vtt, atau .ass';
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const content = e.target.result;
+            localStorage.setItem('movieMatchManualSubtitle', content);
+            localStorage.setItem('movieMatchManualSubtitleName', file.name);
+            manualSubtitleUrl = URL.createObjectURL(file);
+            status.style.color = '#2ecc71';
+            status.textContent = `Subtitle "${file.name}" berhasil dimuat!`;
+            showToast('Subtitle manual dimuat', 'success');
+            setTimeout(() => {
+                closeSubtitleUploadModal();
+                applyManualSubtitleToIframe();
+            }, 1500);
+        } catch (err) {
+            status.style.color = '#e50914';
+            status.textContent = 'Gagal membaca file';
+        }
+    };
+    reader.readAsText(file);
+}
+
+function applyManualSubtitleToIframe() {
+    const iframe = document.getElementById('playerFrame');
+    if (!iframe || !iframe.src || !manualSubtitleUrl) return;
+    try {
+        const url = new URL(iframe.src);
+        url.searchParams.set('sub_url', encodeURIComponent(manualSubtitleUrl));
+        url.searchParams.set('manual_sub', '1');
+        iframe.src = url.toString();
+    } catch (e) {}
+}
+
+async function loadTrendingByCountry(countryCode, btn) {
+    document.querySelectorAll('.country-tab').forEach(t => t.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const container = document.getElementById('trendingCountryContainer');
+    if (!container) return;
+    showSkeletonLoader(container, 8);
+    try {
+        const url = `${BASE_URL}/discover/movie?with_origin_country=${countryCode}&language=id-ID&page=1&sort_by=popularity.desc`;
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } });
+        const data = await res.json();
+        if (!data.results || data.results.length === 0) {
+            container.innerHTML = `<div class="loading">Tidak ada konten trending dari ${COUNTRY_NAMES[countryCode] || countryCode}.</div>`;
+            return;
+        }
+        await displayItems(data.results.slice(0, 10), container, false);
+    } catch (err) {
+        container.innerHTML = '<div class="loading">Gagal memuat.</div>';
+    }
+}
+
+async function renderWatchProviders(id, mediaType) {
+    const container = document.getElementById('watchProvidersSection');
+    if (!container) return;
+    container.style.display = 'block';
+    container.innerHTML = '<h3 class="section-inner-title">Tersedia di</h3><div class="loading">Memuat provider...</div>';
+    try {
+        const res = await fetch(`${BASE_URL}/${mediaType}/${id}/watch/providers`, {
+            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+        });
+        const data = await res.json();
+        const providers = data.results?.ID || data.results?.US || null;
+        if (!providers || (!providers.flatrate && !providers.rent && !providers.buy)) {
+            container.innerHTML = '<h3 class="section-inner-title">Tersedia di</h3><p style="color:#888;font-size:13px;">Tidak ada informasi provider untuk film ini.</p>';
+            return;
+        }
+        const allProviders = [
+            ...(providers.flatrate || []).map(p => ({ ...p, type: 'Streaming' })),
+            ...(providers.rent || []).map(p => ({ ...p, type: 'Rent' })),
+            ...(providers.buy || []).map(p => ({ ...p, type: 'Buy' }))
+        ];
+        const uniqueProviders = [];
+        const seen = new Set();
+        for (const p of allProviders) {
+            if (!seen.has(p.provider_id)) {
+                seen.add(p.provider_id);
+                uniqueProviders.push(p);
+            }
+        }
+        container.innerHTML = `
+            <h3 class="section-inner-title">Tersedia di</h3>
+            <div class="watch-providers-grid">
+                ${uniqueProviders.slice(0, 12).map(p => `
+                    <div class="provider-item" title="${escapeHtml(p.provider_name)} (${p.type})">
+                        <img src="https://image.tmdb.org/t/p/w92${p.logo_path}" alt="${escapeHtml(p.provider_name)}" loading="lazy">
+                        <span>${escapeHtml(p.provider_name)}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } catch (err) {
+        container.innerHTML = '<h3 class="section-inner-title">Tersedia di</h3><p style="color:#888;font-size:13px;">Gagal memuat provider.</p>';
+    }
+}
+
+async function renderBoxOffice(id, mediaType) {
+    const container = document.getElementById('boxOfficeSection');
+    if (!container || mediaType !== 'movie') {
+        if (container) container.style.display = 'none';
+        return;
+    }
+    try {
+        const res = await fetch(`${BASE_URL}/movie/${id}?language=en-US`, {
+            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+        });
+        const data = await res.json();
+        if (!data.budget && !data.revenue) {
+            container.style.display = 'none';
+            return;
+        }
+        const formatMoney = (num) => {
+            if (!num || num === 0) return 'N/A';
+            if (num >= 1000000000) return '$' + (num / 1000000000).toFixed(2) + 'B';
+            if (num >= 1000000) return '$' + (num / 1000000).toFixed(2) + 'M';
+            if (num >= 1000) return '$' + (num / 1000).toFixed(1) + 'K';
+            return '$' + num;
+        };
+        const profit = (data.revenue || 0) - (data.budget || 0);
+        const roi = data.budget ? ((profit / data.budget) * 100).toFixed(1) : 'N/A';
+        container.style.display = 'block';
+        container.innerHTML = `
+            <h3 class="section-inner-title">Box Office</h3>
+            <div class="box-office-grid">
+                <div class="box-office-card">
+                    <div class="box-office-label">BUDGET</div>
+                    <div class="box-office-value">${formatMoney(data.budget)}</div>
+                </div>
+                <div class="box-office-card">
+                    <div class="box-office-label">REVENUE</div>
+                    <div class="box-office-value">${formatMoney(data.revenue)}</div>
+                </div>
+                <div class="box-office-card">
+                    <div class="box-office-label">PROFIT</div>
+                    <div class="box-office-value" style="color:${profit >= 0 ? '#2ecc71' : '#e50914'}">${formatMoney(profit)}</div>
+                </div>
+                <div class="box-office-card">
+                    <div class="box-office-label">ROI</div>
+                    <div class="box-office-value">${roi !== 'N/A' ? roi + '%' : 'N/A'}</div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        container.style.display = 'none';
+    }
+}
+
+async function renderReviews(id, mediaType) {
+    const container = document.getElementById('reviewsSection');
+    if (!container) return;
+    container.style.display = 'block';
+    const user = getCurrentUser();
+    container.innerHTML = `
+        <h3 class="section-inner-title">Review & Komentar</h3>
+        ${user ? `
+            <div class="review-form">
+                <textarea id="reviewTextInput" placeholder="Tulis review kamu tentang film ini..." maxlength="500"></textarea>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:12px;color:#888;">Rating:</span>
+                    <div class="user-stars" id="reviewStars">
+                        ${[1,2,3,4,5,6,7,8,9,10].map(n => `<span class="user-star" data-value="${n}" onclick="selectReviewRating(${n})">★</span>`).join('')}
+                    </div>
+                    <span style="font-size:12px;color:#f1c40f;" id="reviewRatingValue">0/10</span>
+                </div>
+                <button onclick="submitReview(${id}, '${mediaType}')">Kirim Review</button>
+            </div>
+        ` : '<p style="color:#888;font-size:13px;margin-bottom:16px;">Login untuk menulis review.</p>'}
+        <div class="review-list" id="reviewList">
+            <div class="loading">Memuat review...</div>
+        </div>
+    `;
+    loadReviewsList(id, mediaType);
+}
+
+function selectReviewRating(value) {
+    currentReviewRating = value;
+    const stars = document.querySelectorAll('#reviewStars .user-star');
+    stars.forEach((s, i) => s.classList.toggle('filled', i < value));
+    const valueEl = document.getElementById('reviewRatingValue');
+    if (valueEl) valueEl.textContent = value + '/10';
+}
+
+async function submitReview(itemId, mediaType) {
+    const user = getCurrentUser();
+    if (!user || !supabaseClient) {
+        showToast('Login dulu untuk review', 'error');
+        return;
+    }
+    const textInput = document.getElementById('reviewTextInput');
+    const text = textInput ? textInput.value.trim() : '';
+    if (text.length < 5) {
+        showToast('Review minimal 5 karakter', 'error');
+        return;
+    }
+    if (currentReviewRating === 0) {
+        showToast('Pilih rating dulu', 'error');
+        return;
+    }
+    try {
+        const { error } = await supabaseClient.from('reviews').insert([{
+            user_email: user.email,
+            user_name: user.name || 'User',
+            movie_id: itemId,
+            media_type: mediaType,
+            rating: currentReviewRating,
+            review_text: text,
+            created_at: new Date().toISOString()
+        }]);
+        if (error) {
+            showToast('Gagal kirim review: ' + error.message, 'error');
+            return;
+        }
+        showToast('Review berhasil dikirim!', 'success');
+        if (textInput) textInput.value = '';
+        currentReviewRating = 0;
+        const valueEl = document.getElementById('reviewRatingValue');
+        if (valueEl) valueEl.textContent = '0/10';
+        const stars = document.querySelectorAll('#reviewStars .user-star');
+        stars.forEach(s => s.classList.remove('filled'));
+        loadReviewsList(itemId, mediaType);
+    } catch (err) {
+        showToast('Terjadi kesalahan', 'error');
+    }
+}
+
+async function loadReviewsList(itemId, mediaType) {
+    const listContainer = document.getElementById('reviewList');
+    if (!listContainer || !supabaseClient) {
+        if (listContainer) listContainer.innerHTML = '<p style="color:#888;font-size:13px;">Server tidak tersedia.</p>';
+        return;
+    }
+    try {
+        const { data: reviews, error } = await supabaseClient
+            .from('reviews')
+            .select('*')
+            .eq('movie_id', itemId)
+            .eq('media_type', mediaType)
+            .order('created_at', { ascending: false })
+            .limit(20);
+        if (error) {
+            listContainer.innerHTML = '<p style="color:#888;font-size:13px;">Gagal memuat review.</p>';
+            return;
+        }
+        if (!reviews || reviews.length === 0) {
+            listContainer.innerHTML = '<p style="color:#888;font-size:13px;">Belum ada review. Jadi yang pertama!</p>';
+            return;
+        }
+        listContainer.innerHTML = reviews.map(r => {
+            const date = new Date(r.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            return `
+                <div class="review-item">
+                    <div class="review-header">
+                        <img class="review-avatar" src="https://ui-avatars.com/api/?name=${encodeURIComponent(r.user_name)}&background=e50914&color=fff" alt="${escapeHtml(r.user_name)}">
+                        <span class="review-author">${escapeHtml(r.user_name)}</span>
+                        <span class="review-date">${date}</span>
+                    </div>
+                    <div class="review-rating">${'★'.repeat(Math.round(r.rating / 2))} ${r.rating}/10</div>
+                    <div class="review-text">${escapeHtml(r.review_text)}</div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        listContainer.innerHTML = '<p style="color:#888;font-size:13px;">Gagal memuat review.</p>';
+    }
+}
+
+async function openFilmography(personId) {
+    showPage('filmography-page');
+    const container = document.getElementById('filmographyContainer');
+    if (!container) return;
+    container.innerHTML = '<div class="loading">Memuat profil...</div>';
+    try {
+        const [personRes, creditsRes] = await Promise.all([
+            fetch(`${BASE_URL}/person/${personId}?language=en-US`, {
+                headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            }),
+            fetch(`${BASE_URL}/person/${personId}/combined_credits?language=en-US`, {
+                headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            })
+        ]);
+        const person = await personRes.json();
+        const credits = await creditsRes.json();
+        const photo = person.profile_path
+            ? `https://image.tmdb.org/t/p/w500${person.profile_path}`
+            : 'https://via.placeholder.com/300x450?text=No+Photo';
+        const knownFor = person.known_for_department || 'Acting';
+        const birthday = person.birthday || 'N/A';
+        const placeOfBirth = person.place_of_birth || 'N/A';
+        const bio = person.biography || 'Tidak ada biografi tersedia.';
+        const cast = (credits.cast || []).sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 30);
+        container.innerHTML = `
+            <div class="filmography-hero">
+                <div class="filmography-photo">
+                    <img src="${photo}" alt="${escapeHtml(person.name)}" loading="lazy">
+                </div>
+                <div class="filmography-info">
+                    <h1>${escapeHtml(person.name)}</h1>
+                    <div class="filmography-meta">
+                        <span>${knownFor}</span>
+                        <span>Lahir: ${birthday}</span>
+                        <span>${placeOfBirth}</span>
+                    </div>
+                    <p class="filmography-bio">${escapeHtml(bio)}</p>
+                </div>
+            </div>
+            <section class="movies-section">
+                <div class="section-header">
+                    <div>
+                        <p class="label">FILMOGRAFI</p>
+                        <h2>Karya Populer</h2>
+                    </div>
+                </div>
+                <div id="filmographyContainer" class="movie-container"></div>
+            </section>
+        `;
+        const moviesContainer = container.querySelector('#filmographyContainer');
+        if (moviesContainer) {
+            await displayItems(cast, moviesContainer, false);
+        }
+    } catch (err) {
+        container.innerHTML = '<div class="loading">Gagal memuat profil.</div>';
+    }
+}
+
+function openTrailerModal(trailerKey) {
+    let modal = document.getElementById('trailerPopupModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'trailerPopupModal';
+        modal.className = 'trailer-popup-modal';
+        modal.innerHTML = `
+            <div class="trailer-popup-content">
+                <button class="trailer-popup-close" onclick="closeTrailerModal()">&times;</button>
+                <iframe id="trailerPopupIframe" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeTrailerModal();
+        });
+    }
+    const iframe = document.getElementById('trailerPopupIframe');
+    if (iframe) iframe.src = `https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`;
+    modal.classList.add('active');
+}
+
+function closeTrailerModal() {
+    const modal = document.getElementById('trailerPopupModal');
+    const iframe = document.getElementById('trailerPopupIframe');
+    if (iframe) iframe.src = '';
+    if (modal) modal.classList.remove('active');
+}
+
+function promptNewFolder() {
+    const name = prompt('Nama folder baru:');
+    if (!name || name.trim().length < 2) return;
+    const folderId = 'folder_' + Date.now();
+    if (!watchlistFolders[folderId]) {
+        watchlistFolders[folderId] = { name: name.trim(), items: [] };
+        saveWatchlistFolders();
+        renderWatchlistFolders();
+        showToast(`Folder "${name}" dibuat`, 'success');
+    }
+}
+
+function deleteFolder(folderId) {
+    if (folderId === 'default') {
+        showToast('Tidak bisa hapus folder default', 'error');
+        return;
+    }
+    if (!confirm('Hapus folder ini? Semua item di dalamnya akan pindah ke folder default.')) return;
+    const folder = watchlistFolders[folderId];
+    if (folder) {
+        watchlistFolders['default'].items = [
+            ...(watchlistFolders['default'].items || []),
+            ...(folder.items || [])
+        ];
+        delete watchlistFolders[folderId];
+        saveWatchlistFolders();
+        renderWatchlistFolders();
+        showWatchlist();
+        showToast('Folder dihapus', 'info');
+    }
+}
+
+function saveWatchlistFolders() {
+    try { localStorage.setItem('movieMatchWatchlistFolders', JSON.stringify(watchlistFolders)); } catch (e) {}
+}
+
+function loadWatchlistFolders() {
+    try {
+        const saved = localStorage.getItem('movieMatchWatchlistFolders');
+        if (saved) watchlistFolders = JSON.parse(saved);
+        else watchlistFolders = { default: { name: 'Semua', items: [] } };
+    } catch (e) {
+        watchlistFolders = { default: { name: 'Semua', items: [] } };
+    }
+}
+
+function renderWatchlistFolders() {
+    const container = document.getElementById('watchlistFolders');
+    if (!container) return;
+    container.innerHTML = Object.entries(watchlistFolders).map(([id, folder]) => `
+        <button class="folder-tab ${id === currentWatchlistFolder ? 'active' : ''}" onclick="switchWatchlistFolder('${id}')">
+            ${escapeHtml(folder.name)}
+            <span class="folder-count">${(folder.items || []).length}</span>
+            ${id !== 'default' ? `<span class="folder-delete" onclick="event.stopPropagation(); deleteFolder('${id}')">&times;</span>` : ''}
+        </button>
+    `).join('');
+}
+
+function switchWatchlistFolder(folderId) {
+    currentWatchlistFolder = folderId;
+    renderWatchlistFolders();
+    showWatchlist();
+}
+
+function loadMoodHistory() {
+    try { moodHistory = JSON.parse(localStorage.getItem('movieMatchMoodHistory')) || {}; }
+    catch { moodHistory = {}; }
+}
+
+function saveMoodHistory() {
+    try { localStorage.setItem('movieMatchMoodHistory', JSON.stringify(moodHistory)); } catch (e) {}
+}
+
+function recordMoodSelection(mood) {
+    if (!moodHistory[mood]) moodHistory[mood] = 0;
+    moodHistory[mood]++;
+    saveMoodHistory();
+}
+
+function getTopMoods(limit = 3) {
+    return Object.entries(moodHistory)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(m => m[0]);
+}
+
+function loadUserProfile() {
+    const user = getCurrentUser();
+    if (!user) return;
+    try {
+        const saved = localStorage.getItem(`movieMatchProfile_${user.email}`);
+        if (saved) userProfile = JSON.parse(saved);
+        else userProfile = { displayName: user.name, bio: '', avatar: '', favoriteGenres: [] };
+    } catch (e) {
+        userProfile = { displayName: user.name, bio: '', avatar: '', favoriteGenres: [] };
+    }
+    const avatarImg = document.getElementById('profileAvatar');
+    if (avatarImg && userProfile.avatar) avatarImg.src = userProfile.avatar;
+    const nameInput = document.getElementById('profileDisplayName');
+    if (nameInput) nameInput.value = userProfile.displayName || '';
+    const bioInput = document.getElementById('profileBio');
+    if (bioInput) bioInput.value = userProfile.bio || '';
+    document.querySelectorAll('.genre-chip').forEach(chip => {
+        const genre = chip.dataset.genre;
+        if ((userProfile.favoriteGenres || []).includes(genre)) chip.classList.add('active');
+        else chip.classList.remove('active');
+    });
+    isPremiumUser = user.isPremium || false;
+    updatePremiumUI();
+}
+
+function toggleFavoriteGenre(btn) {
+    if (!userProfile.favoriteGenres) userProfile.favoriteGenres = [];
+    const genre = btn.dataset.genre;
+    if (userProfile.favoriteGenres.includes(genre)) {
+        userProfile.favoriteGenres = userProfile.favoriteGenres.filter(g => g !== genre);
+        btn.classList.remove('active');
+    } else {
+        userProfile.favoriteGenres.push(genre);
+        btn.classList.add('active');
+    }
+}
+
+function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+        showToast('Foto max 2MB', 'error');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        userProfile.avatar = dataUrl;
+        const avatarImg = document.getElementById('profileAvatar');
+        if (avatarImg) avatarImg.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+}
+
+function saveProfileCustomization() {
+    const user = getCurrentUser();
+    if (!user) {
+        showToast('Login dulu', 'error');
+        return;
+    }
+    const nameInput = document.getElementById('profileDisplayName');
+    const bioInput = document.getElementById('profileBio');
+    userProfile.displayName = nameInput ? nameInput.value.trim() : '';
+    userProfile.bio = bioInput ? bioInput.value.trim() : '';
+    try {
+        localStorage.setItem(`movieMatchProfile_${user.email}`, JSON.stringify(userProfile));
+        showToast('Profil disimpan!', 'success');
+        const msg = document.getElementById('profileSaveMessage');
+        if (msg) {
+            msg.textContent = 'Profil berhasil disimpan!';
+            msg.style.color = '#2ecc71';
+            setTimeout(() => { msg.textContent = ''; }, 3000);
+        }
+    } catch (e) {
+        showToast('Gagal simpan profil', 'error');
+    }
+}
+
+function togglePremiumStatus() {
+    const user = getCurrentUser();
+    if (!user) {
+        showToast('Login dulu', 'error');
+        return;
+    }
+    if (isPremiumUser) {
+        if (confirm('Downgrade dari Premium? Kamu akan kehilangan benefit premium.')) {
+            isPremiumUser = false;
+            user.isPremium = false;
+            localStorage.setItem('movieMatchCurrentUser', JSON.stringify(user));
+            updatePremiumUI();
+            showToast('Downgrade ke Free Member', 'info');
+        }
+    } else {
+        if (confirm('Upgrade ke Premium? (Demo - tidak ada pembayaran real)')) {
+            isPremiumUser = true;
+            user.isPremium = true;
+            localStorage.setItem('movieMatchCurrentUser', JSON.stringify(user));
+            updatePremiumUI();
+            showToast('Selamat! Kamu Premium Member sekarang', 'success');
+        }
+    }
+}
+
+function updatePremiumUI() {
+    const statusText = document.getElementById('premiumStatusText');
+    const upgradeBtn = document.getElementById('premiumUpgradeBtn');
+    if (isPremiumUser) {
+        if (statusText) statusText.textContent = 'Kamu Premium Member';
+        if (upgradeBtn) {
+            upgradeBtn.textContent = 'Downgrade ke Free';
+            upgradeBtn.style.background = 'linear-gradient(135deg, #666, #444)';
+            upgradeBtn.style.color = '#fff';
+        }
+    } else {
+        if (statusText) statusText.textContent = 'Upgrade untuk pengalaman tanpa batas';
+        if (upgradeBtn) {
+            upgradeBtn.textContent = 'Upgrade ke Premium';
+            upgradeBtn.style.background = 'linear-gradient(135deg, #f1c40f, #d4ac0d)';
+            upgradeBtn.style.color = '#000';
+        }
+    }
+}
+
+async function loadAdminStats() {
+    const container = document.getElementById('adminStats');
+    if (!container) return;
+    const user = getCurrentUser();
+    if (!user || !user.isAdmin) {
+        const section = document.getElementById('adminSection');
+        if (section) section.style.display = 'none';
+        return;
+    }
+    const section = document.getElementById('adminSection');
+    if (section) section.style.display = 'block';
+    container.innerHTML = '<div class="loading">Memuat statistik...</div>';
+    try {
+        const [usersRes, favsRes, historyRes, reviewsRes] = await Promise.all([
+            supabaseClient.from('users').select('*', { count: 'exact', head: true }),
+            supabaseClient.from('favorites').select('*', { count: 'exact', head: true }),
+            supabaseClient.from('history').select('*', { count: 'exact', head: true }),
+            supabaseClient.from('reviews').select('*', { count: 'exact', head: true })
+        ]);
+        container.innerHTML = `
+            <div class="admin-stat-card">
+                <div class="admin-stat-label">TOTAL USERS</div>
+                <div class="admin-stat-value">${usersRes.count || 0}</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="admin-stat-label">TOTAL FAVORITES</div>
+                <div class="admin-stat-value">${favsRes.count || 0}</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="admin-stat-label">WATCH HISTORY</div>
+                <div class="admin-stat-value">${historyRes.count || 0}</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="admin-stat-label">TOTAL REVIEWS</div>
+                <div class="admin-stat-value">${reviewsRes.count || 0}</div>
+            </div>
+        `;
+    } catch (err) {
+        container.innerHTML = '<div class="loading">Gagal memuat statistik.</div>';
+    }
+}
+
+function enhanceOpenDetail() {
+    const original = window.openDetail;
+    if (typeof original !== 'function') return;
+    window.openDetail = async function(item) {
+        await original(item);
+        const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+        renderWatchProviders(item.id, mediaType);
+        renderBoxOffice(item.id, mediaType);
+        renderReviews(item.id, mediaType);
+        recordMoodSelectionIfAny();
+    };
+}
+
+function recordMoodSelectionIfAny() {
+    const params = new URLSearchParams(window.location.search);
+    const mood = params.get('mood');
+    if (mood) recordMoodSelection(mood);
+}
+
+function enhanceFilterByPerson() {
+    const original = window.filterByPerson;
+    if (typeof original !== 'function') return;
+    window.filterByPerson = function(personId, personName) {
+        openFilmography(personId);
+    };
+}
+
+function enhanceShowWatchlist() {
+    const original = window.showWatchlist;
+    if (typeof original !== 'function') return;
+    window.showWatchlist = function() {
+        showPage('watchlist-page');
+        renderWatchlistFolders();
+        const container = document.getElementById('watchlistContainer');
+        if (!container) return;
+        const folder = watchlistFolders[currentWatchlistFolder] || watchlistFolders.default;
+        const items = folder.items || [];
+        if (items.length === 0) {
+            container.innerHTML = '<div class="loading">Folder ini masih kosong.</div>';
+            return;
+        }
+        container.innerHTML = '<div class="loading">Memuat...</div>';
+        Promise.all(items.map(async (w) => {
+            try {
+                const res = await fetch(`${BASE_URL}/${w.media_type}/${w.id}?language=id-ID`, {
+                    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                });
+                return await res.json();
+            } catch { return null; }
+        })).then(loaded => {
+            const valid = loaded.filter(i => i && i.id);
+            if (valid.length === 0) {
+                container.innerHTML = '<div class="loading">Tidak ada item valid.</div>';
+                return;
+            }
+            displayItems(valid, container, false);
+        });
+    };
+}
+
+function enhanceToggleWatchlist() {
+    const original = window.toggleWatchlist;
+    if (typeof original !== 'function') return;
+    window.toggleWatchlist = function(itemId, mediaType, buttonElement) {
+        if (!watchlistFolders[currentWatchlistFolder]) {
+            watchlistFolders[currentWatchlistFolder] = { name: 'Default', items: [] };
+        }
+        const folder = watchlistFolders[currentWatchlistFolder];
+        const exists = folder.items.findIndex(w => w.id === itemId);
+        if (exists >= 0) {
+            folder.items.splice(exists, 1);
+            if (buttonElement) {
+                buttonElement.classList.remove("active");
+                buttonElement.innerHTML = "☆";
+            }
+            showToast("Dihapus dari Watchlist", "info");
+        } else {
+            folder.items.push({ id: itemId, media_type: mediaType });
+            if (buttonElement) {
+                buttonElement.classList.add("active");
+                buttonElement.innerHTML = "★";
+            }
+            showToast("Ditambahkan ke Watchlist", "success");
+        }
+        saveWatchlistFolders();
+        const watchlistPage = document.getElementById('watchlist-page');
+        if (watchlistPage && watchlistPage.classList.contains('active')) {
+            renderWatchlistFolders();
+        }
+    };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadSubtitleOffsets();
+    loadBrightness();
+    loadWatchlistFolders();
+    loadMoodHistory();
+    enhanceOpenDetail();
+    enhanceFilterByPerson();
+    enhanceShowWatchlist();
+    enhanceToggleWatchlist();
+    setTimeout(() => {
+        loadUserProfile();
+        const user = getCurrentUser();
+        if (user && user.isAdmin) loadAdminStats();
+        loadTrendingByCountry('ID', document.querySelector('.country-tab.active'));
+    }, 1500);
+});
+
+window.addEventListener('click', (e) => {
+    const qualitySel = document.getElementById('qualitySelector');
+    const audioSel = document.getElementById('audioSelector');
+    if (qualitySel && qualitySel.style.display === 'flex' && !e.target.closest('#qualitySelector') && !e.target.closest('[onclick*="toggleQualitySelector"]')) {
+        qualitySel.style.display = 'none';
+    }
+    if (audioSel && audioSel.style.display === 'flex' && !e.target.closest('#audioSelector') && !e.target.closest('[onclick*="toggleAudioSelector"]')) {
+        audioSel.style.display = 'none';
+    }
+    const subModal = document.getElementById('subtitleUploadModal');
+    if (subModal && e.target === subModal) closeSubtitleUploadModal();
+});
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeTrailerModal();
+        closeSubtitleUploadModal();
+        const qualitySel = document.getElementById('qualitySelector');
+        const audioSel = document.getElementById('audioSelector');
+        if (qualitySel) qualitySel.style.display = 'none';
+        if (audioSel) audioSel.style.display = 'none';
+    }
+});
 
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('downloadModal');
