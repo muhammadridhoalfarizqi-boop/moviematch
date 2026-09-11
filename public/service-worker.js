@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moviematch-v4';
+const CACHE_NAME = 'moviematch-v5';
 const CACHE_VERSION = '2026-09-11-01';
 
 const PRECACHE_ASSETS = [
