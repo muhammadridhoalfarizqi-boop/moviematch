@@ -521,6 +521,72 @@
         </div>
     </div>
     <div id="toastContainer" class="toast-container"></div>
+        <div id="downloadModal" class="modal">
+        <div class="modal-content download-modal-content">
+            <span class="close-modal" onclick="closeDownloadModal()">&times;</span>
+            <h2 class="download-title">Download</h2>
+            <p class="download-subtitle" id="downloadItemTitle">-</p>
+
+            <div class="download-tabs">
+                <button class="download-tab active" onclick="switchDownloadTab('video', this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="tab-icon"><path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+                    Video
+                </button>
+                <button class="download-tab" onclick="switchDownloadTab('subtitle', this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="tab-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                    Subtitle
+                </button>
+                <button class="download-tab" onclick="switchDownloadTab('info', this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="tab-icon"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
+                    Info
+                </button>
+            </div>
+
+            <div id="downloadTabVideo" class="download-tab-content active">
+                <p class="download-hint">Pilih server untuk mengunduh film atau series. Kualitas tergantung server.</p>
+                <div id="downloadServerList" class="download-server-list"></div>
+            </div>
+
+            <div id="downloadTabSubtitle" class="download-tab-content">
+                <p class="download-hint">Pilih bahasa subtitle untuk diunduh sebagai file .srt</p>
+                <div class="subtitle-lang-list">
+                    <button class="subtitle-lang-btn" onclick="downloadSubtitleFile('id')">
+                        <span class="lang-flag">ID</span> Bahasa Indonesia
+                    </button>
+                    <button class="subtitle-lang-btn" onclick="downloadSubtitleFile('en')">
+                        <span class="lang-flag">EN</span> English
+                    </button>
+                    <button class="subtitle-lang-btn" onclick="downloadSubtitleFile('ms')">
+                        <span class="lang-flag">MS</span> Bahasa Melayu
+                    </button>
+                </div>
+                <div id="subtitleStatus" class="subtitle-status"></div>
+            </div>
+
+            <div id="downloadTabInfo" class="download-tab-content">
+                <div class="download-info-box">
+                    <h4>Cara Download</h4>
+                    <ol>
+                        <li>Pilih server dari tab Video</li>
+                        <li>Jika muncul halaman baru, klik tombol download di halaman itu</li>
+                        <li>Pilih kualitas (1080p / 720p / 480p) jika tersedia</li>
+                        <li>Tunggu hingga file terunduh</li>
+                    </ol>
+
+                    <h4>Tips</h4>
+                    <ul>
+                        <li>Gunakan WiFi untuk download file besar</li>
+                        <li>Beberapa server mungkin butuh VPN</li>
+                        <li>Kalau server mati, coba server lain</li>
+                        <li>Subtitle bisa di-load manual di player</li>
+                    </ul>
+
+                    <h4>Catatan</h4>
+                    <p>Fitur download hanya untuk penggunaan pribadi. Hormati hak cipta pembuat film.</p>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="script.js" defer></script>
 </body>
