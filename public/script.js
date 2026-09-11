@@ -1539,7 +1539,7 @@ async function displayItems(items, container = movieContainer, showPagination = 
         card.onclick = () => openDetail(item);
 
         if (!isFromSupabase) {
-            if (!companyCache.has(item.id)) {
+            if (!companyCache.has(item.id) && item.id > 1000) {
                 const mediaType = item.media_type || currentMediaType;
                 fetchMovieDetails(item.id, mediaType).catch(() => {});
             }
