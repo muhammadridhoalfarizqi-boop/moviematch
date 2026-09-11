@@ -1087,6 +1087,9 @@ window.addEventListener('scroll', () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+    await verifyPremiumFromServer();
+    updatePremiumUI();
+    
     loadSavedProgress();
     loadSubtitleOffsets();
     initAutoTheme();
@@ -1189,6 +1192,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 500);
 
     setupKeyboardShortcuts();
+
+    setInterval(async () => {
+        const user = getCurrentUser();
+        if (user) {
+            const wasPremium = user.isPremium;
+            const isNowPremium = await verifyPremiumFromServer();
+            if (wasPremium !== isNowPremium) {
+                updatePremiumUI();
+                if (isNowPremium) {
+                    const modal = document.getElementById('premiumActivatedModal');
+                    if (modal) modal.style.display = 'flex';
+                    showToast('Premium kamu sudah aktif!', 'success');
+                }
+            }
+        }
+    }, 5 * 60 * 1000);
 });
 
 const originalFetch = window.fetch;
@@ -1312,19 +1331,29 @@ function showPage(pageId) {
     window.scrollTo(0, 0);
 }
 
-function showProfile() {
+async function showProfile() {
     const user = getCurrentUser();
     if (!user) { showPage('login-page'); return; }
-    document.getElementById("profileWelcome").textContent = `Welcome, ${user.name}`;
+    
+    await verifyPremiumFromServer();
+    const updatedUser = getCurrentUser();
+    
+    document.getElementById("profileWelcome").textContent = `Welcome, ${updatedUser.name}`;
     const statusBadge = document.getElementById("userStatusBadge");
     if (statusBadge) {
-        const isPremium = user.isPremium || false;
+        const isPremium = updatedUser.isPremium || false;
         statusBadge.textContent = isPremium ? "Status: Premium Member" : "Status: Free Member (Standar)";
         statusBadge.style.color = isPremium ? "#46f846" : "#aaa";
     }
+    
     showPage('profile-page');
     loadHistory();
-    if (user.isAdmin) loadAdminStats();
+    updatePremiumUI();
+    
+    if (updatedUser.isAdmin) {
+        loadAdminStats();
+        loadPendingOrders();
+    }
 }
 
 function logout() {
@@ -4463,6 +4492,154 @@ window.addEventListener('keydown', (e) => {
         if (audioSel) audioSel.style.display = 'none';
     }
 });
+
+async function refreshPremiumStatus() {
+    showToast('Mengecek status premium...', 'info', 2000);
+    
+    const wasPremium = (getCurrentUser() || {}).isPremium || false;
+    const isNowPremium = await verifyPremiumFromServer();
+    
+    updatePremiumUI();
+    
+    const user = getCurrentUser();
+    const statusBadge = document.getElementById("userStatusBadge");
+    if (statusBadge && user) {
+        statusBadge.textContent = isNowPremium ? "Status: Premium Member" : "Status: Free Member (Standar)";
+        statusBadge.style.color = isNowPremium ? "#46f846" : "#aaa";
+    }
+    
+    if (isNowPremium && !wasPremium) {
+        const modal = document.getElementById('premiumActivatedModal');
+        if (modal) modal.style.display = 'flex';
+        showToast('Selamat! Akun kamu sekarang Premium!', 'success');
+    } else if (isNowPremium) {
+        showToast('Kamu sudah Premium Member', 'success');
+    } else {
+        showToast('Kamu masih Free Member. Order belum di-approve admin.', 'info');
+    }
+}
+
+async function loadPendingOrders() {
+    const user = getCurrentUser();
+    if (!user || !user.isAdmin || !supabaseClient) return;
+    
+    const container = document.getElementById('pendingOrdersList');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="loading">Memuat order...</div>';
+    
+    const ICON_CHECK = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>';
+    const ICON_X = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>';
+    
+    try {
+        const { data: orders, error } = await supabaseClient
+            .from('subscriptions')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            container.innerHTML = '<div class="loading">Gagal memuat order: ' + escapeHtml(error.message) + '</div>';
+            return;
+        }
+        
+        if (!orders || orders.length === 0) {
+            container.innerHTML = '<p style="color:#888;font-size:13px;">Tidak ada order pending saat ini.</p>';
+            return;
+        }
+        
+        container.innerHTML = orders.map(o => `
+            <div class="pending-order-card">
+                <div class="order-email">${escapeHtml(o.user_email)}</div>
+                <div class="order-detail">Nama: ${escapeHtml(o.user_name || '-')}</div>
+                <div class="order-detail">Paket: <strong>${escapeHtml(o.plan || '-')}</strong></div>
+                <div class="order-detail">Harga: <strong>Rp ${(o.amount || 0).toLocaleString('id-ID')}</strong></div>
+                <div class="order-detail">Metode: ${escapeHtml(o.payment_method || '-')}</div>
+                <div class="order-detail">Order ID: <strong>${escapeHtml(o.transaction_id || '-')}</strong></div>
+                <div class="order-detail">Tanggal: ${new Date(o.created_at).toLocaleString('id-ID')}</div>
+                <div class="pending-order-actions">
+                    <button class="approve-btn" onclick="approveOrder('${o.id}', '${escapeHtml(o.user_email)}', '${escapeHtml(o.plan)}')">${ICON_CHECK} Approve</button>
+                    <button class="reject-btn" onclick="rejectOrder('${o.id}')">${ICON_X} Reject</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Load pending orders error:', err);
+        container.innerHTML = '<div class="loading">Gagal memuat order.</div>';
+    }
+}
+
+async function approveOrder(orderId, userEmail, plan) {
+    if (!confirm(`Approve order ${orderId} untuk ${userEmail}?`)) return;
+    if (!supabaseClient) return;
+    
+    const planDays = { monthly: 30, yearly: 365, lifetime: 36500 };
+    const days = planDays[plan] || 30;
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + days);
+    
+    try {
+        const { error: userError } = await supabaseClient
+            .from('users')
+            .update({
+                isPremium: true,
+                premium_plan: plan,
+                premium_expires_at: expiry.toISOString()
+            })
+            .eq('email', userEmail);
+        
+        if (userError) {
+            showToast('Gagal update user: ' + userError.message, 'error');
+            return;
+        }
+        
+        const { error: orderError } = await supabaseClient
+            .from('subscriptions')
+            .update({
+                status: 'approved',
+                approved_at: new Date().toISOString()
+            })
+            .eq('id', orderId);
+        
+        if (orderError) {
+            showToast('Gagal update order: ' + orderError.message, 'error');
+            return;
+        }
+        
+        showToast(`Order ${orderId} di-approve!`, 'success');
+        loadPendingOrders();
+        loadAdminStats();
+    } catch (err) {
+        console.error('Approve error:', err);
+        showToast('Gagal approve order: ' + err.message, 'error');
+    }
+}
+
+async function rejectOrder(orderId) {
+    if (!confirm('Reject order ini?')) return;
+    if (!supabaseClient) return;
+    
+    try {
+        const { error } = await supabaseClient
+            .from('subscriptions')
+            .update({
+                status: 'rejected',
+                rejected_at: new Date().toISOString()
+            })
+            .eq('id', orderId);
+        
+        if (error) {
+            showToast('Gagal reject: ' + error.message, 'error');
+            return;
+        }
+        
+        showToast('Order di-reject', 'info');
+        loadPendingOrders();
+    } catch (err) {
+        console.error('Reject error:', err);
+        showToast('Gagal reject order', 'error');
+    }
+}
 
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('downloadModal');
