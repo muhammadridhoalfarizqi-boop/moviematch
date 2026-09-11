@@ -2172,3 +2172,27 @@ body.light-mode .continue-watching-item .continue-meta {
         font-size: 14px;
     }
 }
+
+#studioSentinel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px 0;
+    width: 100%;
+    grid-column: 1 / -1;
+}
+
+#studioSentinel .loader {
+    width: 40px;
+    height: 40px;
+    border: 3px solid transparent;
+    border-top: 3px solid #e50914;
+    border-bottom: 3px solid #e50914;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
