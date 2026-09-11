@@ -1282,6 +1282,7 @@ function showProfile() {
     }
     showPage('profile-page');
     loadHistory();
+    if (user.isAdmin) loadAdminStats();
 }
 
 function logout() {
