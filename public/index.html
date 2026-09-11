@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0b0f">
+    <meta name="description" content="MovieMatch - Temukan film dan series sesuai mood kamu">
     <title>MovieMatch</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -18,13 +22,14 @@
         </div>
 
         <nav id="menuList">
-            <a onclick="showPage('home-page'); toggleMenu();">Home</a>
-            <a onclick="showPage('search-page'); toggleMenu();">Search</a>
-            <a onclick="showFavorites(); toggleMenu();">Favorites</a>
-            <a onclick="showWatchlist(); toggleMenu();">Watchlist</a>
-            <a onclick="scrollToContinueWatching(); toggleMenu();">Continue</a>
+            <a onclick="showPage('home-page'); toggleMenu();" data-i18n="nav.home">Home</a>
+            <a onclick="showPage('search-page'); toggleMenu();" data-i18n="nav.search">Search</a>
+            <a onclick="showFavorites(); toggleMenu();" data-i18n="nav.favorites">Favorites</a>
+            <a onclick="showWatchlist(); toggleMenu();" data-i18n="nav.watchlist">Watchlist</a>
+            <a onclick="scrollToContinueWatching(); toggleMenu();" data-i18n="nav.continue">Continue</a>
             <a id="nav-auth" onclick="handleAuthClick(); toggleMenu();">Login</a>
-            <button id="themeToggle" class="theme-toggle">&#9790;</button>
+            <button id="langToggle" class="lang-toggle" onclick="toggleLanguage()" title="Change Language">ID</button>
+            <button id="themeToggle" class="theme-toggle" title="Toggle Theme">&#9790;</button>
         </nav>
     </header>
 
@@ -32,10 +37,10 @@
         <div id="home-page" class="page active">
             <section class="hero" id="home">
                 <div class="hero-content">
-                    <p class="label">MOVIE & TV RECOMMENDATION</p>
-                    <h1>Temukan tayangan yang <span>cocok dengan anda.</span></h1>
-                    <p class="hero-description">Temukan film dan series berdasarkan mood, genre, dan preferensi kamu.</p>
-                    <button class="primary-button" onclick="goTosearch()">Find My Content</button>
+                    <p class="label" data-i18n="hero.label">MOVIE & TV RECOMMENDATION</p>
+                    <h1><span data-i18n="hero.title">Temukan tayangan yang</span> <span class="accent" data-i18n="hero.titleAccent">cocok dengan anda.</span></h1>
+                    <p class="hero-description" data-i18n="hero.description">Temukan film dan series berdasarkan mood, genre, dan preferensi kamu.</p>
+                    <button class="primary-button" onclick="goTosearch()" data-i18n="hero.button">Find My Content</button>
                 </div>
             </section>
 
@@ -48,85 +53,94 @@
 
             <section class="top-ten-section" id="topTenSection">
                 <div class="section-title">
-                    <p class="label">TRENDING</p>
-                    <h2>Top 10 Minggu Ini</h2>
-                    <p>Film dan series paling populer saat ini.</p>
+                    <p class="label" data-i18n="topten.label">TRENDING</p>
+                    <h2 data-i18n="topten.title">Top 10 Minggu Ini</h2>
+                    <p data-i18n="topten.description">Film dan series paling populer saat ini.</p>
                 </div>
                 <div class="top-ten-container" id="topTenContainer"></div>
             </section>
 
+            <section class="recommendation-section" id="recommendationSection">
+                <div class="section-title">
+                    <p class="label" data-i18n="recommend.label">FOR YOU</p>
+                    <h2 data-i18n="recommend.title">Rekomendasi Untukmu</h2>
+                    <p data-i18n="recommend.description">Berdasarkan film yang kamu tonton.</p>
+                </div>
+                <div class="movie-container" id="recommendationContainer"></div>
+            </section>
+
             <section class="top-rated-section" id="topRatedSection">
                 <div class="section-title">
-                    <p class="label">TOP RATED</p>
-                    <h2>Rating Tertinggi</h2>
-                    <p>Film dan series dengan rating terbaik dari pengguna.</p>
+                    <p class="label" data-i18n="toprated.label">TOP RATED</p>
+                    <h2 data-i18n="toprated.title">Rating Tertinggi</h2>
+                    <p data-i18n="toprated.description">Film dan series dengan rating terbaik dari pengguna.</p>
                 </div>
                 <div class="top-rated-container" id="topRatedContainer"></div>
             </section>
 
             <section class="continue-watching-section" id="continueWatchingSection">
                 <div class="section-title">
-                    <p class="label">CONTINUE WATCHING</p>
-                    <h2>Lanjutkan Nonton</h2>
-                    <p>Lanjutkan tontonan yang belum selesai.</p>
+                    <p class="label" data-i18n="continue.label">CONTINUE WATCHING</p>
+                    <h2 data-i18n="continue.title">Lanjutkan Nonton</h2>
+                    <p data-i18n="continue.description">Lanjutkan tontonan yang belum selesai.</p>
                 </div>
                 <div class="continue-watching-container" id="continueWatchingContainer"></div>
             </section>
 
             <section class="now-playing-section" id="nowPlayingSection">
                 <div class="section-title">
-                    <p class="label">NOW PLAYING</p>
-                    <h2>Sedang Tayang</h2>
-                    <p>Film yang sedang tayang di bioskop.</p>
+                    <p class="label" data-i18n="nowplaying.label">NOW PLAYING</p>
+                    <h2 data-i18n="nowplaying.title">Sedang Tayang</h2>
+                    <p data-i18n="nowplaying.description">Film yang sedang tayang di bioskop.</p>
                 </div>
                 <div class="movie-container" id="nowPlayingContainer"></div>
             </section>
 
             <section class="airing-today-section" id="airingTodaySection">
                 <div class="section-title">
-                    <p class="label">AIRING TODAY</p>
-                    <h2>Tayang Hari Ini</h2>
-                    <p>Series yang tayang hari ini.</p>
+                    <p class="label" data-i18n="airing.label">AIRING TODAY</p>
+                    <h2 data-i18n="airing.title">Tayang Hari Ini</h2>
+                    <p data-i18n="airing.description">Series yang tayang hari ini.</p>
                 </div>
                 <div class="movie-container" id="airingTodayContainer"></div>
             </section>
 
             <section class="mood-section" id="mood">
                 <div class="section-title">
-                    <p class="label">MOODMATCH</p>
-                    <h2>Apa yang kamu rasakan hari ini?</h2>
-                    <p>Pilih suasana yang sedang kamu rasakan.</p>
+                    <p class="label" data-i18n="mood.label">MOODMATCH</p>
+                    <h2 data-i18n="mood.title">Apa yang kamu rasakan hari ini?</h2>
+                    <p data-i18n="mood.description">Pilih suasana yang sedang kamu rasakan.</p>
                 </div>
 
                 <div class="mood-container">
                     <button class="mood-card" onclick="recommendMoodAndGo('happy')">
-                        <span>Happy / Senang</span>
-                        <small>Comedy and animation</small>
+                        <span data-i18n="mood.happy">Happy / Senang</span>
+                        <small data-i18n="mood.happyDesc">Comedy and animation</small>
                     </button>
                     <button class="mood-card" onclick="recommendMoodAndGo('scary')">
-                        <span>Scary / Takut</span>
-                        <small>Horror and thriller</small>
+                        <span data-i18n="mood.scary">Scary / Takut</span>
+                        <small data-i18n="mood.scaryDesc">Horror and thriller</small>
                     </button>
                     <button class="mood-card" onclick="recommendMoodAndGo('action')">
-                        <span>Exciting / Seru</span>
-                        <small>Action and adventure</small>
+                        <span data-i18n="mood.action">Exciting / Seru</span>
+                        <small data-i18n="mood.actionDesc">Action and adventure</small>
                     </button>
                     <button class="mood-card" onclick="recommendMoodAndGo('sad')">
-                        <span>Emotional / Perasaan</span>
-                        <small>Drama and romance</small>
+                        <span data-i18n="mood.sad">Emotional / Perasaan</span>
+                        <small data-i18n="mood.sadDesc">Drama and romance</small>
                     </button>
                     <button class="mood-card" onclick="recommendMoodAndGo('chill')">
-                        <span>Relaxed / Rileks</span>
-                        <small>Family and comedy</small>
+                        <span data-i18n="mood.chill">Relaxed / Rileks</span>
+                        <small data-i18n="mood.chillDesc">Family and comedy</small>
                     </button>
                 </div>
             </section>
 
             <section class="platform-section" id="platformSection">
                 <div class="section-title">
-                    <p class="label">STREAMING PLATFORMS</p>
-                    <h2>Tersedia di Platform</h2>
-                    <p>Klik logo untuk melihat konten eksklusif dari platform tersebut.</p>
+                    <p class="label" data-i18n="platform.label">STREAMING PLATFORMS</p>
+                    <h2 data-i18n="platform.title">Tersedia di Platform</h2>
+                    <p data-i18n="platform.description">Klik logo untuk melihat konten eksklusif dari platform tersebut.</p>
                 </div>
                 <div class="platform-container" id="platformContainer">
                     <div class="platform-grid">
@@ -191,41 +205,59 @@
                             <h1 id="detailsTitle"></h1>
                             <div class="detailsTrio">
                                 <span id="detailsYear"></span>
-                                <span id="detailsRating">⭐ N/A</span>
+                                <span id="detailsRating">N/A</span>
                                 <span id="detailsRuntime"></span>
                                 <span id="detailsGenre"></span>
                             </div>
                             <p id="detailsOverview"></p>
                         </div>
+
+                        <div class="user-rating-section" id="userRatingSection">
+                            <label class="user-rating-label">Your Rating:</label>
+                            <div class="user-stars" id="userStars">
+                                <span class="user-star" data-value="1" onclick="setUserRating(1)">★</span>
+                                <span class="user-star" data-value="2" onclick="setUserRating(2)">★</span>
+                                <span class="user-star" data-value="3" onclick="setUserRating(3)">★</span>
+                                <span class="user-star" data-value="4" onclick="setUserRating(4)">★</span>
+                                <span class="user-star" data-value="5" onclick="setUserRating(5)">★</span>
+                                <span class="user-star" data-value="6" onclick="setUserRating(6)">★</span>
+                                <span class="user-star" data-value="7" onclick="setUserRating(7)">★</span>
+                                <span class="user-star" data-value="8" onclick="setUserRating(8)">★</span>
+                                <span class="user-star" data-value="9" onclick="setUserRating(9)">★</span>
+                                <span class="user-star" data-value="10" onclick="setUserRating(10)">★</span>
+                            </div>
+                            <span class="user-rating-value" id="userRatingValue">Belum ada rating</span>
+                        </div>
+
                         <div class="playDownload">
                             <button class="playDetails" onclick="goToPlayer()">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:6px;">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
                                 </svg>
-                                Play Now
+                                <span data-i18n="detail.play">Play Now</span>
                             </button>
                             <button class="downloadMovie" onclick="showDownload()">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:6px;">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                 </svg>
-                                Download
+                                <span data-i18n="detail.download">Download</span>
                             </button>
                             <button class="bookmarkDetails" id="bookmarkBtn" onclick="toggleBookmarkCurrent()">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:6px;">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
                                 </svg>
-                                <span id="bookmarkText">Watchlist</span>
+                                <span id="bookmarkText" data-i18n="detail.watchlist">Watchlist</span>
                             </button>
                         </div>
                         <div class="detailsButtonWrapper">
-                            <button class="detailsOverviewbutton red" onclick="showOverview()">Overview</button>
-                            <button class="detailsTrailerbutton" onclick="showTrailer()">Trailer</button>
-                            <button class="detailsSimilarbutton" onclick="showSimilar()">Similar</button>
+                            <button class="detailsOverviewbutton red" onclick="showOverview()" data-i18n="detail.overview">Overview</button>
+                            <button class="detailsTrailerbutton" onclick="showTrailer()" data-i18n="detail.trailer">Trailer</button>
+                            <button class="detailsSimilarbutton" onclick="showSimilar()" data-i18n="detail.similar">Similar</button>
                             <button class="detailsTranslatebutton" onclick="translateOverview()">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802"/>
                                 </svg>
-                                Translate
+                                <span data-i18n="detail.translate">Translate</span>
                             </button>
                         </div>
                         <div id="detailsContent">
@@ -248,7 +280,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:6px;">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                         </svg>
-                        Back
+                        <span data-i18n="player.back">Back</span>
                     </button>
                     <span id="playerTitle">Now Playing</span>
                     <div class="player-controls">
@@ -272,7 +304,7 @@
                             <input type="checkbox" id="sandboxToggle">
                             <span class="slider"></span>
                         </label>
-                        <span class="adsLabel">Disable ads</span>
+                        <span class="adsLabel" data-i18n="player.disableAds">Disable ads</span>
                     </div>
                 </div>
             </div>
@@ -281,26 +313,34 @@
         <div id="search-page" class="page">
             <section class="search-section">
                 <div class="section-title">
-                    <p class="label">EXPLORE & SEARCH</p>
-                    <h2 id="searchTitle">Pilih Kategori Tayangan</h2>
+                    <p class="label" data-i18n="search.label">EXPLORE & SEARCH</p>
+                    <h2 id="searchTitle" data-i18n="search.title">Pilih Kategori Tayangan</h2>
+                </div>
+
+                <div class="search-history-container" id="searchHistoryContainer">
+                    <div class="search-history-header">
+                        <span data-i18n="search.recent">Recent Searches:</span>
+                        <button class="clear-history-btn" onclick="clearSearchHistory()" data-i18n="search.clear">Clear</button>
+                    </div>
+                    <div class="search-history-chips" id="searchHistoryChips"></div>
                 </div>
 
                 <div class="filter-container">
                     <div class="type-btn-group">
-                        <button id="typeBtnMovie" class="type-btn active" onclick="setMediaType('movie')">MOVIES</button>
-                        <button id="typeBtnTv" class="type-btn inactive" onclick="setMediaType('tv')">SERIES</button>
+                        <button id="typeBtnMovie" class="type-btn active" onclick="setMediaType('movie')" data-i18n="filter.movies">MOVIES</button>
+                        <button id="typeBtnTv" class="type-btn inactive" onclick="setMediaType('tv')" data-i18n="filter.series">SERIES</button>
                     </div>
 
                     <select id="categorySelect" class="filter-select" onchange="loadContent(this.value)">
-                        <option value="popular">Popular</option>
-                        <option value="trending">Trending Week</option>
-                        <option value="top_rated">Top Rated</option>
-                        <option value="now_playing">Now Playing</option>
-                        <option value="airing_today">Airing Today</option>
+                        <option value="popular" data-i18n="cat.popular">Popular</option>
+                        <option value="trending" data-i18n="cat.trending">Trending Week</option>
+                        <option value="top_rated" data-i18n="cat.toprated">Top Rated</option>
+                        <option value="now_playing" data-i18n="cat.nowplaying">Now Playing</option>
+                        <option value="airing_today" data-i18n="cat.airing">Airing Today</option>
                     </select>
 
                     <select id="genreSelect" class="filter-select" onchange="getMoviesByGenre(this.value, this.options[this.selectedIndex].text)">
-                        <option value="">Semua Genre</option>
+                        <option value="" data-i18n="genre.all">Semua Genre</option>
                         <option value="28">Action</option>
                         <option value="12">Adventure</option>
                         <option value="16">Animation</option>
@@ -319,14 +359,14 @@
                     </select>
 
                     <select id="runtimeSelect" class="filter-select" onchange="filterByRuntime(this.value)">
-                        <option value="all">Semua Durasi</option>
-                        <option value="short">Singkat (&lt; 90 Menit)</option>
-                        <option value="medium">Sedang (90 - 120 Menit)</option>
-                        <option value="long">Panjang (&gt; 120 Menit)</option>
+                        <option value="all" data-i18n="runtime.all">Semua Durasi</option>
+                        <option value="short" data-i18n="runtime.short">Singkat (&lt; 90 Menit)</option>
+                        <option value="medium" data-i18n="runtime.medium">Sedang (90 - 120 Menit)</option>
+                        <option value="long" data-i18n="runtime.long">Panjang (&gt; 120 Menit)</option>
                     </select>
 
                     <select id="yearSelect" class="filter-select" onchange="filterByYear(this.value)">
-                        <option value="all">Semua Tahun</option>
+                        <option value="all" data-i18n="year.all">Semua Tahun</option>
                         <option value="2026">2026</option>
                         <option value="2025">2025</option>
                         <option value="2024">2024</option>
@@ -341,7 +381,7 @@
                         <option value="2015">2015</option>
                     </select>
                     <select id="studioSelect" onchange="filterByStudio(this.value)" class="filter-select">
-                        <option value="all">Semua Studio / Network</option>
+                        <option value="all" data-i18n="studio.all">Semua Studio / Network</option>
                         <option value="shudder">SHUDDER</option>
                         <option value="netflix">NETFLIX</option>
                         <option value="prime">Prime Video</option>
@@ -353,39 +393,39 @@
                     </select>
 
                     <select id="sortSelect" class="filter-select" onchange="applySort(this.value)">
-                        <option value="default">Sort: Default</option>
-                        <option value="popularity.desc">Popularitas (Tertinggi)</option>
-                        <option value="popularity.asc">Popularitas (Terendah)</option>
-                        <option value="vote_average.desc">Rating (Tertinggi)</option>
-                        <option value="vote_average.asc">Rating (Terendah)</option>
-                        <option value="primary_release_date.desc">Rilis Terbaru</option>
-                        <option value="primary_release_date.asc">Rilis Terlama</option>
-                        <option value="original_title.asc">Judul A-Z</option>
+                        <option value="default" data-i18n="sort.default">Sort: Default</option>
+                        <option value="popularity.desc" data-i18n="sort.popDesc">Popularitas (Tertinggi)</option>
+                        <option value="popularity.asc" data-i18n="sort.popAsc">Popularitas (Terendah)</option>
+                        <option value="vote_average.desc" data-i18n="sort.ratingDesc">Rating (Tertinggi)</option>
+                        <option value="vote_average.asc" data-i18n="sort.ratingAsc">Rating (Terendah)</option>
+                        <option value="primary_release_date.desc" data-i18n="sort.newest">Rilis Terbaru</option>
+                        <option value="primary_release_date.asc" data-i18n="sort.oldest">Rilis Terlama</option>
+                        <option value="original_title.asc" data-i18n="sort.az">Judul A-Z</option>
                     </select>
 
                     <select id="languageSelect" class="filter-select" onchange="filterByLanguage(this.value)">
-                        <option value="all">Semua Bahasa</option>
-                        <option value="en">🇺🇸 Inggris</option>
-                        <option value="ko">🇰🇷 Korea</option>
-                        <option value="ja">🇯🇵 Jepang</option>
-                        <option value="zh">🇨🇳 China</option>
-                        <option value="th">🇹🇭 Thailand</option>
-                        <option value="id">🇮🇩 Indonesia</option>
-                        <option value="es">🇪🇸 Spanyol</option>
-                        <option value="fr">🇫🇷 Prancis</option>
+                        <option value="all" data-i18n="lang.all">Semua Bahasa</option>
+                        <option value="en">English</option>
+                        <option value="ko">Korean</option>
+                        <option value="ja">Japanese</option>
+                        <option value="zh">Chinese</option>
+                        <option value="th">Thai</option>
+                        <option value="id">Indonesian</option>
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
                     </select>
                 </div>
 
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Cari judul..." onkeydown="handleSearch(event)">
-                    <button class="search-btn" onclick="searchMovies()">Search</button>
+                    <input type="text" id="searchInput" placeholder="Cari judul..." onkeydown="handleSearch(event)" data-i18n-placeholder="search.placeholder">
+                    <button class="search-btn" onclick="searchMovies()" data-i18n="search.button">Search</button>
                 </div>
             </section>
 
             <section class="movies-section" id="movies">
                 <div class="section-header">
                     <div>
-                        <p class="label">CATALOG</p>
+                        <p class="label" data-i18n="catalog.label">CATALOG</p>
                         <h2 id="movieTitle">Popular Movies</h2>
                     </div>
                 </div>
@@ -398,8 +438,8 @@
             <section class="movies-section">
                 <div class="section-header">
                     <div>
-                        <p class="label">SAVED LIST</p>
-                        <h2>Your Favorites</h2>
+                        <p class="label" data-i18n="favorites.label">SAVED LIST</p>
+                        <h2 data-i18n="favorites.title">Your Favorites</h2>
                     </div>
                 </div>
                 <div id="favoritesContainer" class="movie-container"></div>
@@ -410,8 +450,8 @@
             <section class="movies-section">
                 <div class="section-header">
                     <div>
-                        <p class="label">BOOKMARK</p>
-                        <h2>Your Watchlist</h2>
+                        <p class="label" data-i18n="watchlist.label">BOOKMARK</p>
+                        <h2 data-i18n="watchlist.title">Your Watchlist</h2>
                     </div>
                 </div>
                 <div id="watchlistContainer" class="movie-container"></div>
@@ -422,15 +462,15 @@
             <section class="movies-section">
                 <div class="section-header">
                     <div>
-                        <p class="label">USER PROFILE</p>
+                        <p class="label" data-i18n="profile.label">USER PROFILE</p>
                         <h2 id="profileWelcome">Welcome, User</h2>
                         <p id="userStatusBadge"></p>
                     </div>
-                    <button class="logout-btn" onclick="logout()">Logout</button>
+                    <button class="logout-btn" onclick="logout()" data-i18n="profile.logout">Logout</button>
                 </div>
 
                 <div class="history-section">
-                    <h3>Riwayat Tayangan Dilihat (Watch History)</h3>
+                    <h3 data-i18n="profile.history">Riwayat Tayangan Dilihat (Watch History)</h3>
                     <div id="historyContainer" class="movie-container"></div>
                 </div>
             </section>
@@ -440,21 +480,21 @@
             <div class="auth-page">
                 <div class="auth-box">
                     <a onclick="showPage('home-page')" class="auth-logo">MovieMatch</a>
-                    <h1>Welcome back</h1>
-                    <p class="auth-description">Login untuk melanjutkan ke MovieMatch.</p>
+                    <h1 data-i18n="auth.loginTitle">Welcome back</h1>
+                    <p class="auth-description" data-i18n="auth.loginDesc">Login untuk melanjutkan ke MovieMatch.</p>
                     <form id="loginForm">
                         <div class="form-group">
-                            <label for="loginEmail">Email</label>
+                            <label for="loginEmail" data-i18n="auth.email">Email</label>
                             <input type="email" id="loginEmail" placeholder="Enter your email" required>
                         </div>
                         <div class="form-group">
-                            <label for="loginPassword">Password</label>
+                            <label for="loginPassword" data-i18n="auth.password">Password</label>
                             <input type="password" id="loginPassword" placeholder="Enter your password" required>
                         </div>
-                        <button type="submit" class="auth-button">Login</button>
+                        <button type="submit" class="auth-button" data-i18n="auth.login">Login</button>
                     </form>
                     <p id="loginMessage" class="auth-message"></p>
-                    <p class="auth-switch">Don't have an account? <a onclick="showPage('register-page')">Register</a></p>
+                    <p class="auth-switch"><span data-i18n="auth.noAccount">Don't have an account?</span> <a onclick="showPage('register-page')" data-i18n="auth.register">Register</a></p>
                 </div>
             </div>
         </div>
@@ -463,19 +503,19 @@
             <div class="auth-page">
                 <div class="auth-box">
                     <a onclick="showPage('home-page')" class="auth-logo">MovieMatch</a>
-                    <h1>Create an account</h1>
-                    <p class="auth-description">Buat akun untuk mendapatkan pengalaman MovieMatch.</p>
+                    <h1 data-i18n="auth.registerTitle">Create an account</h1>
+                    <p class="auth-description" data-i18n="auth.registerDesc">Buat akun untuk mendapatkan pengalaman MovieMatch.</p>
                     <form id="registerForm">
                         <div class="form-group">
-                            <label for="registerName">Name</label>
+                            <label for="registerName" data-i18n="auth.name">Name</label>
                             <input type="text" id="registerName" placeholder="Enter your name" required>
                         </div>
                         <div class="form-group">
-                            <label for="registerEmail">Email</label>
+                            <label for="registerEmail" data-i18n="auth.email">Email</label>
                             <input type="email" id="registerEmail" placeholder="Enter your email" required>
                         </div>
                         <div class="form-group">
-                            <label for="registerPassword">Password</label>
+                            <label for="registerPassword" data-i18n="auth.password">Password</label>
                             <input type="password" id="registerPassword" placeholder="Create a password" required>
                             <div class="password-strength">
                                 <div class="strength-bars">
@@ -484,14 +524,14 @@
                                     <div class="bar" id="strBar3"></div>
                                     <div class="bar" id="strBar4"></div>
                                 </div>
-                                <p class="strength-text" id="strText">Ketik password...</p>
+                                <p class="strength-text" id="strText" data-i18n="auth.typePassword">Ketik password...</p>
                             </div>
-                            <button type="button" class="suggest-pass-btn" id="suggestPassBtn">Suggest Strong Password</button>
+                            <button type="button" class="suggest-pass-btn" id="suggestPassBtn" data-i18n="auth.suggest">Suggest Strong Password</button>
                         </div>
-                        <button type="submit" class="auth-button">Create Account</button>
+                        <button type="submit" class="auth-button" data-i18n="auth.create">Create Account</button>
                     </form>
                     <p id="registerMessage" class="auth-message"></p>
-                    <p class="auth-switch">Already have an account? <a onclick="showPage('login-page')">Login</a></p>
+                    <p class="auth-switch"><span data-i18n="auth.hasAccount">Already have an account?</span> <a onclick="showPage('login-page')" data-i18n="auth.login">Login</a></p>
                 </div>
             </div>
         </div>
@@ -499,16 +539,16 @@
         <div id="otp-page" class="page">
             <div class="auth-page">
                 <div class="auth-box">
-                    <h1>Verifikasi OTP</h1>
-                    <p class="auth-description">Masukkan kode OTP yang telah dikirim ke email Anda.</p>
+                    <h1 data-i18n="otp.title">Verifikasi OTP</h1>
+                    <p class="auth-description" data-i18n="otp.description">Masukkan kode OTP yang telah dikirim ke email Anda.</p>
                     <div id="otpMessage" class="auth-message"></div>
                     <div class="form-group">
-                        <label for="otpInput">Kode OTP</label>
+                        <label for="otpInput" data-i18n="otp.label">Kode OTP</label>
                         <input type="text" id="otpInput" placeholder="Masukkan kode 6 digit" maxlength="6" autocomplete="off">
                     </div>
-                    <button id="otpVerifyBtn" class="auth-button">Verifikasi</button>
-                    <p class="otp-resend">Belum dapat kode? <a href="#" id="resendOtpBtn">Kirim ulang</a></p>
-                    <p class="auth-switch"><a onclick="showPage('login-page')">Kembali ke Login</a></p>
+                    <button id="otpVerifyBtn" class="auth-button" data-i18n="otp.verify">Verifikasi</button>
+                    <p class="otp-resend"><span data-i18n="otp.noCode">Belum dapat kode?</span> <a href="#" id="resendOtpBtn" data-i18n="otp.resend">Kirim ulang</a></p>
+                    <p class="auth-switch"><a onclick="showPage('login-page')" data-i18n="otp.backLogin">Kembali ke Login</a></p>
                 </div>
             </div>
         </div>
@@ -520,35 +560,35 @@
             <div id="modalBody"></div>
         </div>
     </div>
-    <div id="toastContainer" class="toast-container"></div>
-        <div id="downloadModal" class="modal">
+
+    <div id="downloadModal" class="modal">
         <div class="modal-content download-modal-content">
             <span class="close-modal" onclick="closeDownloadModal()">&times;</span>
-            <h2 class="download-title">Download</h2>
+            <h2 class="download-title" data-i18n="download.title">Download</h2>
             <p class="download-subtitle" id="downloadItemTitle">-</p>
 
             <div class="download-tabs">
                 <button class="download-tab active" onclick="switchDownloadTab('video', this)">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="tab-icon"><path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
-                    Video
+                    <span data-i18n="download.video">Video</span>
                 </button>
                 <button class="download-tab" onclick="switchDownloadTab('subtitle', this)">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="tab-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
-                    Subtitle
+                    <span data-i18n="download.subtitle">Subtitle</span>
                 </button>
                 <button class="download-tab" onclick="switchDownloadTab('info', this)">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="tab-icon"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
-                    Info
+                    <span data-i18n="download.info">Info</span>
                 </button>
             </div>
 
             <div id="downloadTabVideo" class="download-tab-content active">
-                <p class="download-hint">Pilih server untuk mengunduh film atau series. Kualitas tergantung server.</p>
+                <p class="download-hint" data-i18n="download.hint">Pilih server untuk mengunduh film atau series. Kualitas tergantung server.</p>
                 <div id="downloadServerList" class="download-server-list"></div>
             </div>
 
             <div id="downloadTabSubtitle" class="download-tab-content">
-                <p class="download-hint">Pilih bahasa subtitle untuk diunduh sebagai file .srt</p>
+                <p class="download-hint" data-i18n="download.subtitleHint">Pilih bahasa subtitle untuk diunduh sebagai file .srt</p>
                 <div class="subtitle-lang-list">
                     <button class="subtitle-lang-btn" onclick="downloadSubtitleFile('id')">
                         <span class="lang-flag">ID</span> Bahasa Indonesia
@@ -565,28 +605,60 @@
 
             <div id="downloadTabInfo" class="download-tab-content">
                 <div class="download-info-box">
-                    <h4>Cara Download</h4>
+                    <h4 data-i18n="download.howTo">Cara Download</h4>
                     <ol>
-                        <li>Pilih server dari tab Video</li>
-                        <li>Jika muncul halaman baru, klik tombol download di halaman itu</li>
-                        <li>Pilih kualitas (1080p / 720p / 480p) jika tersedia</li>
-                        <li>Tunggu hingga file terunduh</li>
+                        <li data-i18n="download.step1">Pilih server dari tab Video</li>
+                        <li data-i18n="download.step2">Jika muncul halaman baru, klik tombol download di halaman itu</li>
+                        <li data-i18n="download.step3">Pilih kualitas (1080p / 720p / 480p) jika tersedia</li>
+                        <li data-i18n="download.step4">Tunggu hingga file terunduh</li>
                     </ol>
 
-                    <h4>Tips</h4>
+                    <h4 data-i18n="download.tips">Tips</h4>
                     <ul>
-                        <li>Gunakan WiFi untuk download file besar</li>
-                        <li>Beberapa server mungkin butuh VPN</li>
-                        <li>Kalau server mati, coba server lain</li>
-                        <li>Subtitle bisa di-load manual di player</li>
+                        <li data-i18n="download.tip1">Gunakan WiFi untuk download file besar</li>
+                        <li data-i18n="download.tip2">Beberapa server mungkin butuh VPN</li>
+                        <li data-i18n="download.tip3">Kalau server mati, coba server lain</li>
+                        <li data-i18n="download.tip4">Subtitle bisa di-load manual di player</li>
                     </ul>
 
-                    <h4>Catatan</h4>
-                    <p>Fitur download hanya untuk penggunaan pribadi. Hormati hak cipta pembuat film.</p>
+                    <h4 data-i18n="download.note">Catatan</h4>
+                    <p data-i18n="download.noteText">Fitur download hanya untuk penggunaan pribadi. Hormati hak cipta pembuat film.</p>
                 </div>
             </div>
         </div>
     </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <button class="scroll-top-btn" id="scrollTopBtn" onclick="scrollToTop()" title="Scroll to top">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px;height:22px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+        </svg>
+    </button>
+
+    <div class="shortcuts-modal" id="shortcutsModal">
+        <div class="shortcuts-content">
+            <span class="close-modal" onclick="closeShortcuts()">&times;</span>
+            <h2>Keyboard Shortcuts</h2>
+            <div class="shortcuts-list">
+                <div class="shortcut-item"><kbd>/</kbd><span>Focus search</span></div>
+                <div class="shortcut-item"><kbd>Esc</kbd><span>Close modal / player</span></div>
+                <div class="shortcut-item"><kbd>H</kbd><span>Home page</span></div>
+                <div class="shortcut-item"><kbd>S</kbd><span>Search page</span></div>
+                <div class="shortcut-item"><kbd>F</kbd><span>Favorites page</span></div>
+                <div class="shortcut-item"><kbd>W</kbd><span>Watchlist page</span></div>
+                <div class="shortcut-item"><kbd>T</kbd><span>Toggle theme</span></div>
+                <div class="shortcut-item"><kbd>L</kbd><span>Toggle language</span></div>
+                <div class="shortcut-item"><kbd>?</kbd><span>Show this help</span></div>
+                <div class="shortcut-item"><kbd>Space</kbd><span>Play / Pause (player)</span></div>
+                <div class="shortcut-item"><kbd>←</kbd><span>Previous episode</span></div>
+                <div class="shortcut-item"><kbd>→</kbd><span>Next episode</span></div>
+                <div class="shortcut-item"><kbd>M</kbd><span>Mute (player)</span></div>
+                <div class="shortcut-item"><kbd>F11</kbd><span>Fullscreen</span></div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="script.js" defer></script>
 </body>
