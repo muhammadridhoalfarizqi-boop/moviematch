@@ -1356,21 +1356,22 @@ async function createItemElements(items) {
 
 function buildServersList(mediaType, id, season = 1, episode = 1) {
     const tvParams = mediaType === 'tv' ? `&season=${season}&episode=${episode}` : '';
-
+    const subParams = '&sub=id,en&sub-source=opensubtitles';
+    
     return [
-        { name: "VidSrc XYZ", url: `https://vidsrc.xyz/embed/${mediaType}?tmdb=${id}${tvParams}${SUB_PARAMS}` },
-        { name: "VidSrc ME", url: `https://vidsrc.me/embed/${mediaType}?tmdb=${id}${tvParams}${SUB_PARAMS}` },
+        { name: "VidSrc XYZ", url: `https://vidsrc.xyz/embed/${mediaType}?tmdb=${id}${tvParams}${subParams}` },
+        { name: "VidSrc ME", url: `https://vidsrc.me/embed/${mediaType}?tmdb=${id}${tvParams}${subParams}` },
         { name: "Embed SU", url: `https://embed.su/embed/${mediaType}/${id}${mediaType === 'tv' ? `/${season}/${episode}` : ''}?subtitle=id,en&subtitle-source=opensubtitles` },
-        { name: "VidSrc CC", url: `https://vidsrc.cc/v2/embed/${mediaType}/${id}${mediaType === 'tv' ? `/${season}/${episode}` : ''}${SUB_PARAMS}` },
-        { name: "MultiEmbed", url: `https://multiembed.mov/?video_id=${id}&tmdb=1${mediaType === 'tv' ? `&s=${season}&e=${episode}` : ''}${SUB_PARAMS}` },
-        { name: "AutoEmbed", url: `https://player.autoembed.cc/embed/${mediaType}/${id}${SUB_PARAMS}` },
-        { name: "2Embed", url: `https://2embed.cc/embed/${mediaType}/${id}${SUB_PARAMS}` },
-        { name: "MoviesAPI", url: `https://moviesapi.club/movie/${id}${SUB_PARAMS}` },
-        { name: "VidSrc VIP", url: `https://vidsrc.vip/embed/${mediaType}/${id}${SUB_PARAMS}` },
-        { name: "VidSrc NL", url: `https://player.vidsrc.nl/embed/${mediaType}/${id}${SUB_PARAMS}` },
-        { name: "IDSrc TO", url: `https://idsrc.to/embed/${mediaType}/${id}${SUB_PARAMS}` },
-        { name: "VidSrc ICU", url: `https://vidsrc.icu/embed/${mediaType}/${id}${SUB_PARAMS}` },
-        { name: "Anime-KKI", url: `https://anime-kki.herokuapp.com/embed/${id}${SUB_PARAMS}` },
+        { name: "VidSrc CC", url: `https://vidsrc.cc/v2/embed/${mediaType}/${id}${mediaType === 'tv' ? `/${season}/${episode}` : ''}${subParams}` },
+        { name: "MultiEmbed", url: `https://multiembed.mov/?video_id=${id}&tmdb=1${mediaType === 'tv' ? `&s=${season}&e=${episode}` : ''}${subParams}` },
+        { name: "AutoEmbed", url: `https://player.autoembed.cc/embed/${mediaType}/${id}${subParams}` },
+        { name: "2Embed", url: `https://2embed.cc/embed/${mediaType}/${id}${subParams}` },
+        { name: "MoviesAPI", url: `https://moviesapi.club/movie/${id}${subParams}` },
+        { name: "VidSrc VIP", url: `https://vidsrc.vip/embed/${mediaType}/${id}${subParams}` },
+        { name: "VidSrc NL", url: `https://player.vidsrc.nl/embed/${mediaType}/${id}${subParams}` },
+        { name: "IDSrc TO", url: `https://idsrc.to/embed/${mediaType}/${id}${subParams}` },
+        { name: "VidSrc ICU", url: `https://vidsrc.icu/embed/${mediaType}/${id}${subParams}` },
+        { name: "Anime-KKI", url: `https://anime-kki.herokuapp.com/embed/${id}${subParams}` },
         { name: "Main Server 1", url: mediaType === 'movie' 
             ? `https://vidstuck.xyz/embed/movie/${id}?branding=zxcstream&subtitle=english,indonesian` 
             : `https://vidstuck.xyz/embed/tv/${id}/${season}/${episode}?branding=zxcstream&subtitle=english,indonesian` },
@@ -1378,17 +1379,17 @@ function buildServersList(mediaType, id, season = 1, episode = 1) {
             ? `https://zxcstream.xyz/player/movie/${id}?server=0&subLang=english,indonesian` 
             : `https://zxcstream.xyz/player/tv/${id}/${season}/${episode}?server=0&subLang=english,indonesian` },
         { name: "Server Alpha", url: mediaType === 'movie' 
-            ? `https://vidup.to/movie/${id}?autoPlay=true&theme=FF0000${SUB_PARAMS}` 
-            : `https://vidup.to/tv/${id}/${season}/${episode}?autoPlay=true&theme=FF0000${SUB_PARAMS}` },
+            ? `https://vidup.to/movie/${id}?autoPlay=true&theme=FF0000&sub=id,en&sub-source=opensubtitles` 
+            : `https://vidup.to/tv/${id}/${season}/${episode}?autoPlay=true&theme=FF0000&sub=id,en&sub-source=opensubtitles` },
         { name: "Server Beta", url: mediaType === 'movie' 
-            ? `https://mappletv.uk/watch/movie/${id}?${SUB_PARAMS.substring(1)}` 
-            : `https://mappletv.uk/watch/tv/${id}-${season}-${episode}?${SUB_PARAMS.substring(1)}` },
+            ? `https://mappletv.uk/watch/movie/${id}?sub=id,en&sub-source=opensubtitles` 
+            : `https://mappletv.uk/watch/tv/${id}-${season}-${episode}?sub=id,en&sub-source=opensubtitles` },
         { name: "Server Delta", url: mediaType === 'movie' 
-            ? `https://111movies.com/movie/${id}?${SUB_PARAMS.substring(1)}` 
-            : `https://111movies.com/tv/${id}/${season}/${episode}?${SUB_PARAMS.substring(1)}` },
+            ? `https://111movies.com/movie/${id}?sub=id,en&sub-source=opensubtitles` 
+            : `https://111movies.com/tv/${id}/${season}/${episode}?sub=id,en&sub-source=opensubtitles` },
         { name: "Server Zeta", url: mediaType === 'movie' 
-            ? `https://vidsrc.xyz/embed/movie/${id}?${SUB_PARAMS.substring(1)}` 
-            : `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}${SUB_PARAMS}` }
+            ? `https://vidsrc.xyz/embed/movie/${id}?sub=id,en&sub-source=opensubtitles` 
+            : `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}&sub=id,en&sub-source=opensubtitles` }
     ];
 }
 
