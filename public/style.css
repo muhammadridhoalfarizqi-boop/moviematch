@@ -4989,3 +4989,120 @@ body.light-mode .admin-stat-card {
         flex-direction: column;
     }
 }
+
+.premium-refresh-btn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: #333;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    width: 100%;
+    transition: 0.2s;
+}
+
+.premium-refresh-btn:hover {
+    background: #444;
+}
+
+body.light-mode .premium-refresh-btn {
+    background: #eee;
+    color: #111;
+}
+
+body.light-mode .premium-refresh-btn:hover {
+    background: #ddd;
+}
+
+#pendingOrdersSection {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #24242a;
+}
+
+#pendingOrdersSection h3 {
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+.pending-order-card {
+    padding: 16px;
+    background: #15151b;
+    border: 1px solid #292930;
+    border-radius: 10px;
+    margin-bottom: 12px;
+}
+
+.pending-order-card .order-email {
+    font-weight: 700;
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.pending-order-card .order-detail {
+    color: #aaa;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.pending-order-card .order-detail strong {
+    color: #f1c40f;
+}
+
+.pending-order-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.approve-btn,
+.reject-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.approve-btn {
+    background: #2ecc71;
+}
+
+.approve-btn:hover {
+    background: #27ae60;
+}
+
+.reject-btn {
+    background: #e50914;
+}
+
+.reject-btn:hover {
+    background: #b80710;
+}
+
+body.light-mode .pending-order-card {
+    background: #f5f5f5;
+    border-color: #ddd;
+}
+
+body.light-mode .pending-order-card .order-email {
+    color: #111;
+}
+
+body.light-mode .pending-order-card .order-detail {
+    color: #555;
+}
+
+body.light-mode #pendingOrdersSection {
+    border-top-color: #ddd;
+}
+
+body.light-mode #pendingOrdersSection h3 {
+    color: #111;
+}
