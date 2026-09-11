@@ -21,6 +21,7 @@
             <a onclick="showPage('home-page'); toggleMenu();">Home</a>
             <a onclick="showPage('search-page'); toggleMenu();">Search</a>
             <a onclick="showFavorites(); toggleMenu();">Favorites</a>
+            <a onclick="showWatchlist(); toggleMenu();">Watchlist</a>
             <a onclick="scrollToContinueWatching(); toggleMenu();">Continue</a>
             <a id="nav-auth" onclick="handleAuthClick(); toggleMenu();">Login</a>
             <button id="themeToggle" class="theme-toggle">&#9790;</button>
@@ -70,6 +71,24 @@
                     <p>Lanjutkan tontonan yang belum selesai.</p>
                 </div>
                 <div class="continue-watching-container" id="continueWatchingContainer"></div>
+            </section>
+
+            <section class="now-playing-section" id="nowPlayingSection">
+                <div class="section-title">
+                    <p class="label">NOW PLAYING</p>
+                    <h2>Sedang Tayang</h2>
+                    <p>Film yang sedang tayang di bioskop.</p>
+                </div>
+                <div class="movie-container" id="nowPlayingContainer"></div>
+            </section>
+
+            <section class="airing-today-section" id="airingTodaySection">
+                <div class="section-title">
+                    <p class="label">AIRING TODAY</p>
+                    <h2>Tayang Hari Ini</h2>
+                    <p>Series yang tayang hari ini.</p>
+                </div>
+                <div class="movie-container" id="airingTodayContainer"></div>
             </section>
 
             <section class="mood-section" id="mood">
@@ -191,14 +210,30 @@
                                 </svg>
                                 Download
                             </button>
+                            <button class="bookmarkDetails" id="bookmarkBtn" onclick="toggleBookmarkCurrent()">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:6px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                                </svg>
+                                <span id="bookmarkText">Watchlist</span>
+                            </button>
                         </div>
                         <div class="detailsButtonWrapper">
                             <button class="detailsOverviewbutton red" onclick="showOverview()">Overview</button>
                             <button class="detailsTrailerbutton" onclick="showTrailer()">Trailer</button>
+                            <button class="detailsSimilarbutton" onclick="showSimilar()">Similar</button>
+                            <button class="detailsTranslatebutton" onclick="translateOverview()">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802"/>
+                                </svg>
+                                Translate
+                            </button>
                         </div>
                         <div id="detailsContent">
                             <p id="detailsOverviewText"></p>
                         </div>
+                        <div id="ratingBreakdown"></div>
+                        <div id="seasonSelector"></div>
+                        <div id="episodeList"></div>
                     </div>
                 </div>
             </div>
@@ -214,6 +249,10 @@
                         Back
                     </button>
                     <span id="playerTitle">Now Playing</span>
+                    <div class="player-controls">
+                        <button id="prevEpisodeBtn" class="episode-nav-btn" onclick="playPrevEpisode()" style="display:none;">‹ Prev</button>
+                        <button id="nextEpisodeBtn" class="episode-nav-btn" onclick="playNextEpisode()" style="display:none;">Next ›</button>
+                    </div>
                 </div>
                 <div id="playerSourceContainer">
                     <div class="iframeContainer">
@@ -221,6 +260,10 @@
                             <div class="loader"></div>
                             <iframe id="playerFrame" allowfullscreen></iframe>
                         </div>
+                    </div>
+                    <div class="player-progress-container">
+                        <div class="player-progress-bar" id="playerProgressBar"></div>
+                        <span class="player-progress-text" id="playerProgressText">0%</span>
                     </div>
                     <div class="serversContainer" id="playerServers">
                         <label class="switch">
@@ -250,7 +293,8 @@
                         <option value="popular">Popular</option>
                         <option value="trending">Trending Week</option>
                         <option value="top_rated">Top Rated</option>
-                        <option value="upcoming">Upcoming / On Air</option>
+                        <option value="now_playing">Now Playing</option>
+                        <option value="airing_today">Airing Today</option>
                     </select>
 
                     <select id="genreSelect" class="filter-select" onchange="getMoviesByGenre(this.value, this.options[this.selectedIndex].text)">
@@ -321,6 +365,7 @@
                     </div>
                 </div>
                 <div id="movieContainer" class="movie-container"></div>
+                <div id="infiniteSentinel" style="display:none;"></div>
             </section>
         </div>
 
@@ -333,6 +378,18 @@
                     </div>
                 </div>
                 <div id="favoritesContainer" class="movie-container"></div>
+            </section>
+        </div>
+
+        <div id="watchlist-page" class="page">
+            <section class="movies-section">
+                <div class="section-header">
+                    <div>
+                        <p class="label">BOOKMARK</p>
+                        <h2>Your Watchlist</h2>
+                    </div>
+                </div>
+                <div id="watchlistContainer" class="movie-container"></div>
             </section>
         </div>
 
