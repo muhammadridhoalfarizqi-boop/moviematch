@@ -616,7 +616,13 @@
                             <li>Watch Party</li>
                             <li>Prioritas Support</li>
                         </ul>
-                        <button class="premium-upgrade-btn" id="premiumUpgradeBtn" onclick="togglePremiumStatus()">Upgrade ke Premium</button>
+                        <button class="premium-upgrade-btn" id="premiumUpgradeBtn" onclick="openPremiumModal()">Upgrade ke Premium</button>
+                        <div id="premiumStatusInfo" style="margin-top: 16px; display: none;">
+                            <div class="premium-status-badge">
+                                <span id="premiumPlanBadge">Premium Member</span>
+                                <span id="premiumExpiryInfo"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -790,6 +796,89 @@
                     <p data-i18n="download.noteText">Fitur download hanya untuk penggunaan pribadi. Hormati hak cipta pembuat film.</p>
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <div id="premiumModal" class="modal" style="display:none;">
+        <div class="modal-content premium-modal-content">
+            <span class="close-modal" onclick="closePremiumModal()">&times;</span>
+            <h2 class="premium-modal-title">Pilih Paket Premium</h2>
+            <p class="premium-modal-subtitle">Bayar manual via WhatsApp atau Telegram, aktif otomatis setelah konfirmasi</p>
+            
+            <div class="premium-plans">
+                <div class="premium-plan-card" data-plan="monthly" onclick="selectPremiumPlan('monthly', this)">
+                    <div class="plan-header">
+                        <h3>Bulanan</h3>
+                        <span class="plan-price">Rp 15.000</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>Tanpa Iklan</li>
+                        <li>Download Unlimited</li>
+                        <li>Subtitle Premium</li>
+                    </ul>
+                    <span class="plan-duration">30 hari</span>
+                </div>
+                
+                <div class="premium-plan-card featured" data-plan="yearly" onclick="selectPremiumPlan('yearly', this)">
+                    <span class="plan-badge">POPULER</span>
+                    <div class="plan-header">
+                        <h3>Tahunan</h3>
+                        <span class="plan-price">Rp 150.000</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>Tanpa Iklan</li>
+                        <li>Download Unlimited</li>
+                        <li>Subtitle Premium</li>
+                        <li>Watch Party</li>
+                        <li>Prioritas Support</li>
+                    </ul>
+                    <span class="plan-duration">365 hari</span>
+                </div>
+                <div class="premium-plan-card" data-plan="lifetime" onclick="selectPremiumPlan('lifetime', this)">
+                    <div class="plan-header">
+                        <h3>Lifetime</h3>
+                        <span class="plan-price">Rp 500.000</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>Semua Manfaat</li>
+                        <li>Badge Khusus</li>
+                        <li>Akses Selamanya</li>
+                    </ul>
+                    <span class="plan-duration">Selamanya</span>
+                </div>
+            </div>
+            
+            <div class="premium-payment-info">
+                <p>Setelah pilih paket, klik tombol di bawah untuk chat Admin. Bayar sesuai instruksi, lalu Admin akan aktifkan Premium kamu.</p>
+            </div>
+            
+            <div class="premium-action-buttons">
+                <button class="premium-wa-btn" onclick="upgradeViaWhatsApp()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px;">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                    </svg>
+                    Chat via WhatsApp
+                </button>
+                <button class="premium-tg-btn" onclick="upgradeViaTelegram()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px;">
+                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    </svg>
+                Chat via Telegram
+                </button>
+            </div>
+            
+            <div id="premiumOrderInfo" class="premium-order-info" style="display:none;">
+                <p>Order ID: <strong id="premiumOrderId">-</strong></p>
+                <p>Status: <strong id="premiumOrderStatus">Menunggu Konfirmasi Admin</strong></p>
+            </div>
+        </div>
+    </div>
+    <div id="premiumActivatedModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div style="font-size: 64px; color: #f1c40f; margin-bottom: 16px;">★</div>
+            <h2 style="color: #f1c40f; margin-bottom: 12px;">Premium Aktif!</h2>
+            <p style="color: #ccc; margin-bottom: 20px;">Selamat! Akun kamu sekarang Premium Member.</p>
+            <button onclick="closePremiumActivatedModal()" class="premium-upgrade-btn">Oke, Siap!</button>
         </div>
     </div>
     
