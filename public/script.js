@@ -113,6 +113,7 @@ let manualSubtitleUrl = null;
 let moodHistory = {};
 let userProfile = {};
 let isPremiumUser = false;
+let selectedPremiumPlan = null;
 let currentReviewRating = 0;
 
 const ICON_TRANSLATE = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802"/></svg>`;
@@ -4010,39 +4011,192 @@ function saveProfileCustomization() {
 }
 
 function togglePremiumStatus() {
+    const PREMIUM_PLANS = {
+    monthly: { name: 'Premium Bulanan', price: 20000, days: 30 },
+    yearly: { name: 'Premium Tahunan', price: 150000, days: 365 },
+    lifetime: { name: 'Premium Lifetime', price: 500000, days: 36500 }
+};
+
+const ADMIN_WHATSAPP = "6288901419668";
+const ADMIN_TELEGRAM = "OwnerMovieMatch";
+
+function openPremiumModal() {
+    const user = getCurrentUser();
+    if (!user) {
+        showToast('Login dulu untuk upgrade premium', 'error');
+        showPage('login-page');
+        return;
+    }
+    
+    const modal = document.getElementById('premiumModal');
+    if (modal) modal.style.display = 'flex';
+    
+    selectedPremiumPlan = null;
+    document.querySelectorAll('.premium-plan-card').forEach(c => c.classList.remove('selected'));
+    
+    const orderInfo = document.getElementById('premiumOrderInfo');
+    if (orderInfo) orderInfo.style.display = 'none';
+}
+
+function closePremiumModal() {
+    const modal = document.getElementById('premiumModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function selectPremiumPlan(plan, card) {
+    selectedPremiumPlan = plan;
+    document.querySelectorAll('.premium-plan-card').forEach(c => c.classList.remove('selected'));
+    if (card) card.classList.add('selected');
+}
+
+async function upgradeViaWhatsApp() {
+    await processPremiumUpgrade('whatsapp');
+}
+
+async function upgradeViaTelegram() {
+    await processPremiumUpgrade('telegram');
+}
+
+async function processPremiumUpgrade(method) {
     const user = getCurrentUser();
     if (!user) {
         showToast('Login dulu', 'error');
         return;
     }
-    if (isPremiumUser) {
-        if (confirm('Downgrade dari Premium? Kamu akan kehilangan benefit premium.')) {
-            isPremiumUser = false;
-            user.isPremium = false;
-            localStorage.setItem('movieMatchCurrentUser', JSON.stringify(user));
-            updatePremiumUI();
-            showToast('Downgrade ke Free Member', 'info');
+    
+    if (!selectedPremiumPlan) {
+        showToast('Pilih paket dulu', 'error');
+        return;
+    }
+    
+    const plan = PREMIUM_PLANS[selectedPremiumPlan];
+    const orderId = 'MM-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+    
+    try {
+        await supabaseClient.from('subscriptions').insert([{
+            user_email: user.email,
+            user_name: user.name || 'User',
+            plan: selectedPremiumPlan,
+            amount: plan.price,
+            payment_method: method,
+            status: 'pending',
+            transaction_id: orderId,
+            created_at: new Date().toISOString()
+        }]);
+        
+        const orderInfo = document.getElementById('premiumOrderInfo');
+        const orderIdEl = document.getElementById('premiumOrderId');
+        if (orderInfo && orderIdEl) {
+            orderIdEl.textContent = orderId;
+            orderInfo.style.display = 'block';
         }
-    } else {
-        if (confirm('Upgrade ke Premium? (Demo - tidak ada pembayaran real)')) {
-            isPremiumUser = true;
-            user.isPremium = true;
-            localStorage.setItem('movieMatchCurrentUser', JSON.stringify(user));
-            updatePremiumUI();
-            showToast('Selamat! Kamu Premium Member sekarang', 'success');
+        
+        const message = 
+            'Halo Admin MovieMatch!' + '\n\n' +
+            'Saya ingin upgrade ke Premium.' + '\n\n' +
+            'Email: ' + user.email + '\n' +
+            'Nama: ' + (user.name || 'User') + '\n' +
+            'Paket: ' + plan.name + '\n' +
+            'Harga: Rp ' + plan.price.toLocaleString('id-ID') + '\n' +
+            'Order ID: ' + orderId + '\n\n' +
+            'Mohon info cara pembayaran. Terima kasih!';
+        
+        const encodedMsg = encodeURIComponent(message);
+        
+        if (method === 'whatsapp') {
+            window.open('https://wa.me/' + ADMIN_WHATSAPP + '?text=' + encodedMsg, '_blank');
+        } else {
+            window.open('https://t.me/' + ADMIN_TELEGRAM + '?text=' + encodedMsg, '_blank');
         }
+        
+        showToast('Order dibuat! Silakan chat Admin untuk pembayaran.', 'success');
+        
+    } catch (err) {
+        console.error('Premium order error:', err);
+        showToast('Gagal membuat order: ' + err.message, 'error');
+    }
+}
+
+function closePremiumActivatedModal() {
+    const modal = document.getElementById('premiumActivatedModal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function checkPremiumStatus() {
+    const user = getCurrentUser();
+    if (!user || !supabaseClient) return;
+    
+    try {
+        const { data: users } = await supabaseClient
+            .from('users')
+            .select('*')
+            .eq('email', user.email)
+            .limit(1);
+        
+        if (users && users.length > 0) {
+            const dbUser = users[0];
+            
+            if (dbUser.isPremium && !user.isPremium) {
+                localStorage.setItem('movieMatchCurrentUser', JSON.stringify(dbUser));
+                const modal = document.getElementById('premiumActivatedModal');
+                if (modal) modal.style.display = 'flex';
+                showToast('Selamat! Akun kamu sudah Premium!', 'success');
+                setTimeout(() => { showProfile(); }, 2000);
+                return;
+            }
+            
+            if (dbUser.isPremium !== user.isPremium || 
+                dbUser.premium_expires_at !== user.premium_expires_at) {
+                localStorage.setItem('movieMatchCurrentUser', JSON.stringify(dbUser));
+                updatePremiumUI();
+            }
+        }
+    } catch (err) {
+        console.error('Check premium status error:', err);
     }
 }
 
 function updatePremiumUI() {
+    const user = getCurrentUser();
     const statusText = document.getElementById('premiumStatusText');
     const upgradeBtn = document.getElementById('premiumUpgradeBtn');
+    const statusBadge = document.getElementById('premiumStatusInfo');
+    const planBadge = document.getElementById('premiumPlanBadge');
+    const expiryInfo = document.getElementById('premiumExpiryInfo');
+    
+    if (!user) return;
+    
+    isPremiumUser = user.isPremium || false;
+    
     if (isPremiumUser) {
         if (statusText) statusText.textContent = 'Kamu Premium Member';
         if (upgradeBtn) {
-            upgradeBtn.textContent = 'Downgrade ke Free';
-            upgradeBtn.style.background = 'linear-gradient(135deg, #666, #444)';
-            upgradeBtn.style.color = '#fff';
+            upgradeBtn.textContent = 'Perpanjang Premium';
+            upgradeBtn.style.background = 'linear-gradient(135deg, #f1c40f, #d4ac0d)';
+            upgradeBtn.style.color = '#000';
+        }
+        
+        if (statusBadge) statusBadge.style.display = 'block';
+        
+        if (planBadge) {
+            const planNames = { monthly: 'Bulanan', yearly: 'Tahunan', lifetime: 'Lifetime' };
+            planBadge.textContent = (planNames[user.premium_plan] || 'Premium Member');
+        }
+        
+        if (expiryInfo && user.premium_expires_at) {
+            const expiry = new Date(user.premium_expires_at);
+            const now = new Date();
+            const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+            
+            if (daysLeft > 365 * 10) {
+                expiryInfo.textContent = 'Selamanya';
+            } else if (daysLeft > 0) {
+                expiryInfo.textContent = daysLeft + ' hari lagi';
+            } else {
+                expiryInfo.textContent = 'Kadaluarsa';
+            }
+        } else if (expiryInfo) {
+            expiryInfo.textContent = 'Aktif';
         }
     } else {
         if (statusText) statusText.textContent = 'Upgrade untuk pengalaman tanpa batas';
@@ -4051,9 +4205,24 @@ function updatePremiumUI() {
             upgradeBtn.style.background = 'linear-gradient(135deg, #f1c40f, #d4ac0d)';
             upgradeBtn.style.color = '#000';
         }
+        
+        if (statusBadge) statusBadge.style.display = 'none';
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        const user = getCurrentUser();
+        if (user && user.isPremium) {
+            const expiry = user.premium_expires_at ? new Date(user.premium_expires_at) : null;
+            if (expiry && expiry < new Date()) {
+                user.isPremium = false;
+                localStorage.setItem('movieMatchCurrentUser', JSON.stringify(user));
+            }
+        }
+    }, 500);
+});
+    
 async function loadAdminStats() {
     const container = document.getElementById('adminStats');
     if (!container) return;
