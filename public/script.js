@@ -1086,7 +1086,7 @@ window.addEventListener('scroll', () => {
     else btn.classList.remove('visible');
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     await verifyPremiumFromServer();
     updatePremiumUI();
     
