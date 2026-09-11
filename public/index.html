@@ -234,6 +234,8 @@
                         <div id="ratingBreakdown"></div>
                         <div id="seasonSelector"></div>
                         <div id="episodeList"></div>
+                        <div id="collectionSection"></div>
+                        <div id="castSection"></div>
                     </div>
                 </div>
             </div>
@@ -348,6 +350,29 @@
                         <option value="marvel">MARVEL STUDIOS</option>
                         <option value="dreamworks">DREAMWORKS PICTURES</option>
                         <option value="amc">AMC</option>
+                    </select>
+
+                    <select id="sortSelect" class="filter-select" onchange="applySort(this.value)">
+                        <option value="default">Sort: Default</option>
+                        <option value="popularity.desc">Popularitas (Tertinggi)</option>
+                        <option value="popularity.asc">Popularitas (Terendah)</option>
+                        <option value="vote_average.desc">Rating (Tertinggi)</option>
+                        <option value="vote_average.asc">Rating (Terendah)</option>
+                        <option value="primary_release_date.desc">Rilis Terbaru</option>
+                        <option value="primary_release_date.asc">Rilis Terlama</option>
+                        <option value="original_title.asc">Judul A-Z</option>
+                    </select>
+
+                    <select id="languageSelect" class="filter-select" onchange="filterByLanguage(this.value)">
+                        <option value="all">Semua Bahasa</option>
+                        <option value="en">🇺🇸 Inggris</option>
+                        <option value="ko">🇰🇷 Korea</option>
+                        <option value="ja">🇯🇵 Jepang</option>
+                        <option value="zh">🇨🇳 China</option>
+                        <option value="th">🇹🇭 Thailand</option>
+                        <option value="id">🇮🇩 Indonesia</option>
+                        <option value="es">🇪🇸 Spanyol</option>
+                        <option value="fr">🇫🇷 Prancis</option>
                     </select>
                 </div>
 
@@ -495,6 +520,7 @@
             <div id="modalBody"></div>
         </div>
     </div>
+    <div id="toastContainer" class="toast-container"></div>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="script.js" defer></script>
 </body>
