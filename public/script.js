@@ -3935,6 +3935,25 @@ function loadUserProfile() {
             avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=e50914&color=fff&size=100`;
         }
     }
+    
+    const nameInput = document.getElementById('profileDisplayName');
+    if (nameInput) nameInput.value = userProfile.displayName || '';
+
+    const bioInput = document.getElementById('profileBio');
+    if (bioInput) bioInput.value = userProfile.bio || '';
+    
+    document.querySelectorAll('.genre-chip').forEach(chip => {
+        const genre = chip.dataset.genre;
+        if ((userProfile.favoriteGenres || []).includes(genre)) {
+            chip.classList.add('active');
+        } else {
+            chip.classList.remove('active');
+        }
+    });
+
+    isPremiumUser = user.isPremium || false;
+    updatePremiumUI();
+}
 
 function toggleFavoriteGenre(btn) {
     if (!userProfile.favoriteGenres) userProfile.favoriteGenres = [];
