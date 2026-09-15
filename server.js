@@ -1,91 +1,56 @@
-const express = require('express');
-const mysql = require('mysql2');
-const cors = require('cors');
-const bcrypt = require('bcryptjs');
+const http = require('http');
+const fs = require('fs');
 const path = require('path');
 
-const app = express();
-app.use(express.json());
-app.use(cors());
+const publicDir = path.join(__dirname, 'public');
+const port = process.env.PORT || 3000;
 
-const db = mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'Ridho',        
-    password: process.env.DB_PASSWORD || '089524620042ridho',  
-    database: process.env.DB_NAME || 'moviematch_db'
-});
+const mimeTypes = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.webmanifest': 'application/manifest+json; charset=utf-8'
+};
 
-db.connect((err) => {
+const server = http.createServer((req, res) => {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  let pathname = decodeURIComponent(url.pathname);
+
+  if (pathname === '/') pathname = '/index.html';
+
+  const requestedPath = path.normalize(path.join(publicDir, pathname));
+  if (!requestedPath.startsWith(publicDir)) {
+    res.writeHead(403);
+    res.end('Forbidden');
+    return;
+  }
+
+  fs.readFile(requestedPath, (err, data) => {
     if (err) {
-        console.error('Koneksi ke database MySQL gagal:', err);
-        return;
-    }
-    console.log('Berhasil terhubung ke database MySQL.');
-});
-
-app.post('/api/register', async (req, res) => {
-    const { name, email, password } = req.body;
-    
-    if (!name || !email || !password) {
-        return res.json({ success: false, message: 'Semua kolom harus diisi!' });
-    }
-
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const query = 'INSERT INTO users (name, email, password) VALUES (?, ?, ?)';
-        db.query(query, [name, email, hashedPassword], (err, result) => {
-            if (err) {
-                if (err.code === 'ER_DUP_ENTRY') {
-                    return res.json({ success: false, message: 'Email sudah terdaftar!' });
-                }
-                return res.json({ success: false, message: 'Terjadi kesalahan pada server.' });
-            }
-            res.json({ success: true, message: 'Registrasi berhasil!' });
-        });
-    } catch (error) {
-        res.json({ success: false, message: 'Gagal memproses pendaftaran.' });
-    }
-});
-
-app.post('/api/login', (req, res) => {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-        return res.json({ success: false, message: 'Email dan password harus diisi!' });
-    }
-
-    const query = 'SELECT * FROM users WHERE email = ?';
-    db.query(query, [email], async (err, results) => {
-        if (err || results.length === 0) {
-            return res.json({ success: false, message: 'Email atau password salah.' });
+      fs.readFile(path.join(publicDir, 'index.html'), (fallbackErr, fallbackData) => {
+        if (fallbackErr) {
+          res.writeHead(404);
+          res.end('Not found');
+          return;
         }
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(fallbackData);
+      });
+      return;
+    }
 
-        const user = results[0];
-        
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.json({ success: false, message: 'Email atau password salah.' });
-        }
-
-        res.json({
-            success: true,
-            message: 'Login berhasil!',
-            user: { id: user.id, name: user.name, email: user.email }
-        });
-    });
+    const ext = path.extname(requestedPath).toLowerCase();
+    res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
+    res.end(data);
+  });
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+server.listen(port, () => {
+  console.log(`MovieMatch running on http://localhost:${port}`);
 });
-
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(3000, () => {
-        console.log('Server berjalan di http://localhost:3000');
-    });
-}
-
-module.exports = app;
