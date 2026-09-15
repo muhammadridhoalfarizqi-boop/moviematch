@@ -4,7 +4,6 @@
   "private": true,
   "description": "MovieMatch - Movie & TV recommendation web app",
   "scripts": {
-    "start": "echo \"Static app served by Vercel\"",
     "build": "echo \"No build needed\""
   },
   "dependencies": {}
