@@ -1,10 +1,10 @@
-const API_KEY = "c460f7483f7f090ecb7b0ebf0b214d50";
-const ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjNDYwZjc0ODNmN2YwOTBlY2I3YjBlYmYwYjIxNGQ1MCIsIm5iZiI6MTc4ODQ3NDYyMi44OTYsInN1YiI6IjZhOTlmNGZlNTZlODkxMjg0OTgzZGRkOSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.ULTfSl002E5c4EXvAj9uIE4f_tFJMP98SBGGQEdEerE";
-const BASE_URL = "https://api.themoviedb.org/3";
+const BASE_URL = "/api/tmdb";
 const IMAGE_URL = "https://image.tmdb.org/t/p/w500";
+
 const SUPABASE_URL = "https://yratvqvtlixcvyciqrsg.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable___KN08wXZeXaPpHU6z-DAQ_JbZXIoyj";
-const OPENSUBTITLES_API_KEY = "C3oTYqRkJtvkZFVR4r361m0zFfInJcom";
+
+const OPENSUBTITLES_BASE_URL = "/api/opensubtitles";
 const SUB_PARAMS = "&sub=id,en&sub-source=opensubtitles";
 
 let supabaseClient = null;
@@ -523,7 +523,7 @@ async function loadRecommendations() {
         const recommendationPromises = history.slice(0, 3).map(h => {
             const mt = h.media_type || 'movie';
             return fetch(`${BASE_URL}/${mt}/${h.movie_id}/recommendations?language=id-ID&page=1`, {
-                headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                
             }).then(r => r.json()).catch(() => ({ results: [] }));
         });
 
@@ -561,7 +561,7 @@ async function filterByPerson(personId, personName) {
     try {
         const url = `${BASE_URL}/discover/movie?with_cast=${personId}&language=id-ID&page=1&sort_by=popularity.desc`;
         const res = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const data = await res.json();
         await displayItems(data.results, movieContainer, true);
@@ -597,7 +597,7 @@ async function searchActorByName() {
     try {
         const url = `${BASE_URL}/search/person?query=${encodeURIComponent(query)}&language=en-US&page=1`;
         const res = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const data = await res.json();
         const people = (data.results || []).slice(0, 12);
@@ -660,7 +660,7 @@ async function filterByActor(personId, personName, department) {
         const param = department === 'Directing' ? 'with_crew' : 'with_cast';
         const url = `${BASE_URL}/discover/movie?${param}=${personId}&language=id-ID&page=1&sort_by=popularity.desc`;
         const res = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const data = await res.json();
 
@@ -792,7 +792,7 @@ function scheduleTrailerAutoPlay(slide, itemId, mediaType) {
 
     trailerAutoPlayTimer = setTimeout(async () => {
         try {
-            const res = await fetch(`${BASE_URL}/${mediaType}/${itemId}/videos?api_key=${API_KEY}`);
+            const res = await fetch(`${BASE_URL}/${mediaType}/${itemId}/videos`);
             const data = await res.json();
             const trailer = data.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
             if (!trailer) return;
@@ -861,7 +861,7 @@ function scheduleDetailTrailerAutoPlay() {
         try {
             const id = currentDetailItem.id;
             const mediaType = currentDetailItem.mediaType || 'movie';
-            const res = await fetch(`${BASE_URL}/${mediaType}/${id}/videos?api_key=${API_KEY}`);
+            const res = await fetch(`${BASE_URL}/${mediaType}/${id}/videos`);
             const data = await res.json();
             const trailer = data.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
             if (!trailer) return;
@@ -921,7 +921,7 @@ function checkForNewEpisodes() {
             Promise.all(historyItems.map(async (item) => {
                 try {
                     const res = await fetch(`${BASE_URL}/tv/${item.movie_id}?language=en-US`, {
-                        headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                        
                     });
                     const data = await res.json();
 
@@ -1440,7 +1440,7 @@ async function loadContent(filterParam, page = 1) {
 
     try {
         const res = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const data = await res.json();
         let results = data.results || [];
@@ -1469,7 +1469,7 @@ async function loadNowPlaying() {
     if (!container) return;
     try {
         const res = await fetch(`${BASE_URL}/movie/now_playing?page=1&language=id-ID`, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const data = await res.json();
         await displayItems((data.results || []).slice(0, 10), container, false);
@@ -1481,7 +1481,7 @@ async function loadAiringToday() {
     if (!container) return;
     try {
         const res = await fetch(`${BASE_URL}/tv/airing_today?page=1&language=id-ID`, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const data = await res.json();
         await displayItems((data.results || []).slice(0, 10), container, false);
@@ -1515,7 +1515,7 @@ async function searchByQuery(query) {
 
     let url = `${BASE_URL}/search/${currentMediaType}?query=${encodeURIComponent(query)}&language=id-ID&page=1`;
     try {
-        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } });
+        const res = await fetch(url);
         const data = await res.json();
         searchInfiniteTotalPages = Math.min(data.total_pages || 1, 20);
         await displayItems(data.results, movieContainer, true);
@@ -1559,7 +1559,7 @@ async function loadMoreSearchResults() {
 
     const url = `${BASE_URL}/search/${currentMediaType}?query=${encodeURIComponent(searchInfiniteQuery)}&language=id-ID&page=${searchInfinitePage}`;
     try {
-        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } });
+        const res = await fetch(url);
         const data = await res.json();
         if (data.results && data.results.length > 0) {
             const newItems = await createItemElements(data.results);
@@ -1669,7 +1669,7 @@ async function fetchMovieDetails(itemId, mediaType) {
     if (companyCache.has(itemId)) return companyCache.get(itemId);
     const url = `${BASE_URL}/${mediaType}/${itemId}?language=id-ID`;
     try {
-        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } });
+        const res = await fetch(url);
         const data = await res.json();
         const companies = data.production_companies || [];
         companyCache.set(itemId, companies);
@@ -1685,7 +1685,7 @@ async function fetchRuntime(itemId, mediaType) {
     if (runtimeCache.has(itemId)) return runtimeCache.get(itemId);
     try {
         const res = await fetch(`${BASE_URL}/${mediaType}/${itemId}?language=en-US`, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const data = await res.json();
         const runtime = data.runtime || (data.episode_run_time && data.episode_run_time[0]) || 0;
@@ -1764,7 +1764,7 @@ async function getMoviesByGenre(genreId, genreName, page = 1) {
     if (activeLanguage !== 'all') url += `&with_original_language=${activeLanguage}`;
 
     try {
-        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } });
+        const res = await fetch(url);
         const data = await res.json();
         let results = applyClientFilters(data.results || []);
         await displayItems(results, movieContainer, true);
@@ -1809,7 +1809,7 @@ function filterByStudio(value) {
     if (movieTitle) movieTitle.textContent = `${data.name} - Exclusive Content`;
     if (catalogTitle) catalogTitle.textContent = `${data.name} - Exclusive Content`;
 
-    fetch(url, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } })
+    fetch(url)
         .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
         .then(data => {
             if (!data.results || data.results.length === 0) {
@@ -1856,7 +1856,7 @@ function loadMoreStudioContent() {
     const mediaType = currentStudioType === 'network' ? 'tv' : 'movie';
     const url = `${BASE_URL}/discover/${mediaType}?${filterParam}=${currentStudioId}&language=id-ID&page=${currentStudioPage}&sort_by=popularity.desc`;
 
-    fetch(url, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } })
+    fetch(url)
         .then(res => res.json())
         .then(data => {
             if (data.results && data.results.length > 0) {
@@ -1955,9 +1955,9 @@ window.addEventListener("click", function(event) { if (event.target === movieMod
 
 async function getSubtitle(imdbId, lang = 'id') {
     if (!imdbId) return null;
-    const url = `https://api.opensubtitles.com/api/v1/subtitles?imdb_id=${imdbId}&languages=${lang}`;
+    const url = `${OPENSUBTITLES_BASE_URL}/subtitles?imdb_id=${imdbId}&languages=${lang}`;
     try {
-        const res = await fetch(url, { headers: { 'Api-Key': OPENSUBTITLES_API_KEY, 'User-Agent': 'MovieMatchApp v1.0' } });
+        const res = await fetch(url, { headers: { 'User-Agent': 'MovieMatchApp v1.0' } });
         if (!res.ok) return null;
         return await res.json();
     } catch { return null; }
@@ -1966,8 +1966,8 @@ async function getSubtitle(imdbId, lang = 'id') {
 async function downloadSubtitle(fileId) {
     if (!fileId) return null;
     try {
-        const res = await fetch(`https://api.opensubtitles.com/api/v1/download/${fileId}`, {
-            headers: { 'Api-Key': OPENSUBTITLES_API_KEY, 'User-Agent': 'MovieMatchApp v1.0' }
+        const res = await fetch(`${OPENSUBTITLES_BASE_URL}/download/${fileId}`, {
+            headers: { 'User-Agent': 'MovieMatchApp v1.0' }
         });
         if (!res.ok) return null;
         const data = await res.json();
@@ -2055,7 +2055,7 @@ function showWatchlist() {
     Promise.all(watchlist.map(async (w) => {
         try {
             const res = await fetch(`${BASE_URL}/${w.media_type}/${w.id}?language=id-ID`, {
-                headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                
             });
             return await res.json();
         } catch { return null; }
@@ -2262,7 +2262,7 @@ async function recommendMood(mood, page = 1) {
 
     let url = `${BASE_URL}/discover/${currentMediaType}?with_genres=${genreId}&language=id-ID&page=${page}&sort_by=popularity.desc`;
     try {
-        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } });
+        const res = await fetch(url);
         const data = await res.json();
         await displayItems(data.results, movieContainer, true);
         addGenrePagination(data.total_pages, page);
@@ -2369,8 +2369,8 @@ async function loadLandingSlider() {
 
     try {
         const [trendingRes, popularRes] = await Promise.all([
-            fetch(`${BASE_URL}/trending/all/week?language=en-US`, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } }),
-            fetch(`${BASE_URL}/movie/popular?language=en-US&page=1`, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } })
+            fetch(`${BASE_URL}/trending/all/week?language=en-US`),
+            fetch(`${BASE_URL}/movie/popular?language=en-US&page=1`)
         ]);
         const trending = await trendingRes.json();
         const popular = await popularRes.json();
@@ -2475,7 +2475,7 @@ async function loadLandingSlider() {
 async function openDetailFromLanding(id, mediaType) {
     try {
         const res = await fetch(`${BASE_URL}/${mediaType}/${id}?language=en-US`, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const item = await res.json();
         item.media_type = mediaType;
@@ -2484,7 +2484,7 @@ async function openDetailFromLanding(id, mediaType) {
 }
 
 function playNow(id, mediaType) {
-    fetch(`${BASE_URL}/${mediaType}/${id}?language=en-US`, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } })
+    fetch(`${BASE_URL}/${mediaType}/${id}?language=en-US`)
         .then(res => res.json())
         .then(item => { item.media_type = mediaType; openDetail(item); })
         .catch(err => console.error("Error:", err));
@@ -2492,7 +2492,7 @@ function playNow(id, mediaType) {
 
 async function playTrailer(id, mediaType, button) {
     try {
-        const res = await fetch(`${BASE_URL}/${mediaType}/${id}/videos?api_key=${API_KEY}`);
+        const res = await fetch(`${BASE_URL}/${mediaType}/${id}/videos`);
         const data = await res.json();
         const trailer = data.results?.find(v => v.type === "Trailer" && v.site === "YouTube");
         if (trailer) {
@@ -2531,7 +2531,7 @@ async function loadTopTen() {
     if (!container) return;
     container.innerHTML = '<div class="loading">Memuat Top 10...</div>';
     try {
-        const res = await fetch(`${BASE_URL}/trending/all/week?language=en-US`, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } });
+        const res = await fetch(`${BASE_URL}/trending/all/week?language=en-US`);
         const data = await res.json();
         const items = (data.results || []).slice(0, 10);
         container.innerHTML = "";
@@ -2545,7 +2545,7 @@ async function loadTopTen() {
 
             let director = "Unknown", stars = "No cast data";
             try {
-                const detailRes = await fetch(`${BASE_URL}/${mediaType}/${item.id}/credits?language=en-US`, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } });
+                const detailRes = await fetch(`${BASE_URL}/${mediaType}/${item.id}/credits?language=en-US`);
                 const detailData = await detailRes.json();
                 const crew = detailData.crew || [];
                 const directorObj = crew.find(c => c.job === "Director");
@@ -2567,7 +2567,7 @@ async function loadTopTen() {
                 </div>
             `;
             div.onclick = () => {
-                fetch(`${BASE_URL}/${mediaType}/${item.id}?language=en-US`, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } })
+                fetch(`${BASE_URL}/${mediaType}/${item.id}?language=en-US`)
                     .then(res => res.json())
                     .then(fullItem => { fullItem.media_type = mediaType; openDetail(fullItem); })
                     .catch(err => console.error("Error:", err));
@@ -2585,7 +2585,7 @@ async function loadTopRated() {
     if (!container) return;
     container.innerHTML = '<div class="loading">Memuat...</div>';
     try {
-        const res = await fetch(`${BASE_URL}/movie/top_rated?language=en-US&page=1`, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } });
+        const res = await fetch(`${BASE_URL}/movie/top_rated?language=en-US&page=1`);
         const data = await res.json();
         const items = (data.results || []).slice(0, 10);
         container.innerHTML = "";
@@ -2603,7 +2603,7 @@ async function loadTopRated() {
                 </div>
             `;
             div.onclick = () => {
-                fetch(`${BASE_URL}/movie/${item.id}?language=en-US`, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } })
+                fetch(`${BASE_URL}/movie/${item.id}?language=en-US`)
                     .then(res => res.json())
                     .then(fullItem => { fullItem.media_type = "movie"; openDetail(fullItem); })
                     .catch(err => console.error("Error:", err));
@@ -2659,7 +2659,7 @@ async function loadContinueWatching() {
                 </div>
             `;
             card.onclick = () => {
-                fetch(`${BASE_URL}/${mediaType}/${item.movie_id}?language=en-US`, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } })
+                fetch(`${BASE_URL}/${mediaType}/${item.movie_id}?language=en-US`)
                     .then(res => res.json())
                     .then(fullItem => { fullItem.media_type = mediaType; openDetail(fullItem); })
                     .catch(err => console.error("Error:", err));
@@ -2685,7 +2685,7 @@ async function openDetail(item) {
     const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
 
     const res = await fetch(`${BASE_URL}/${mediaType}/${item.id}?language=en-US`, {
-        headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+        
     });
     const data = await res.json();
 
@@ -2814,7 +2814,7 @@ async function selectSeason(seasonNumber, btn) {
 
     try {
         const res = await fetch(`${BASE_URL}/tv/${currentDetailItem.id}/season/${seasonNumber}?language=en-US`, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const data = await res.json();
         const episodes = data.episodes || [];
@@ -2855,7 +2855,7 @@ async function renderCollection(data, mediaType) {
 
     try {
         const res = await fetch(`${BASE_URL}/collection/${data.belongs_to_collection.id}?language=en-US`, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const col = await res.json();
         const parts = (col.parts || []).sort((a, b) => (a.release_date || '').localeCompare(b.release_date || ''));
@@ -2891,7 +2891,7 @@ async function renderCast(id, mediaType) {
 
     try {
         const res = await fetch(`${BASE_URL}/${mediaType}/${id}/credits?language=en-US`, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const data = await res.json();
         const cast = (data.cast || []).slice(0, 12);
@@ -3088,7 +3088,7 @@ async function showTrailer() {
     const content = document.getElementById('detailsContent');
 
     try {
-        const res = await fetch(`${BASE_URL}/${mediaType}/${id}/videos?api_key=${API_KEY}`);
+        const res = await fetch(`${BASE_URL}/${mediaType}/${id}/videos`);
         const data = await res.json();
         const trailer = data.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
         if (trailer) {
@@ -3129,7 +3129,7 @@ async function showSimilar() {
 
     try {
         const res = await fetch(`${BASE_URL}/${mediaType}/${id}/similar?language=en-US&page=1`, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const data = await res.json();
         const items = (data.results || []).slice(0, 12);
@@ -3313,7 +3313,7 @@ async function downloadSubtitleFile(lang) {
         try {
             const mediaType = currentDetailItem.mediaType || currentMediaType;
             const res = await fetch(BASE_URL + '/' + mediaType + '/' + currentDetailItem.id + '?append_to_response=external_ids', {
-                headers: { 'Authorization': 'Bearer ' + ACCESS_TOKEN }
+                
             });
             const data = await res.json();
             imdbId = data.imdb_id || (data.external_ids && data.external_ids.imdb_id);
@@ -3336,9 +3336,9 @@ async function downloadSubtitleFile(lang) {
     }
 
     try {
-        const searchUrl = 'https://api.opensubtitles.com/api/v1/subtitles?imdb_id=' + imdbId + '&languages=' + lang;
+        const searchUrl = '${OPENSUBTITLES_BASE_URL}/subtitles?imdb_id=' + imdbId + '&languages=' + lang;
         const res = await fetch(searchUrl, {
-            headers: { 'Api-Key': OPENSUBTITLES_API_KEY, 'User-Agent': 'MovieMatchApp v1.0' }
+            headers: { 'User-Agent': 'MovieMatchApp v1.0' }
         });
 
         if (!res.ok) {
@@ -3367,10 +3367,10 @@ async function downloadSubtitleFile(lang) {
 
         status.textContent = 'Mengunduh...';
 
-        const downloadRes = await fetch('https://api.opensubtitles.com/api/v1/download', {
+        const downloadRes = await fetch('${OPENSUBTITLES_BASE_URL}/download', {
             method: 'POST',
             headers: {
-                'Api-Key': OPENSUBTITLES_API_KEY,
+                
                 'Content-Type': 'application/json',
                 'User-Agent': 'MovieMatchApp v1.0'
             },
@@ -3614,7 +3614,7 @@ async function loadTrendingByCountry(countryCode, btn) {
     showSkeletonLoader(container, 8);
     try {
         const url = `${BASE_URL}/discover/movie?with_origin_country=${countryCode}&language=id-ID&page=1&sort_by=popularity.desc`;
-        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } });
+        const res = await fetch(url);
         const data = await res.json();
         if (!data.results || data.results.length === 0) {
             container.innerHTML = `<div class="loading">Tidak ada konten trending dari ${COUNTRY_NAMES[countryCode] || countryCode}.</div>`;
@@ -3633,7 +3633,7 @@ async function renderWatchProviders(id, mediaType) {
     container.innerHTML = '<h3 class="section-inner-title">Tersedia di</h3><div class="loading">Memuat provider...</div>';
     try {
         const res = await fetch(`${BASE_URL}/${mediaType}/${id}/watch/providers`, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const data = await res.json();
         const providers = data.results?.ID || data.results?.US || null;
@@ -3678,7 +3678,7 @@ async function renderBoxOffice(id, mediaType) {
     }
     try {
         const res = await fetch(`${BASE_URL}/movie/${id}?language=en-US`, {
-            headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+            
         });
         const data = await res.json();
         if (!data.budget && !data.revenue) {
@@ -3848,10 +3848,10 @@ async function openFilmography(personId) {
     try {
         const [personRes, creditsRes] = await Promise.all([
             fetch(`${BASE_URL}/person/${personId}?language=en-US`, {
-                headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                
             }),
             fetch(`${BASE_URL}/person/${personId}/combined_credits?language=en-US`, {
-                headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                
             })
         ]);
         const person = await personRes.json();
@@ -4405,7 +4405,7 @@ function enhanceShowWatchlist() {
         Promise.all(items.map(async (w) => {
             try {
                 const res = await fetch(`${BASE_URL}/${w.media_type}/${w.id}?language=id-ID`, {
-                    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                    
                 });
                 return await res.json();
             } catch { return null; }
