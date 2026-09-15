@@ -4,11 +4,8 @@
   "private": true,
   "description": "MovieMatch - Movie & TV recommendation web app",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "echo \"Static app served by Vercel\"",
+    "build": "echo \"No build needed\""
   },
-  "dependencies": {
-    "@vercel/node": "latest"
-  },
-  "devDependencies": {}
+  "dependencies": {}
 }
