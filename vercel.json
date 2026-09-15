@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "echo \"No build needed\"",
   "outputDirectory": "public",
   "rewrites": [
     {
-      "source": "/api/tmdb/:path*",
+      "source": "/api/tmdb/(.*)",
       "destination": "/api/tmdb.js"
     },
     {
-      "source": "/api/opensubtitles/:path*",
+      "source": "/api/opensubtitles/(.*)",
       "destination": "/api/opensubtitles.js"
     },
     {
