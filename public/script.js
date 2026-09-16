@@ -169,7 +169,7 @@ const TRANSLATIONS = {
         'watchlist.label': 'BOOKMARK', 'watchlist.title': 'Watchlist Kamu',
         'profile.label': 'PROFIL PENGGUNA', 'profile.logout': 'Logout', 'profile.history': 'Riwayat Tayangan Dilihat',
         'auth.loginTitle': 'Selamat Datang', 'auth.loginDesc': 'Login untuk melanjutkan ke MovieMatch.',
-        'auth.email': 'Email', 'auth.password': 'Password', 'auth.login': 'Login',
+        'auth.email': 'Email', 'auth.password': 'Password', 'auth.login': 'Login', 'auth.rememberMe': 'Ingat saya', 'auth.forgotPassword': 'Lupa password?',
         'auth.noAccount': 'Belum punya akun?', 'auth.register': 'Daftar',
         'auth.registerTitle': 'Buat Akun', 'auth.registerDesc': 'Buat akun untuk pengalaman MovieMatch.',
         'auth.name': 'Nama', 'auth.create': 'Buat Akun', 'auth.hasAccount': 'Sudah punya akun?',
@@ -229,7 +229,7 @@ const TRANSLATIONS = {
         'watchlist.label': 'BOOKMARK', 'watchlist.title': 'Your Watchlist',
         'profile.label': 'USER PROFILE', 'profile.logout': 'Logout', 'profile.history': 'Watch History',
         'auth.loginTitle': 'Welcome Back', 'auth.loginDesc': 'Login to continue to MovieMatch.',
-        'auth.email': 'Email', 'auth.password': 'Password', 'auth.login': 'Login',
+        'auth.email': 'Email', 'auth.password': 'Password', 'auth.login': 'Login', 'auth.rememberMe': 'Remember me', 'auth.forgotPassword': 'Forgot password?',
         'auth.noAccount': "Don't have an account?", 'auth.register': 'Register',
         'auth.registerTitle': 'Create an Account', 'auth.registerDesc': 'Create an account for the MovieMatch experience.',
         'auth.name': 'Name', 'auth.create': 'Create Account', 'auth.hasAccount': 'Already have an account?',
@@ -1223,6 +1223,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyLanguage();
     updateNavAuth();
     renderSearchHistory();
+    loadRememberedLogin();
     routeFromUrl();
     loadNowPlaying();
     loadAiringToday();
@@ -1308,8 +1309,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     setTimeout(() => {
-        // Home content is loaded by routeFromUrl() / showPage("home-page").
-        // Jangan panggil loadTopTen() di sini supaya Top 10 tidak double.
         setupActorSearch();
         requestNotificationPermission();
         setTimeout(checkForNewEpisodes, 3000);
@@ -2407,12 +2406,58 @@ function startResendTimer() {
     }, 1000);
 }
 
+function loadRememberedLogin() {
+    const savedEmail = localStorage.getItem("movieMatchRememberEmail");
+    const rememberMe = document.getElementById("rememberMe");
+    const loginEmail = document.getElementById("loginEmail");
+
+    if (savedEmail && loginEmail) {
+        loginEmail.value = savedEmail;
+        if (rememberMe) rememberMe.checked = true;
+    }
+}
+
+function saveRememberedLogin(email) {
+    const rememberMe = document.getElementById("rememberMe");
+
+    if (rememberMe && rememberMe.checked) {
+        localStorage.setItem("movieMatchRememberEmail", email);
+    } else {
+        localStorage.removeItem("movieMatchRememberEmail");
+    }
+}
+
+async function handleForgotPassword() {
+    const emailInput = document.getElementById("loginEmail");
+    const messageEl = document.getElementById("loginMessage");
+    const email = emailInput ? emailInput.value.trim() : "";
+
+    if (!email) {
+        if (messageEl) messageEl.textContent = "Masukkan email dulu untuk reset password.";
+        if (emailInput) emailInput.focus();
+        return;
+    }
+
+    if (messageEl) messageEl.textContent = "Membuka bantuan reset password...";
+
+    const subject = encodeURIComponent("Reset Password MovieMatch");
+    const body = encodeURIComponent(`Halo Admin MovieMatch, saya lupa password akun MovieMatch.\n\nEmail akun: ${email}\nMohon dibantu reset password saya.`);
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=ridhonozxy@gmail.com&su=${subject}&body=${body}`;
+
+    window.open(gmailUrl, "_blank", "noopener,noreferrer");
+
+    if (typeof showToast === "function") {
+        showToast("Email bantuan reset password dibuka.", "success");
+    }
+}
+
 if (loginForm) {
     loginForm.addEventListener("submit", async function(e) {
         e.preventDefault();
         if (!supabaseClient) return;
-        const email = document.getElementById("loginEmail").value;
+        const email = document.getElementById("loginEmail").value.trim();
         const password = document.getElementById("loginPassword").value;
+        saveRememberedLogin(email);
         const { data: users, error } = await supabaseClient.from('users').select('*').eq('email', email).eq('password', password);
         if (error || !users || users.length === 0) {
             document.getElementById("loginMessage").textContent = "Email atau password salah!";
@@ -2757,8 +2802,6 @@ async function loadTopTen() {
         const res = await fetch(`${BASE_URL}/trending/all/week?language=en-US`);
         const data = await res.json();
 
-        // Kalau ada request loadTopTen yang lebih baru, hentikan request lama.
-        // Ini mencegah Top 10 muncul double saat home/load awal kepanggil berdekatan.
         if (requestId !== topTenRequestId) return;
 
         const items = (data.results || []).slice(0, 10);
