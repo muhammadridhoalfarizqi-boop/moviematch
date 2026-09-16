@@ -140,7 +140,7 @@ const PLAYBACK_SPEEDS = [1, 1.25, 1.5, 1.75, 2, 0.5, 0.75];
 
 const TRANSLATIONS = {
     id: {
-        'nav.home': 'Home', 'nav.search': 'Search', 'nav.favorites': 'Favorites', 'nav.watchlist': 'Watchlist', 'nav.continue': 'Continue',
+        'nav.home': 'Home', 'nav.search': 'Search', 'nav.favorites': 'Favorites', 'nav.watchlist': 'Watchlist', 'nav.continue': 'Continue', 'nav.support': 'Support',
         'hero.label': 'REKOMENDASI FILM & TV', 'hero.title': 'Temukan tayangan yang', 'hero.titleAccent': 'cocok dengan anda.',
         'hero.description': 'Temukan film dan series berdasarkan mood, genre, dan preferensi kamu.', 'hero.button': 'Cari Konten',
         'topten.label': 'TRENDING', 'topten.title': 'Top 10 Minggu Ini', 'topten.description': 'Film dan series paling populer saat ini.',
@@ -193,10 +193,14 @@ const TRANSLATIONS = {
         'sort.ratingDesc': 'Rating (Tertinggi)', 'sort.ratingAsc': 'Rating (Terendah)',
         'sort.newest': 'Rilis Terbaru', 'sort.oldest': 'Rilis Terlama', 'sort.az': 'Judul A-Z',
         'lang.all': 'Semua Bahasa',
-        'notif.title': 'Notifikasi Episode Baru'
+        'notif.title': 'Notifikasi Episode Baru',
+        'support.label': 'SUPPORT', 'support.title': 'Hubungi Support', 'support.description': 'Laporkan bug, error, saran fitur, atau masalah saat memakai MovieMatch.',
+        'support.bugTitle': 'Laporkan Bug', 'support.bugDesc': 'Jika tombol tidak bisa diklik, film tidak muncul, login error, atau halaman bermasalah.',
+        'support.contactTitle': 'Kontak Langsung', 'support.contactDesc': 'Butuh bantuan cepat? Hubungi admin MovieMatch lewat email.',
+        'support.ideaTitle': 'Kirim Saran', 'support.ideaDesc': 'Punya ide fitur baru? Kirim saranmu.', 'support.formTitle': 'Format laporan yang disarankan'
     },
     en: {
-        'nav.home': 'Home', 'nav.search': 'Search', 'nav.favorites': 'Favorites', 'nav.watchlist': 'Watchlist', 'nav.continue': 'Continue',
+        'nav.home': 'Home', 'nav.search': 'Search', 'nav.favorites': 'Favorites', 'nav.watchlist': 'Watchlist', 'nav.continue': 'Continue', 'nav.support': 'Support',
         'hero.label': 'MOVIE & TV RECOMMENDATION', 'hero.title': 'Find shows that', 'hero.titleAccent': 'match your taste.',
         'hero.description': 'Find movies and series based on your mood, genre, and preferences.', 'hero.button': 'Find My Content',
         'topten.label': 'TRENDING', 'topten.title': 'Top 10 This Week', 'topten.description': 'Most popular movies and series right now.',
@@ -249,7 +253,11 @@ const TRANSLATIONS = {
         'sort.ratingDesc': 'Rating (High)', 'sort.ratingAsc': 'Rating (Low)',
         'sort.newest': 'Newest Release', 'sort.oldest': 'Oldest Release', 'sort.az': 'Title A-Z',
         'lang.all': 'All Languages',
-        'notif.title': 'New Episode Notification'
+        'notif.title': 'New Episode Notification',
+        'support.label': 'SUPPORT', 'support.title': 'Contact Support', 'support.description': 'Report bugs, errors, feature ideas, or issues while using MovieMatch.',
+        'support.bugTitle': 'Report Bug', 'support.bugDesc': 'Use this if buttons fail, movies do not load, login errors happen, or pages break.',
+        'support.contactTitle': 'Direct Contact', 'support.contactDesc': 'Need quick help? Contact MovieMatch admin by email.',
+        'support.ideaTitle': 'Send Idea', 'support.ideaDesc': 'Have a feature idea? Send your suggestion.', 'support.formTitle': 'Suggested report format'
     }
 };
 
@@ -1160,6 +1168,11 @@ function routeFromUrl() {
             return true;
         }
 
+        if (view === "support") {
+            showPage("support-page");
+            return true;
+        }
+
         if (search) {
             showPage("search-page");
 
@@ -1433,6 +1446,11 @@ function openContinuePage() {
     setTimeout(() => {
         scrollToContinueWatching();
     }, 500);
+}
+
+function openSupportPage() {
+    history.pushState({ view: "support" }, "", "?view=support");
+    showPage("support-page");
 }
 
 function showPage(pageId) {
