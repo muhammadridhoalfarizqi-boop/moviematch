@@ -5483,7 +5483,7 @@ body.light-mode #pendingOrdersSection h3 {
 
 .library-section {
     min-height: 100vh;
-    padding: 120px 5% 80px;
+    padding: 35px 5% 80px;
 }
 .library-breadcrumb {
     color: #9b9ba5;
