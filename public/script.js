@@ -7,6 +7,9 @@ const SUPABASE_ANON_KEY = "sb_publishable___KN08wXZeXaPpHU6z-DAQ_JbZXIoyj";
 const OPENSUBTITLES_BASE_URL = "/api/opensubtitles";
 const SUB_PARAMS = "&sub=id,en&sub-source=opensubtitles";
 
+// Ganti nomor ini dengan nomor WhatsApp support kamu. Format wajib 62, bukan 08.
+const WHATSAPP_SUPPORT_NUMBER = "6281234567890";
+
 const FALLBACK_POSTER = "/assets/no-poster.svg";
 let lastRetryAction = null;
 let isRoutingFromUrl = false;
@@ -1446,6 +1449,25 @@ function openContinuePage() {
     setTimeout(() => {
         scrollToContinueWatching();
     }, 500);
+}
+
+function openWhatsAppSupport(type = "support") {
+    const pageUrl = window.location.href;
+    const messages = {
+        bug: `Halo Admin MovieMatch, saya mau lapor bug.\n\nHalaman/fitur: \nDeskripsi bug: \nPerangkat/browser: \nURL: ${pageUrl}`,
+        idea: `Halo Admin MovieMatch, saya punya saran fitur.\n\nSaran: \nAlasan: \nURL: ${pageUrl}`,
+        support: `Halo Admin MovieMatch, saya butuh bantuan terkait MovieMatch.\n\nMasalah: \nURL: ${pageUrl}`
+    };
+
+    const message = encodeURIComponent(messages[type] || messages.support);
+    const phone = String(WHATSAPP_SUPPORT_NUMBER || "").replace(/\D/g, "");
+
+    if (!phone || phone === "6281234567890") {
+        showToast("Ganti nomor WhatsApp support di script.js dulu.", "warning");
+        return;
+    }
+
+    window.open(`https://wa.me/${phone}?text=${message}`, "_blank", "noopener,noreferrer");
 }
 
 function openSupportPage() {
