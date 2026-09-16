@@ -39,9 +39,7 @@
         <nav id="menuList">
             <a onclick="openHomePage(); toggleMenu();" data-i18n="nav.home">Home</a>
             <a onclick="openSearchPage(); toggleMenu();" data-i18n="nav.search">Search</a>
-            <a onclick="openFavoritesPage(); toggleMenu();" data-i18n="nav.favorites">Favorites</a>
-            <a onclick="openWatchlistPage(); toggleMenu();" data-i18n="nav.watchlist">Watchlist</a>
-            <a onclick="openContinuePage(); toggleMenu();" data-i18n="nav.continue">Continue</a>
+            <a onclick="openLibraryPage(); toggleMenu();" data-i18n="nav.library">Library</a>
             <a onclick="openSupportPage(); toggleMenu();" data-i18n="nav.support">Support</a>
             <a id="nav-auth" onclick="handleAuthClick(); toggleMenu();">Login</a>
             <button id="langToggle" class="lang-toggle" onclick="toggleLanguage()" title="Change Language">ID</button>
@@ -533,6 +531,50 @@
                 </div>
                 <div id="movieContainer" class="movie-container"></div>
                 <div id="infiniteSentinel" style="display:none;"></div>
+            </section>
+        </div>
+
+        <div id="library-page" class="page">
+            <section class="library-section">
+                <div class="library-breadcrumb">Home <span>›</span> <strong>Library</strong></div>
+                <div class="library-header">
+                    <div>
+                        <p class="label" data-i18n="library.label">LIBRARY</p>
+                        <h2 data-i18n="library.title">My Library</h2>
+                        <p data-i18n="library.description">Pick up where you left off or explore your saved titles.</p>
+                    </div>
+                    <div class="library-search-wrap">
+                        <i class="ri-search-line"></i>
+                        <input id="librarySearchInput" type="text" placeholder="Search library..." oninput="filterLibraryCards()">
+                    </div>
+                </div>
+
+                <div class="library-divider"></div>
+
+                <h3 class="library-subtitle" data-i18n="library.yourLists">Your Lists</h3>
+                <div class="library-grid" id="libraryGrid">
+                    <button class="library-card" data-title="watchlist" onclick="openWatchlistPage()">
+                        <span class="library-icon"><i class="ri-bookmark-line"></i></span>
+                        <span><strong>Watchlist</strong><small data-i18n="library.watchlistDesc">Titles you want to watch</small></span>
+                    </button>
+                    <button class="library-card" data-title="favorites" onclick="openFavoritesPage()">
+                        <span class="library-icon"><i class="ri-heart-line"></i></span>
+                        <span><strong>Favorites</strong><small data-i18n="library.favoritesDesc">Your favorite titles</small></span>
+                    </button>
+                    <button class="library-card" data-title="history" onclick="openHistoryPage()">
+                        <span class="library-icon"><i class="ri-history-line"></i></span>
+                        <span><strong>History</strong><small data-i18n="library.historyDesc">Recently watched</small></span>
+                    </button>
+                    <button class="library-card" data-title="create list folder" onclick="openCreateListFromLibrary()">
+                        <span class="library-icon"><i class="ri-add-line"></i></span>
+                        <span><strong>Create List</strong><small data-i18n="library.createDesc">Make your own collection</small></span>
+                    </button>
+                </div>
+
+                <div class="library-preview" id="libraryPreview">
+                    <h3 data-i18n="library.quickPreview">Quick Preview</h3>
+                    <p data-i18n="library.quickPreviewDesc">Pilih salah satu daftar di atas untuk melihat kontennya.</p>
+                </div>
             </section>
         </div>
 
