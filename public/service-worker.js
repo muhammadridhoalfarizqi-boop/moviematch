@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moviematch-v6';
+const CACHE_NAME = 'moviematch-v12';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
