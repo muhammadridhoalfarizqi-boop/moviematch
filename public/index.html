@@ -37,11 +37,11 @@
         </div>
 
         <nav id="menuList">
-            <a onclick="showPage('home-page'); toggleMenu();" data-i18n="nav.home">Home</a>
+            <a onclick="openHomePage(); toggleMenu();" data-i18n="nav.home">Home</a>
             <a onclick="openSearchPage(); toggleMenu();" data-i18n="nav.search">Search</a>
-            <a onclick="showFavorites(); toggleMenu();" data-i18n="nav.favorites">Favorites</a>
-            <a onclick="showWatchlist(); toggleMenu();" data-i18n="nav.watchlist">Watchlist</a>
-            <a onclick="scrollToContinueWatching(); toggleMenu();" data-i18n="nav.continue">Continue</a>
+            <a onclick="openFavoritesPage(); toggleMenu();" data-i18n="nav.favorites">Favorites</a>
+            <a onclick="openWatchlistPage(); toggleMenu();" data-i18n="nav.watchlist">Watchlist</a>
+            <a onclick="openContinuePage(); toggleMenu();" data-i18n="nav.continue">Continue</a>
             <a id="nav-auth" onclick="handleAuthClick(); toggleMenu();">Login</a>
             <button id="langToggle" class="lang-toggle" onclick="toggleLanguage()" title="Change Language">ID</button>
             <button id="themeToggle" class="theme-toggle" title="Toggle Theme">&#9790;</button>
