@@ -1050,6 +1050,22 @@
         </div>
     </div>
     
+
+    <div class="library-modal-backdrop" id="libraryListModal" onclick="handleLibraryModalBackdrop(event)">
+        <div class="library-modal" role="dialog" aria-modal="true" aria-labelledby="libraryModalTitle">
+            <h3 id="libraryModalTitle">Create a new list</h3>
+            <p>Give your new collection a name.</p>
+            <div class="library-modal-input">
+                <i class="ri-search-line"></i>
+                <input id="newLibraryListName" type="text" placeholder="e.g. Anime to Watch" autocomplete="off">
+            </div>
+            <div class="library-modal-actions">
+                <button type="button" class="library-modal-cancel" onclick="closeCreateListModal()">Cancel</button>
+                <button type="button" class="library-modal-submit" onclick="createLibraryList()">Create list</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toastContainer" class="toast-container"></div>
 
     <button class="scroll-top-btn" id="scrollTopBtn" onclick="scrollToTop()" title="Scroll to top">
