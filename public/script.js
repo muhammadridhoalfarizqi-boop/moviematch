@@ -1460,10 +1460,87 @@ function openHistoryPage() {
 }
 
 function openCreateListFromLibrary() {
-    openWatchlistPage();
-    setTimeout(() => {
-        if (typeof promptNewFolder === "function") promptNewFolder();
-    }, 250);
+    openCreateListModal();
+}
+
+function getCustomLibraryLists() {
+    try { return JSON.parse(localStorage.getItem("movieMatchCustomLists")) || []; }
+    catch { return []; }
+}
+
+function saveCustomLibraryLists(lists) {
+    localStorage.setItem("movieMatchCustomLists", JSON.stringify(lists));
+}
+
+function openCreateListModal() {
+    const modal = document.getElementById("libraryListModal");
+    const input = document.getElementById("newLibraryListName");
+    if (!modal) return;
+    modal.classList.add("active");
+    document.body.classList.add("modal-open");
+    setTimeout(() => { if (input) { input.value = ""; input.focus(); } }, 80);
+}
+
+function closeCreateListModal() {
+    const modal = document.getElementById("libraryListModal");
+    if (modal) modal.classList.remove("active");
+    document.body.classList.remove("modal-open");
+}
+
+function handleLibraryModalBackdrop(event) {
+    if (event.target && event.target.id === "libraryListModal") closeCreateListModal();
+}
+
+function createLibraryList() {
+    const input = document.getElementById("newLibraryListName");
+    const name = input ? input.value.trim() : "";
+    if (name.length < 2) {
+        if (typeof showToast === "function") showToast("Nama list minimal 2 karakter.", "warning");
+        if (input) input.focus();
+        return;
+    }
+    const lists = getCustomLibraryLists();
+    if (lists.some(list => list.name.toLowerCase() === name.toLowerCase())) {
+        showToast(`List "${name}" sudah ada.`, "info");
+        return;
+    }
+    lists.push({ id: "list_" + Date.now(), name, items: [] });
+    saveCustomLibraryLists(lists);
+    closeCreateListModal();
+    renderCustomLibraryLists();
+    renderLibraryPreview();
+    showToast(`List created: "${name}" was created successfully.`, "success");
+}
+
+function deleteCustomLibraryList(id) {
+    const lists = getCustomLibraryLists();
+    const target = lists.find(list => list.id === id);
+    if (!target) return;
+    if (!confirm(`Hapus list "${target.name}"?`)) return;
+    saveCustomLibraryLists(lists.filter(list => list.id !== id));
+    renderCustomLibraryLists();
+    renderLibraryPreview();
+    showToast("List dihapus.", "info");
+}
+
+function renderCustomLibraryLists() {
+    const grid = document.getElementById("libraryGrid");
+    if (!grid) return;
+    grid.querySelectorAll(".custom-library-list").forEach(el => el.remove());
+    getCustomLibraryLists().forEach(list => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "library-card custom-library-list";
+        btn.dataset.title = list.name.toLowerCase();
+        btn.innerHTML = `
+            <span class="library-icon"><i class="ri-folder-line"></i></span>
+            <span><strong>${escapeHtml(list.name)}</strong><small>${(list.items || []).length} titles</small></span>
+            <span class="library-card-menu" onclick="event.stopPropagation(); deleteCustomLibraryList('${list.id}')"><i class="ri-more-2-fill"></i></span>
+        `;
+        btn.onclick = () => showToast(`List "${list.name}" masih kosong.`, "info");
+        const createCard = grid.querySelector('[data-title="create list folder"]');
+        grid.insertBefore(btn, createCard);
+    });
 }
 
 function filterLibraryCards() {
@@ -1476,6 +1553,7 @@ function filterLibraryCards() {
 }
 
 function renderLibraryPreview() {
+    renderCustomLibraryLists();
     const preview = document.getElementById("libraryPreview");
     if (!preview) return;
     const watchlistCount = typeof getWatchlist === "function" ? getWatchlist().length : 0;
