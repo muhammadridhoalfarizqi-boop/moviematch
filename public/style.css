@@ -5613,3 +5613,36 @@ body.light-mode #pendingOrdersSection h3 {
     .library-section { padding: 100px 20px 60px; }
     .library-grid { grid-template-columns: 1fr; }
 }
+
+body.modal-open { overflow: hidden; }
+.library-modal-backdrop {
+    position: fixed; inset: 0; z-index: 5000;
+    display: none; align-items: center; justify-content: center;
+    padding: 20px; background: rgba(0,0,0,.62); backdrop-filter: blur(10px);
+}
+.library-modal-backdrop.active { display: flex; }
+.library-modal {
+    width: min(420px, 100%); border-radius: 14px; overflow: hidden;
+    background: #1d1d22; border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 24px 80px rgba(0,0,0,.55); color: #fff;
+}
+.library-modal h3 { margin: 0; padding: 22px 22px 6px; font-size: 18px; }
+.library-modal p { margin: 0; padding: 0 22px 14px; color: #aeb0bb; font-size: 14px; }
+.library-modal-input {
+    margin: 0 22px 16px; height: 42px; display: flex; align-items: center; gap: 10px;
+    padding: 0 12px; border-radius: 10px; background: #131318;
+    border: 1px solid rgba(255,255,255,.18); color: #aeb0bb;
+}
+.library-modal-input:focus-within { border-color: #747480; box-shadow: 0 0 0 3px rgba(255,255,255,.10); }
+.library-modal-input input { flex: 1; background: transparent; border: 0; outline: 0; color: #fff; font: inherit; }
+.library-modal-actions {
+    display: flex; justify-content: flex-end; gap: 10px; padding: 16px 18px;
+    background: rgba(255,255,255,.045); border-top: 1px solid rgba(255,255,255,.08);
+}
+.library-modal-actions button { border: 0; border-radius: 8px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
+.library-modal-cancel { background: transparent; color: #fff; }
+.library-modal-submit { background: #e50914; color: #fff; }
+.library-modal-submit:hover { background: #b80710; }
+.library-card { position: relative; }
+.library-card-menu { margin-left: auto; color: #aaa; padding: 6px; border-radius: 8px; }
+.library-card-menu:hover { background: rgba(255,255,255,.08); color: #fff; }
