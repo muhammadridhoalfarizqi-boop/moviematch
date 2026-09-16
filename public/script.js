@@ -7,6 +7,22 @@ const SUPABASE_ANON_KEY = "sb_publishable___KN08wXZeXaPpHU6z-DAQ_JbZXIoyj";
 const OPENSUBTITLES_BASE_URL = "/api/opensubtitles";
 const SUB_PARAMS = "&sub=id,en&sub-source=opensubtitles";
 
+const FALLBACK_POSTER = "/assets/no-poster.svg";
+let lastRetryAction = null;
+function normalizeMediaType(mediaType, item = {}) { return (mediaType === "tv" || item.media_type === "tv" || item.first_air_date) ? "tv" : "movie"; }
+function normalizeMediaItem(item, fallbackType = (typeof currentMediaType !== "undefined" ? currentMediaType : "movie")) { if (!item) return null; const id = item.id || item.movie_id || item.tmdb_id; const media_type = normalizeMediaType(item.media_type || item.mediaType || fallbackType, item); if (!id || !["movie","tv"].includes(media_type)) return null; return { ...item, id, movie_id: item.movie_id || id, media_type, mediaType: media_type }; }
+function getPosterUrl(path, size = "w500") { return path && String(path).length > 3 ? `https://image.tmdb.org/t/p/${size}${path}` : FALLBACK_POSTER; }
+async function safeFetchJson(url, options = {}) { const response = await fetch(url, options); let data=null; try{data=await response.json();}catch{} if(!response.ok){const error=new Error((data&&(data.status_message||data.error||data.message))||`Request gagal (${response.status})`); error.status=response.status; error.data=data; throw error;} return data||{}; }
+function renderErrorUI(container, message="Gagal memuat data.", retryFn=null){ if(!container)return; if(retryFn)lastRetryAction=retryFn; container.innerHTML=`<div class="error-state"><div class="error-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg></div><h3>Oops, data belum bisa dimuat</h3><p>${escapeHtml(message)}</p><button class="retry-btn" type="button" onclick="retryLastAction()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>Coba lagi</button></div>`; }
+function retryLastAction(){ if(typeof lastRetryAction==="function")lastRetryAction(); else loadContent(currentFilterParam||"popular", currentPage||1); }
+function shareCurrentMovie(){ if(!currentDetailItem)return; const title=currentDetailItem.title||currentDetailItem.name||"MovieMatch"; const overview=currentDetailItem.overview||"Cek rekomendasi ini di MovieMatch."; const url=`${window.location.origin}${window.location.pathname}?detail=${currentDetailItem.media_type||currentDetailItem.mediaType||'movie'}-${currentDetailItem.id}`; const data={title,text:`${title}
+${overview.substring(0,120)}...`,url}; if(navigator.share)navigator.share(data).catch(()=>{}); else if(navigator.clipboard)navigator.clipboard.writeText(`${data.text}
+${data.url}`).then(()=>showToast("Link film disalin","success")); else window.open('https://wa.me/?text='+encodeURIComponent(`${data.text} ${data.url}`),'_blank'); }
+async function surpriseMe(){ const page=Math.floor(Math.random()*10)+1; const mediaType=currentMediaType||"movie"; if(movieContainer)showSkeletonLoader(movieContainer,8); try{const data=await safeFetchJson(`${BASE_URL}/discover/${mediaType}?language=id-ID&page=${page}&sort_by=popularity.desc&vote_count.gte=80&include_adult=false`); const results=(data.results||[]).map(i=>normalizeMediaItem(i,mediaType)).filter(Boolean); if(!results.length)throw new Error("Tidak ada rekomendasi acak ditemukan."); await displayItems(results,movieContainer,true); openDetail(results[Math.floor(Math.random()*results.length)]);}catch(err){renderErrorUI(movieContainer,err.message||"Gagal mengambil rekomendasi acak.",surpriseMe);} }
+function setupBackToTopButton(){ let btn=document.getElementById("backToTopBtn"); if(!btn){btn=document.createElement("button"); btn.id="backToTopBtn"; btn.className="back-to-top"; btn.type="button"; btn.setAttribute("aria-label","Kembali ke atas"); btn.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" /></svg>`; btn.onclick=()=>window.scrollTo({top:0,behavior:"smooth"}); document.body.appendChild(btn);} window.addEventListener("scroll",()=>btn.classList.toggle("show",window.scrollY>500),{passive:true}); }
+function injectCatalogTools(){ const title=document.getElementById('movieTitle'); if(!title||document.getElementById('surpriseBtn'))return; const wrap=document.createElement('div'); wrap.className='catalog-tools'; wrap.innerHTML=`<button id="surpriseBtn" class="surprise-btn" type="button" onclick="surpriseMe()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6.75 19.5 9.75m0 0-3 3m3-3H8.25a3.75 3.75 0 0 0 0 7.5h.75m-1.5-12h8.25a3.75 3.75 0 0 1 0 7.5H15m0 0 3-3m-3 3 3 3" /></svg>Surprise Me</button>`; title.parentNode.appendChild(wrap); }
+
+
 let supabaseClient = null;
 try {
     if (window.supabase && typeof window.supabase.createClient === 'function') {
@@ -1449,7 +1465,7 @@ async function loadContent(filterParam, page = 1) {
         scrollToMovies();
     } catch (err) {
         console.error("Error:", err);
-        if (movieContainer) movieContainer.innerHTML = '<div class="loading">Gagal memuat data film. Coba periksa koneksi.</div>';
+        renderErrorUI(movieContainer, err.message || 'Gagal memuat data film. Coba periksa koneksi.', () => loadContent(filterParam, page));
     }
 }
 
@@ -1598,6 +1614,7 @@ function scrollToMovies() {
 async function displayItems(items, container = movieContainer, showPagination = true) {
     if (!container) return;
     container.innerHTML = "";
+    items = (items || []).map(item => normalizeMediaItem(item)).filter(Boolean);
     if (!items || items.length === 0) {
         container.innerHTML = '<div class="loading">Tidak ada data ditemukan.</div>';
         return;
@@ -1617,9 +1634,7 @@ async function displayItems(items, container = movieContainer, showPagination = 
             }
         }
 
-        const poster = item.poster_path && item.poster_path.length > 3
-            ? `${IMAGE_URL}${item.poster_path}`
-            : 'https://via.placeholder.com/300x450?text=No+Image';
+        const poster = getPosterUrl(item.poster_path);
 
         const title = item.title || item.name || "Untitled";
         const originalTitle = item.original_title || item.original_name || "";
@@ -1644,7 +1659,7 @@ async function displayItems(items, container = movieContainer, showPagination = 
         else countryText = lang ? lang.toUpperCase() : "";
 
         card.innerHTML = `
-            <img src="${poster}" alt="${escapeHtml(title)}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+            <img src="${poster}" alt="${escapeHtml(title)}" loading="lazy" onerror="this.src='/assets/no-poster.svg'">
             <div class="movie-info">
                 <h3>${escapeHtml(title)}</h3>
                 ${displaySubTitle}
@@ -1881,12 +1896,12 @@ async function createItemElements(items) {
     for (const item of items) {
         const card = document.createElement("article");
         card.className = "movie-card";
-        const poster = item.poster_path ? `${IMAGE_URL}${item.poster_path}` : 'https://via.placeholder.com/300x450?text=No+Image';
+        const poster = getPosterUrl(item.poster_path);
         const title = item.title || item.name || "Untitled";
         const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
         const year = (item.release_date || item.first_air_date || "").substring(0, 4) || "N/A";
         card.innerHTML = `
-            <img src="${poster}" alt="${escapeHtml(title)}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+            <img src="${poster}" alt="${escapeHtml(title)}" loading="lazy" onerror="this.src='/assets/no-poster.svg'">
             <div class="movie-info">
                 <h3>${escapeHtml(title)}</h3>
                 <p>${year} | ${rating}</p>
@@ -2243,7 +2258,7 @@ if (registerForm) {
 
 async function recommendMood(mood, page = 1) {
     const genreMap = {
-        happy: [35, 10751, 16], scary: [27, 53], action: [28, 12, 878], sad: [18, 10749], chill: [10751, 35]
+        happy: [35, 10751, 16], scary: [27, 53, 9648], action: [28, 12, 878, 53], sad: [18, 10749], chill: [10751, 35, 16, 14], romantic: [10749, 35, 18], anime: [16, 10765, 10759], mystery: [9648, 53, 80], family: [10751, 16, 35]
     };
     const genreIds = genreMap[mood] || [35, 10751];
     const genreId = genreIds.join(',');
@@ -2394,7 +2409,7 @@ async function loadLandingSlider() {
             slide.style.display = index === 0 ? "flex" : "none";
             slide.dataset.index = index;
 
-            const poster = item.poster_path ? `${IMAGE_URL}${item.poster_path}` : "https://via.placeholder.com/300x450?text=No+Image";
+            const poster = item.poster_path ? `${IMAGE_URL}${item.poster_path}` : "/assets/no-poster.svg";
             const backdrop = item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : poster;
             const title = item.title || item.name || "Untitled";
             const year = (item.release_date || item.first_air_date || "").substring(0, 4) || "N/A";
@@ -2539,7 +2554,7 @@ async function loadTopTen() {
         for (const [index, item] of items.entries()) {
             const div = document.createElement("div");
             div.className = "top-ten-item";
-            const poster = item.poster_path ? `${IMAGE_URL}${item.poster_path}` : "https://via.placeholder.com/300x450?text=No+Image";
+            const poster = item.poster_path ? `${IMAGE_URL}${item.poster_path}` : "/assets/no-poster.svg";
             const title = item.title || item.name || "Untitled";
             const mediaType = item.media_type || (item.first_air_date ? "tv" : "movie");
 
@@ -2592,7 +2607,7 @@ async function loadTopRated() {
         items.forEach(item => {
             const div = document.createElement("div");
             div.className = "top-rated-item";
-            const poster = item.poster_path ? `${IMAGE_URL}${item.poster_path}` : "https://via.placeholder.com/300x450?text=No+Image";
+            const poster = item.poster_path ? `${IMAGE_URL}${item.poster_path}` : "/assets/no-poster.svg";
             const title = item.title || item.name || "Untitled";
             const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
             div.innerHTML = `
@@ -2639,7 +2654,7 @@ async function loadContinueWatching() {
         for (const item of historyItems) {
             const card = document.createElement("div");
             card.className = "continue-watching-item";
-            const poster = item.poster_path ? `${IMAGE_URL}${item.poster_path}` : "https://via.placeholder.com/300x450?text=No+Image";
+            const poster = item.poster_path ? `${IMAGE_URL}${item.poster_path}` : "/assets/no-poster.svg";
             const title = item.title || "Untitled";
             const mediaType = item.media_type || "movie";
             const year = item.release_date ? item.release_date.substring(0, 4) : "N/A";
@@ -2689,7 +2704,7 @@ async function openDetail(item) {
     });
     const data = await res.json();
 
-    const poster = data.poster_path ? `${IMAGE_URL}${data.poster_path}` : 'https://via.placeholder.com/300x450?text=No+Image';
+    const poster = getPosterUrl(data.poster_path);
     const title = data.title || data.name || 'Untitled';
     const year = (data.release_date || data.first_air_date || '').substring(0, 4) || 'N/A';
     const rating = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
@@ -2824,7 +2839,7 @@ async function selectSeason(seasonNumber, btn) {
             <div class="episode-list-title">Episode List - Season ${seasonNumber}</div>
             ${episodes.map(ep => `
                 <div class="episode-item" onclick="playEpisode(${ep.episode_number})">
-                    <img class="episode-thumb" src="${ep.still_path ? `${IMAGE_URL}${ep.still_path}` : 'https://via.placeholder.com/120x68?text=No+Image'}" alt="${escapeHtml(ep.name || '')}" loading="lazy">
+                    <img class="episode-thumb" src="${ep.still_path ? `${IMAGE_URL}${ep.still_path}` : '/assets/no-poster.svg'}" alt="${escapeHtml(ep.name || '')}" loading="lazy">
                     <div class="episode-info">
                         <span class="episode-number">Episode ${ep.episode_number}</span>
                         <span class="episode-title">${escapeHtml(ep.name || 'Untitled')}</span>
@@ -2864,7 +2879,7 @@ async function renderCollection(data, mediaType) {
             <h3 class="section-inner-title">${escapeHtml(col.name || 'Collection')}</h3>
             <div class="collection-grid">
                 ${parts.map(p => {
-                    const poster = p.poster_path ? `${IMAGE_URL}${p.poster_path}` : 'https://via.placeholder.com/300x450?text=No+Image';
+                    const poster = p.poster_path ? `${IMAGE_URL}${p.poster_path}` : '/assets/no-poster.svg';
                     const title = p.title || p.name || 'Untitled';
                     const year = (p.release_date || '').substring(0, 4) || 'N/A';
                     return `
@@ -2901,7 +2916,7 @@ async function renderCast(id, mediaType) {
             <h3 class="section-inner-title">Cast & Crew</h3>
             <div class="cast-grid">
                 ${cast.map(c => {
-                    const photo = c.profile_path ? `https://image.tmdb.org/t/p/w200${c.profile_path}` : 'https://via.placeholder.com/200x300?text=No+Image';
+                    const photo = c.profile_path ? `https://image.tmdb.org/t/p/w200${c.profile_path}` : '/assets/no-poster.svg';
                     return `
                         <div class="cast-card" onclick="filterByPerson(${c.id}, '${escapeHtml(c.name).replace(/'/g, "&#39;")}')">
                             <img src="${photo}" loading="lazy" alt="${escapeHtml(c.name)}">
@@ -3138,7 +3153,7 @@ async function showSimilar() {
         content.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;">
                 ${items.map(item => {
-                    const poster = item.poster_path ? `${IMAGE_URL}${item.poster_path}` : 'https://via.placeholder.com/300x450?text=No+Image';
+                    const poster = getPosterUrl(item.poster_path);
                     const title = item.title || item.name || 'Untitled';
                     const year = (item.release_date || item.first_air_date || '').substring(0,4) || 'N/A';
                     const mt = item.media_type || (item.first_air_date ? 'tv' : 'movie');
@@ -4645,3 +4660,6 @@ window.addEventListener('click', function(event) {
     const modal = document.getElementById('downloadModal');
     if (event.target === modal) closeDownloadModal();
 });
+
+
+document.addEventListener('DOMContentLoaded', () => { setupBackToTopButton(); injectCatalogTools(); });
