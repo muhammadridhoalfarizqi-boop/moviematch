@@ -8,14 +8,14 @@
     <meta property="og:title" content="MovieMatch">
     <meta property="og:description" content="Temukan film dan series sesuai mood kamu.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://moviematch-theta.vercel.app">
-    <meta property="og:image" content="https://moviematch-theta.vercel.app/icons/icon-512.png">
+    <meta property="og:url" content="https://moviematcch.vercel.app">
+    <meta property="og:image" content="https://moviematcch.vercel.app/icons/icon-512.png">
     <meta property="og:image:width" content="512">
     <meta property="og:image:height" content="512">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="MovieMatch">
     <meta name="twitter:description" content="Temukan film dan series sesuai mood kamu.">
-    <meta name="twitter:image" content="https://moviematch-theta.vercel.app/icons/icon-512.png">
+    <meta name="twitter:image" content="https://moviematcch.vercel.app/icons/icon-512.png">
     <title>MovieMatch</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -756,7 +756,12 @@
                         </div>
                         <h3 data-i18n="support.bugTitle">Laporkan Bug</h3>
                         <p data-i18n="support.bugDesc">Kalau ada tombol tidak bisa diklik, film tidak muncul, login error, atau halaman bermasalah.</p>
-                        <a class="support-action" href="mailto:ridhonozxy@gmail.com?subject=Bug%20MovieMatch&body=Halo%2C%20saya%20menemukan%20bug%20di%20MovieMatch.%0A%0AHalaman%2Ffitur%3A%0ADeskripsi%20bug%3A%0AScreenshot%20jika%20ada%3A" target="_self">Email Bug Report</a>
+                        <div class="support-action-row">
+                            <a class="support-action" href="mailto:ridhonozxy@gmail.com?subject=Bug%20MovieMatch&body=Halo%2C%20saya%20menemukan%20bug%20di%20MovieMatch.%0A%0AHalaman%2Ffitur%3A%0ADeskripsi%20bug%3A%0AScreenshot%20jika%20ada%3A" target="_self">Email Bug</a>
+                            <button class="support-action whatsapp" type="button" onclick="openWhatsAppSupport('bug')">
+                                <i class="ri-whatsapp-line"></i> WA Bug
+                            </button>
+                        </div>
                     </div>
 
                     <div class="support-card featured">
@@ -765,7 +770,12 @@
                         </div>
                         <h3 data-i18n="support.contactTitle">Kontak Langsung</h3>
                         <p data-i18n="support.contactDesc">Butuh bantuan cepat? Hubungi admin MovieMatch lewat email.</p>
-                        <a class="support-action" href="mailto:ridhonozxy@gmail.com?subject=Support%20MovieMatch" target="_self">ridhonozxy@gmail.com</a>
+                        <div class="support-action-row">
+                            <a class="support-action" href="mailto:ridhonozxy@gmail.com?subject=Support%20MovieMatch" target="_self">Email Admin</a>
+                            <button class="support-action whatsapp" type="button" onclick="openWhatsAppSupport('support')">
+                                <i class="ri-whatsapp-line"></i> WhatsApp
+                            </button>
+                        </div>
                     </div>
 
                     <div class="support-card">
@@ -774,7 +784,12 @@
                         </div>
                         <h3 data-i18n="support.ideaTitle">Kirim Saran</h3>
                         <p data-i18n="support.ideaDesc">Punya ide fitur baru seperti filter, rekomendasi, subtitle, atau tampilan? Kirim saranmu.</p>
-                        <a class="support-action" href="mailto:ridhonozxy@gmail.com?subject=Saran%20Fitur%20MovieMatch&body=Halo%2C%20saya%20punya%20saran%20untuk%20MovieMatch.%0A%0ASaran%3A" target="_self">Kirim Saran</a>
+                        <div class="support-action-row">
+                            <a class="support-action" href="mailto:ridhonozxy@gmail.com?subject=Saran%20Fitur%20MovieMatch&body=Halo%2C%20saya%20punya%20saran%20untuk%20MovieMatch.%0A%0ASaran%3A" target="_self">Email Saran</a>
+                            <button class="support-action whatsapp" type="button" onclick="openWhatsAppSupport('idea')">
+                                <i class="ri-whatsapp-line"></i> WA Saran
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -786,6 +801,7 @@
                         <li>Sertakan screenshot atau pesan error jika ada.</li>
                         <li>Sebutkan perangkat dan browser yang dipakai.</li>
                     </ul>
+                    <p class="support-wa-note"><strong>Catatan:</strong> nomor WhatsApp bisa diganti di <code>script.js</code> pada bagian <code>WHATSAPP_SUPPORT_NUMBER</code>.</p>
                 </div>
             </section>
         </div>
