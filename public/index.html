@@ -678,6 +678,18 @@
                             <label for="loginPassword" data-i18n="auth.password">Password</label>
                             <input type="password" id="loginPassword" placeholder="Enter your password" required>
                         </div>
+                        <div class="login-options">
+                            <label class="remember-me">
+                                <input type="checkbox" id="rememberMe">
+                                <span class="remember-box" aria-hidden="true">
+                                    <svg class="remember-check-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                    </svg>
+                                </span>
+                                <span data-i18n="auth.rememberMe">Ingat saya</span>
+                            </label>
+                            <a class="forgot-password-link" onclick="handleForgotPassword()" data-i18n="auth.forgotPassword">Lupa password?</a>
+                        </div>
                         <button type="submit" class="auth-button" data-i18n="auth.login">Login</button>
                     </form>
                     <p id="loginMessage" class="auth-message"></p>
