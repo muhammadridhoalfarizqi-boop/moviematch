@@ -143,7 +143,7 @@ const PLAYBACK_SPEEDS = [1, 1.25, 1.5, 1.75, 2, 0.5, 0.75];
 
 const TRANSLATIONS = {
     id: {
-        'nav.home': 'Home', 'nav.search': 'Search', 'nav.favorites': 'Favorites', 'nav.watchlist': 'Watchlist', 'nav.continue': 'Continue', 'nav.support': 'Support',
+        'nav.home': 'Home', 'nav.search': 'Search', 'nav.library': 'Library', 'nav.support': 'Support',
         'hero.label': 'REKOMENDASI FILM & TV', 'hero.title': 'Temukan tayangan yang', 'hero.titleAccent': 'cocok dengan anda.',
         'hero.description': 'Temukan film dan series berdasarkan mood, genre, dan preferensi kamu.', 'hero.button': 'Cari Konten',
         'topten.label': 'TRENDING', 'topten.title': 'Top 10 Minggu Ini', 'topten.description': 'Film dan series paling populer saat ini.',
@@ -197,13 +197,15 @@ const TRANSLATIONS = {
         'sort.newest': 'Rilis Terbaru', 'sort.oldest': 'Rilis Terlama', 'sort.az': 'Judul A-Z',
         'lang.all': 'Semua Bahasa',
         'notif.title': 'Notifikasi Episode Baru',
+        'library.label': 'LIBRARY', 'library.title': 'My Library', 'library.description': 'Lanjutkan tontonan atau buka daftar yang kamu simpan.', 'library.yourLists': 'Daftar Kamu', 'library.watchlistDesc': 'Tontonan yang ingin dilihat', 'library.favoritesDesc': 'Judul favorit kamu', 'library.historyDesc': 'Riwayat tontonan', 'library.createDesc': 'Buat koleksi sendiri', 'library.quickPreview': 'Preview Cepat', 'library.quickPreviewDesc': 'Pilih salah satu daftar di atas untuk melihat kontennya.',
+        'library.label': 'LIBRARY', 'library.title': 'My Library', 'library.description': 'Pick up where you left off or explore your saved titles.', 'library.yourLists': 'Your Lists', 'library.watchlistDesc': 'Titles you want to watch', 'library.favoritesDesc': 'Your favorite titles', 'library.historyDesc': 'Recently watched', 'library.createDesc': 'Make your own collection', 'library.quickPreview': 'Quick Preview', 'library.quickPreviewDesc': 'Choose a list above to open it.',
         'support.label': 'SUPPORT', 'support.title': 'Hubungi Support', 'support.description': 'Laporkan bug, error, saran fitur, atau masalah saat memakai MovieMatch.',
         'support.bugTitle': 'Laporkan Bug', 'support.bugDesc': 'Jika tombol tidak bisa diklik, film tidak muncul, login error, atau halaman bermasalah.',
         'support.contactTitle': 'Kontak Langsung', 'support.contactDesc': 'Butuh bantuan cepat? Hubungi admin MovieMatch lewat email.',
         'support.ideaTitle': 'Kirim Saran', 'support.ideaDesc': 'Punya ide fitur baru? Kirim saranmu.', 'support.formTitle': 'Format laporan yang disarankan'
     },
     en: {
-        'nav.home': 'Home', 'nav.search': 'Search', 'nav.favorites': 'Favorites', 'nav.watchlist': 'Watchlist', 'nav.continue': 'Continue', 'nav.support': 'Support',
+        'nav.home': 'Home', 'nav.search': 'Search', 'nav.library': 'Library', 'nav.support': 'Support',
         'hero.label': 'MOVIE & TV RECOMMENDATION', 'hero.title': 'Find shows that', 'hero.titleAccent': 'match your taste.',
         'hero.description': 'Find movies and series based on your mood, genre, and preferences.', 'hero.button': 'Find My Content',
         'topten.label': 'TRENDING', 'topten.title': 'Top 10 This Week', 'topten.description': 'Most popular movies and series right now.',
@@ -1152,6 +1154,17 @@ function routeFromUrl() {
             loadContent("popular", page);
             return true;
         }
+
+        if (view === "library") {
+            showPage("library-page");
+            renderLibraryPreview();
+            return true;
+        }
+
+        if (view === "history") {
+            openHistoryPage();
+            return true;
+        }
         
         if (view === "favorites") {
             showFavorites(false);
@@ -1428,6 +1441,53 @@ function openSearchPage() {
 
     showPage("search-page");
     loadContent("popular", 1);
+}
+
+function openLibraryPage() {
+    history.pushState({ view: "library" }, "", "?view=library");
+    showPage("library-page");
+    renderLibraryPreview();
+}
+
+function openHistoryPage() {
+    history.pushState({ view: "history" }, "", "?view=history");
+    showPage("profile-page");
+    loadHistory();
+    setTimeout(() => {
+        const historySection = document.querySelector(".history-section");
+        if (historySection) historySection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+}
+
+function openCreateListFromLibrary() {
+    openWatchlistPage();
+    setTimeout(() => {
+        if (typeof promptNewFolder === "function") promptNewFolder();
+    }, 250);
+}
+
+function filterLibraryCards() {
+    const input = document.getElementById("librarySearchInput");
+    const query = input ? input.value.toLowerCase().trim() : "";
+    document.querySelectorAll(".library-card").forEach(card => {
+        const title = (card.dataset.title || card.textContent || "").toLowerCase();
+        card.style.display = !query || title.includes(query) ? "flex" : "none";
+    });
+}
+
+function renderLibraryPreview() {
+    const preview = document.getElementById("libraryPreview");
+    if (!preview) return;
+    const watchlistCount = typeof getWatchlist === "function" ? getWatchlist().length : 0;
+    preview.innerHTML = `
+        <h3>Quick Preview</h3>
+        <div class="library-stats">
+            <div><strong>${watchlistCount}</strong><span>Watchlist</span></div>
+            <div><strong>★</strong><span>Favorites</span></div>
+            <div><strong>↺</strong><span>History</span></div>
+            <div><strong>＋</strong><span>Create List</span></div>
+        </div>
+    `;
 }
 
 function openFavoritesPage() {
