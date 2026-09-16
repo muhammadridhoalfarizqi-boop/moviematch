@@ -5229,3 +5229,19 @@ body.light-mode #pendingOrdersSection h3 {
         animation: none
     }
 }
+
+.movie-card {
+  position: relative;
+  cursor: pointer;
+  z-index: 1;
+  touch-action: manipulation;
+}
+
+.movie-card img,
+.movie-card .movie-info {
+  pointer-events: none;
+}
+
+#infiniteSentinel {
+  pointer-events: none;
+}
