@@ -9,6 +9,7 @@ const SUB_PARAMS = "&sub=id,en&sub-source=opensubtitles";
 
 const FALLBACK_POSTER = "/assets/no-poster.svg";
 let lastRetryAction = null;
+let isRoutingFromUrl = false;
 function normalizeMediaType(mediaType, item = {}) { return (mediaType === "tv" || item.media_type === "tv" || item.first_air_date) ? "tv" : "movie"; }
 function normalizeMediaItem(item, fallbackType = (typeof currentMediaType !== "undefined" ? currentMediaType : "movie")) { if (!item) return null; const id = item.id || item.movie_id || item.tmdb_id; const media_type = normalizeMediaType(item.media_type || item.mediaType || fallbackType, item); if (!id || !["movie","tv"].includes(media_type)) return null; return { ...item, id, movie_id: item.movie_id || id, media_type, mediaType: media_type }; }
 function getPosterUrl(path, size = "w500") { return path && String(path).length > 3 ? `https://image.tmdb.org/t/p/${size}${path}` : FALLBACK_POSTER; }
@@ -1102,6 +1103,81 @@ window.addEventListener('scroll', () => {
     else btn.classList.remove('visible');
 });
 
+function routeFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+
+    const detail = params.get("detail");
+    const category = params.get("category");
+    const search = params.get("search");
+    const mood = params.get("mood");
+    const genre = params.get("genre");
+    const genreName = params.get("genreName") || "Genre";
+    const view = params.get("view");
+    const page = Math.max(1, Number(params.get("page") || 1));
+
+    isRoutingFromUrl = true;
+
+    try {
+        if (detail) {
+            const [mediaType, id] = detail.split("-");
+
+            if (id && ["movie", "tv"].includes(mediaType)) {
+                showPage("search-page");
+                openDetail({
+                    id,
+                    media_type: mediaType
+                }, false);
+                return true;
+            }
+        }
+
+        if (view === "favorites") {
+            showFavorites(false);
+            return true;
+        }
+
+        if (view === "watchlist") {
+            showWatchlist(false);
+            return true;
+        }
+
+        if (search) {
+            showPage("search-page");
+
+            const searchInputEl = document.getElementById("searchInput");
+            if (searchInputEl) searchInputEl.value = search;
+
+            searchByQuery(search);
+            return true;
+        }
+
+        if (mood) {
+            showPage("search-page");
+            recommendMood(mood, page);
+            return true;
+        }
+
+        if (genre) {
+            showPage("search-page");
+            getMoviesByGenre(genre, genreName, page);
+            return true;
+        }
+
+        if (category) {
+            showPage("search-page");
+            loadContent(category, page);
+            return true;
+        }
+
+        showPage("home-page");
+        return true;
+    } finally {
+        setTimeout(() => {
+            isRoutingFromUrl = false;
+        }, 0);
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     await verifyPremiumFromServer();
     updatePremiumUI();
@@ -1112,7 +1188,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyLanguage();
     updateNavAuth();
     renderSearchHistory();
-    loadContent('popular', 1);
+    routeFromUrl();
     loadNowPlaying();
     loadAiringToday();
 
@@ -1307,6 +1383,17 @@ function goToCatalog() { showPage('catalog-page'); loadContent('popular', 1); }
 function goTosearch() { showPage('search-page'); loadContent('popular', 1); }
 function recommendMoodAndGo(mood) { showPage('search-page'); isMoodSearch = true; recommendMood(mood, 1); }
 
+function openSearchPage() {
+    history.pushState(
+        { category: "popular", page: 1 },
+        "",
+        "?category=popular&page=1"
+    );
+
+    showPage("search-page");
+    loadContent("popular", 1);
+}
+
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
     const targetPage = document.getElementById(pageId);
@@ -1337,13 +1424,13 @@ function showPage(pageId) {
     }
 
     if (pageId === 'search-page') {
-        if (!isMoodSearch) {
+        if (!isRoutingFromUrl && !isMoodSearch) {
             if (catalogTitle) catalogTitle.textContent = "Pilih Kategori Tayangan";
             loadContent('popular', 1);
         }
         setTimeout(() => { setupActorSearch(); }, 200);
     }
-
+    
     window.scrollTo(0, 0);
 }
 
@@ -1589,19 +1676,8 @@ async function loadMoreSearchResults() {
     }
 }
 
-window.addEventListener("popstate", function(event) {
-    if (event.state && event.state.genre) { showPage('home-page'); return; }
-    if (event.state && event.state.search) {
-        const searchInputEl = document.getElementById("searchInput");
-        if (searchInputEl) searchInputEl.value = event.state.search;
-        searchByQuery(event.state.search);
-        return;
-    }
-    if (event.state && event.state.category) {
-        loadContent(event.state.category, event.state.page || 1);
-        return;
-    }
-    showPage('home-page');
+window.addEventListener("popstate", function() {
+    routeFromUrl();
 });
 
 function scrollToMovies() {
@@ -2041,7 +2117,11 @@ async function toggleFavoriteCurrent(item) {
     }
 }
 
-async function showFavorites() {
+async function showFavorites(updateUrl = true) {
+    if (updateUrl) {
+        history.pushState({ view: "favorites" }, "", "?view=favorites");
+    }
+
     showPage('favorites-page');
     const user = getCurrentUser();
     const container = document.getElementById("favoritesContainer");
@@ -2077,7 +2157,11 @@ function toggleWatchlist(itemId, mediaType, buttonElement) {
     saveWatchlist(watchlist);
 }
 
-function showWatchlist() {
+function showWatchlist(updateUrl = true) {
+    if (updateUrl) {
+        history.pushState({ view: "watchlist" }, "", "?view=watchlist");
+    }
+
     showPage('watchlist-page');
     const container = document.getElementById('watchlistContainer');
     if (!container) return;
@@ -2715,11 +2799,27 @@ function scrollToContinueWatching() {
     }, 400);
 }
 
-async function openDetail(item) {
-    currentDetailItem = item;
-    const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
-
-    const res = await fetch(`${BASE_URL}/${mediaType}/${item.id}?language=en-US`, {
+async function openDetail(item, updateUrl = true) {
+    const normalized = normalizeMediaItem(item);
+    
+    if (!normalized) {
+        console.warn("Invalid detail item:", item);
+        showToast("Data film tidak valid.", "error");
+        return;
+    }
+    
+    currentDetailItem = normalized;
+    const mediaType = normalized.media_type;
+    
+    if (updateUrl) {
+        history.pushState(
+            { detail: `${mediaType}-${normalized.id}` },
+            "",
+            `?detail=${mediaType}-${normalized.id}`
+        );
+    }
+    
+    const res = await fetch(`${BASE_URL}/${mediaType}/${normalized.id}?language=en-US`, {
         
     });
     const data = await res.json();
@@ -2733,7 +2833,7 @@ async function openDetail(item) {
     const genres = data.genres ? data.genres.map(g => g.name).join(', ') : '';
 
     currentOverviewEn = data.overview || '';
-    currentOverviewId = item.id;
+    currentOverviewId = normalized.id;
     isOverviewTranslated = false;
 
     document.getElementById('detailsPoster').src = poster;
@@ -2748,7 +2848,7 @@ async function openDetail(item) {
     const translateBtn = document.querySelector('.detailsTranslatebutton');
     if (translateBtn) translateBtn.innerHTML = ICON_TRANSLATE + ' Translate';
 
-    currentDetailItem = { ...item, ...data, mediaType };
+    currentDetailItem = { ...normalized, ...data, mediaType, media_type: mediaType };
 
     updateBookmarkButton();
     loadUserRating();
@@ -2761,7 +2861,7 @@ async function openDetail(item) {
     detailTrailerActive = false;
 
     showPage('detail-page');
-    await addToHistory(item);
+    await addToHistory(currentDetailItem);
 
     scheduleDetailTrailerAutoPlay();
 }
