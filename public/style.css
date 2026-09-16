@@ -5329,3 +5329,39 @@ body.light-mode #pendingOrdersSection h3 {
     .support-section { padding: 100px 20px 60px; }
     .support-card, .support-form-box { padding: 22px; border-radius: 18px; }
 }
+
+.support-action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.support-action.whatsapp {
+    border: 0;
+    background: #25d366;
+    color: #07140b;
+    cursor: pointer;
+    font-family: inherit;
+}
+.support-action.whatsapp:hover {
+    background: #1fb858;
+}
+.support-action.whatsapp i {
+    font-size: 18px;
+    margin-right: 6px;
+}
+.support-wa-note {
+    margin-top: 16px;
+    color: var(--muted-text, #b8b8c2);
+    line-height: 1.6;
+}
+.support-wa-note code {
+    color: #fff;
+    background: rgba(255,255,255,.08);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+@media (max-width: 520px) {
+    .support-action-row { flex-direction: column; align-items: stretch; }
+    .support-action-row .support-action { width: 100%; }
+}
