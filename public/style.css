@@ -5365,3 +5365,118 @@ body.light-mode #pendingOrdersSection h3 {
     .support-action-row { flex-direction: column; align-items: stretch; }
     .support-action-row .support-action { width: 100%; }
 }
+
+.login-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: -2px 0 18px;
+    font-size: 14px;
+}
+.remember-me {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #b8b8c2;
+    cursor: pointer;
+    user-select: none;
+}
+.remember-me input {
+    width: 16px;
+    height: 16px;
+    accent-color: #e50914;
+    cursor: pointer;
+}
+.forgot-password-link {
+    color: #e50914;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+.forgot-password-link:hover {
+    color: #ff3b45;
+    text-decoration: underline;
+}
+@media (max-width: 420px) {
+    .login-options {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+.login-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: -2px 0 18px;
+    font-size: 14px;
+}
+.remember-me {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #b8b8c2;
+    cursor: pointer;
+    user-select: none;
+}
+.remember-me input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+}
+.remember-box {
+    width: 18px;
+    height: 18px;
+    border: 1.8px solid rgba(255, 255, 255, .35);
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    transition: .2s ease;
+    flex: 0 0 18px;
+}
+.remember-check-icon {
+    width: 14px;
+    height: 14px;
+    color: #fff;
+    opacity: 0;
+    transform: scale(.7);
+    transition: .2s ease;
+}
+.remember-me:hover .remember-box {
+    border-color: rgba(229, 9, 20, .85);
+}
+.remember-me input:focus-visible + .remember-box {
+    outline: 2px solid rgba(229, 9, 20, .45);
+    outline-offset: 3px;
+}
+.remember-me input:checked + .remember-box {
+    background: #e50914;
+    border-color: #e50914;
+    box-shadow: 0 0 0 4px rgba(229, 9, 20, .14);
+}
+.remember-me input:checked + .remember-box .remember-check-icon {
+    opacity: 1;
+    transform: scale(1);
+}
+.forgot-password-link {
+    color: #e50914;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+.forgot-password-link:hover {
+    color: #ff3b45;
+    text-decoration: underline;
+}
+@media (max-width: 420px) {
+    .login-options {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
