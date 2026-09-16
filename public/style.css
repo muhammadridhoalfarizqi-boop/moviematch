@@ -5245,3 +5245,87 @@ body.light-mode #pendingOrdersSection h3 {
 #infiniteSentinel {
   pointer-events: none;
 }
+
+.support-section {
+    padding: 120px 5% 80px;
+    min-height: 100vh;
+}
+.support-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 22px;
+    margin-top: 34px;
+}
+.support-card {
+    background: rgba(255,255,255,.045);
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 22px;
+    padding: 28px;
+    transition: .25s ease;
+}
+.support-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(229,9,20,.55);
+    background: rgba(255,255,255,.065);
+}
+.support-card.featured {
+    border-color: rgba(229,9,20,.65);
+    background: linear-gradient(145deg, rgba(229,9,20,.20), rgba(255,255,255,.045));
+}
+.support-icon {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: rgba(229,9,20,.14);
+    color: #e50914;
+    font-size: 28px;
+    margin-bottom: 18px;
+}
+.support-card h3 {
+    color: #fff;
+    font-size: 1.35rem;
+    margin-bottom: 10px;
+}
+.support-card p {
+    color: var(--muted-text, #b8b8c2);
+    line-height: 1.65;
+    margin-bottom: 22px;
+}
+.support-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 18px;
+    border-radius: 999px;
+    background: #e50914;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+}
+.support-action:hover {
+    background: #b80710;
+}
+.support-form-box {
+    margin-top: 30px;
+    padding: 26px 28px;
+    border-radius: 22px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.10);
+}
+.support-form-box h3 {
+    color: #fff;
+    margin-bottom: 14px;
+}
+.support-form-box ul {
+    padding-left: 20px;
+    color: var(--muted-text, #b8b8c2);
+    line-height: 1.8;
+}
+@media (max-width: 768px) {
+    .support-section { padding: 100px 20px 60px; }
+    .support-card, .support-form-box { padding: 22px; border-radius: 18px; }
+}
