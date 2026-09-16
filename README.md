@@ -6,34 +6,23 @@ Website ini dibuat dengan HTML, CSS, dan JavaScript, lalu di-deploy menggunakan 
 
 ---
 
+## 🌐 Live Demo
+
+https://moviematch-theta.vercel.app
+
+---
+
 ## ✨ Fitur Utama
 
-- 🔍 **Search Movie & Series**  
-  Cari film atau series berdasarkan judul.
-
-- 🎭 **Mood Recommendation**  
-  Rekomendasi tontonan berdasarkan suasana hati pengguna.
-
-- 🔥 **Top 10 This Week**  
-  Menampilkan film dan series populer minggu ini.
-
-- ⭐ **Favorites**  
-  Simpan film atau series favorit.
-
-- 📌 **Watchlist**  
-  Tambahkan tontonan ke daftar watchlist.
-
-- ▶️ **Movie Detail & Player**  
-  Menampilkan detail film, rating, sinopsis, cast, trailer, dan player.
-
-- 📱 **PWA Support**  
-  Bisa di-install seperti aplikasi melalui browser.
-
-- 🛟 **Support Page**  
-  Pengguna bisa melaporkan bug, mengirim saran, atau menghubungi admin lewat email dan WhatsApp.
-
-- 🌙 **Dark Mode UI**  
-  Tampilan modern bertema gelap dengan aksen merah.
+- 🔍 Search Movie & Series
+- 🎭 Mood Recommendation
+- 🔥 Top 10 This Week
+- ⭐ Favorites
+- 📌 Watchlist
+- ▶️ Movie Detail & Player
+- 📱 PWA Support
+- 🛟 Support Page
+- 🌙 Dark Mode UI
 
 ---
 
@@ -55,6 +44,28 @@ Website ini dibuat dengan HTML, CSS, dan JavaScript, lalu di-deploy menggunakan 
 ## 👤 Developer
 
 Dibuat oleh **Muhammad Ridho Alfarizqi**.
+
+---
+
+## 🛟 Support
+
+Jika menemukan bug, error, atau ingin mengirim saran fitur, kamu bisa menghubungi support MovieMatch melalui halaman berikut:
+
+[https://moviematch-theta.vercel.app/?view=support](https://moviematch-theta.vercel.app/?view=support)
+
+Support tersedia untuk:
+
+- 🐞 Laporan bug
+- ⚠️ Error saat menggunakan website
+- 💡 Saran fitur baru
+- 🔐 Masalah login atau akun
+- ⭐ Masalah favorites dan watchlist
+- 🎬 Masalah film/series yang tidak muncul
+
+Kamu bisa menghubungi admin melalui:
+
+- Email
+- WhatsApp
 
 ---
 
