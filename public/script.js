@@ -12,6 +12,7 @@ const WHATSAPP_SUPPORT_NUMBER = "6288901419668";
 const FALLBACK_POSTER = "/assets/no-poster.svg";
 let lastRetryAction = null;
 let isRoutingFromUrl = false;
+let topTenRequestId = 0;
 function normalizeMediaType(mediaType, item = {}) { return (mediaType === "tv" || item.media_type === "tv" || item.first_air_date) ? "tv" : "movie"; }
 function normalizeMediaItem(item, fallbackType = (typeof currentMediaType !== "undefined" ? currentMediaType : "movie")) { if (!item) return null; const id = item.id || item.movie_id || item.tmdb_id; const media_type = normalizeMediaType(item.media_type || item.mediaType || fallbackType, item); if (!id || !["movie","tv"].includes(media_type)) return null; return { ...item, id, movie_id: item.movie_id || id, media_type, mediaType: media_type }; }
 function getPosterUrl(path, size = "w500") { return path && String(path).length > 3 ? `https://image.tmdb.org/t/p/${size}${path}` : FALLBACK_POSTER; }
@@ -1307,11 +1308,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     setTimeout(() => {
-        loadLandingSlider();
-        loadTopTen();
-        loadRecommendations();
-        loadTopRated();
-        loadContinueWatching();
+        // Home content is loaded by routeFromUrl() / showPage("home-page").
+        // Jangan panggil loadTopTen() di sini supaya Top 10 tidak double.
         setupActorSearch();
         requestNotificationPermission();
         setTimeout(checkForNewEpisodes, 3000);
@@ -2732,14 +2730,23 @@ function closeTrailer(btn) {
 async function loadTopTen() {
     const container = document.getElementById("topTenContainer");
     if (!container) return;
+
+    const requestId = ++topTenRequestId;
     container.innerHTML = '<div class="loading">Memuat Top 10...</div>';
+
     try {
         const res = await fetch(`${BASE_URL}/trending/all/week?language=en-US`);
         const data = await res.json();
+
+        // Kalau ada request loadTopTen yang lebih baru, hentikan request lama.
+        // Ini mencegah Top 10 muncul double saat home/load awal kepanggil berdekatan.
+        if (requestId !== topTenRequestId) return;
+
         const items = (data.results || []).slice(0, 10);
         container.innerHTML = "";
 
         for (const [index, item] of items.entries()) {
+            if (requestId !== topTenRequestId) return;
             const div = document.createElement("div");
             div.className = "top-ten-item";
             const poster = item.poster_path ? `${IMAGE_URL}${item.poster_path}` : "/assets/no-poster.svg";
@@ -2775,9 +2782,11 @@ async function loadTopTen() {
                     .then(fullItem => { fullItem.media_type = mediaType; openDetail(fullItem); })
                     .catch(err => console.error("Error:", err));
             };
+            if (requestId !== topTenRequestId) return;
             container.appendChild(div);
         }
     } catch (err) {
+        if (requestId !== topTenRequestId) return;
         console.error("Error Top 10:", err);
         container.innerHTML = '<div class="loading">Gagal memuat Top 10.</div>';
     }
