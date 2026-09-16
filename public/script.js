@@ -7,8 +7,7 @@ const SUPABASE_ANON_KEY = "sb_publishable___KN08wXZeXaPpHU6z-DAQ_JbZXIoyj";
 const OPENSUBTITLES_BASE_URL = "/api/opensubtitles";
 const SUB_PARAMS = "&sub=id,en&sub-source=opensubtitles";
 
-// Ganti nomor ini dengan nomor WhatsApp support kamu. Format wajib 62, bukan 08.
-const WHATSAPP_SUPPORT_NUMBER = "6281234567890";
+const WHATSAPP_SUPPORT_NUMBER = "6288901419668";
 
 const FALLBACK_POSTER = "/assets/no-poster.svg";
 let lastRetryAction = null;
