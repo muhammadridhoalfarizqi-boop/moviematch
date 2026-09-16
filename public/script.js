@@ -1130,14 +1130,33 @@ function routeFromUrl() {
                 return true;
             }
         }
-
+        
+        if (view === "home") {
+            showPage("home-page");
+            return true;
+        }
+        
+        if (view === "search") {
+            showPage("search-page");
+            loadContent("popular", page);
+            return true;
+        }
+        
         if (view === "favorites") {
             showFavorites(false);
             return true;
         }
-
+        
         if (view === "watchlist") {
             showWatchlist(false);
+            return true;
+        }
+        
+        if (view === "continue") {
+            showPage("home-page");
+            setTimeout(() => {
+                scrollToContinueWatching();
+            }, 500);
             return true;
         }
 
@@ -1383,15 +1402,37 @@ function goToCatalog() { showPage('catalog-page'); loadContent('popular', 1); }
 function goTosearch() { showPage('search-page'); loadContent('popular', 1); }
 function recommendMoodAndGo(mood) { showPage('search-page'); isMoodSearch = true; recommendMood(mood, 1); }
 
+function openHomePage() {
+    history.pushState({ view: "home" }, "", "?view=home");
+    showPage("home-page");
+}
+
 function openSearchPage() {
     history.pushState(
-        { category: "popular", page: 1 },
+        { view: "search", category: "popular", page: 1 },
         "",
-        "?category=popular&page=1"
+        "?view=search&category=popular&page=1"
     );
 
     showPage("search-page");
     loadContent("popular", 1);
+}
+
+function openFavoritesPage() {
+    showFavorites(true);
+}
+
+function openWatchlistPage() {
+    showWatchlist(true);
+}
+
+function openContinuePage() {
+    history.pushState({ view: "continue" }, "", "?view=continue");
+    showPage("home-page");
+
+    setTimeout(() => {
+        scrollToContinueWatching();
+    }, 500);
 }
 
 function showPage(pageId) {
@@ -1521,8 +1562,12 @@ async function loadContent(filterParam, page = 1) {
     isMoodSearch = false;
 
     if (catalogTitle) catalogTitle.textContent = "Pilih Kategori Tayangan";
-
-    history.pushState({ category: filterParam, page: page }, "", `?category=${filterParam}&page=${page}`);
+    
+    history.pushState(
+        { view: "search", category: filterParam, page: page },
+        "",
+        `?view=search&category=${filterParam}&page=${page}`
+    );
 
     if (movieContainer) showSkeletonLoader(movieContainer, 8);
 
