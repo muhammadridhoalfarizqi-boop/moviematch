@@ -1625,7 +1625,17 @@ async function displayItems(items, container = movieContainer, showPagination = 
     for (const item of items) {
         const card = document.createElement("article");
         card.className = "movie-card";
-        card.onclick = () => openDetail(item);
+        card.onclick = () => {
+            const normalized = normalizeMediaItem(item);
+            
+            if (!normalized) {
+                console.warn("Invalid clicked item:", item);
+                showToast("Data film tidak valid.", "error");
+                return;
+            }
+
+    openDetail(normalized);
+};
 
         if (!isFromSupabase) {
             if (!companyCache.has(item.id) && item.id > 1000) {
@@ -1907,7 +1917,17 @@ async function createItemElements(items) {
                 <p>${year} | ${rating}</p>
             </div>
         `;
-        card.onclick = () => openDetail(item);
+        card.onclick = () => {
+            const normalized = normalizeMediaItem(item);
+            
+            if (!normalized) {
+                console.warn("Invalid clicked item:", item);
+                showToast("Data film tidak valid.", "error");
+                return;
+            }
+
+    openDetail(normalized);
+};
         elements.push(card);
     }
     return elements;
