@@ -1450,21 +1450,37 @@ function openContinuePage() {
 
 function openWhatsAppSupport(type = "support") {
     const pageUrl = window.location.href;
+
     const messages = {
-        bug: `Halo Admin MovieMatch, saya mau lapor bug.\n\nHalaman/fitur: \nDeskripsi bug: \nPerangkat/browser: \nURL: ${pageUrl}`,
-        idea: `Halo Admin MovieMatch, saya punya saran fitur.\n\nSaran: \nAlasan: \nURL: ${pageUrl}`,
-        support: `Halo Admin MovieMatch, saya butuh bantuan terkait MovieMatch.\n\nMasalah: \nURL: ${pageUrl}`
-    };
+        bug: `Halo Admin MovieMatch, saya mau lapor bug.
+        
+        Halaman/fitur:
+        Deskripsi bug:
+        Perangkat/browser:
+        URL: ${pageUrl}`,
+        
+        idea: `Halo Admin MovieMatch, saya punya saran fitur.
+        
+        Saran:
+        Alasan:
+        URL: ${pageUrl}`,
+
+        support: `Halo Admin MovieMatch, saya butuh bantuan terkait MovieMatch.
+        
+        Masalah:
+        URL: ${pageUrl}`
+            };
 
     const message = encodeURIComponent(messages[type] || messages.support);
     const phone = String(WHATSAPP_SUPPORT_NUMBER || "").replace(/\D/g, "");
 
-    if (!phone || phone === "6281234567890") {
-        showToast("Ganti nomor WhatsApp support di script.js dulu.", "warning");
+    if (!phone) {
+        showToast("Nomor WhatsApp support belum diisi.", "warning");
         return;
     }
 
-    window.open(`https://wa.me/${phone}?text=${message}`, "_blank", "noopener,noreferrer");
+    const waUrl = `https://wa.me/${phone}?text=${message}`;
+    window.open(waUrl, "_blank");
 }
 
 function openSupportPage() {
