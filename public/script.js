@@ -1453,23 +1453,23 @@ function openWhatsAppSupport(type = "support") {
 
     const messages = {
         bug: `Halo Admin MovieMatch, saya mau lapor bug.
-        
-        Halaman/fitur:
-        Deskripsi bug:
-        Perangkat/browser:
-        URL: ${pageUrl}`,
-        
+
+Halaman/fitur:
+Deskripsi bug:
+Perangkat/browser:
+URL: ${pageUrl}`,
+
         idea: `Halo Admin MovieMatch, saya punya saran fitur.
-        
-        Saran:
-        Alasan:
-        URL: ${pageUrl}`,
+
+Saran:
+Alasan:
+URL: ${pageUrl}`,
 
         support: `Halo Admin MovieMatch, saya butuh bantuan terkait MovieMatch.
-        
-        Masalah:
-        URL: ${pageUrl}`
-            };
+
+Masalah:
+URL: ${pageUrl}`
+    };
 
     const message = encodeURIComponent(messages[type] || messages.support);
     const phone = String(WHATSAPP_SUPPORT_NUMBER || "").replace(/\D/g, "");
@@ -1479,8 +1479,11 @@ function openWhatsAppSupport(type = "support") {
         return;
     }
 
-    const waUrl = `https://wa.me/${phone}?text=${message}`;
-    window.open(waUrl, "_blank");
+    const waUrl = "https://wa.me/" + phone + "?text=" + message;
+
+    console.log("Opening WhatsApp:", waUrl);
+
+    window.location.href = waUrl;
 }
 
 function openSupportPage() {
