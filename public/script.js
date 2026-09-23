@@ -2127,7 +2127,7 @@ function filterByStudio(value) {
         'marvel': { id: 420, type: 'company', name: 'MARVEL STUDIOS' },
         'dreamworks': { id: 521, type: 'company', name: 'DREAMWORKS' },
         'pixar': { id: 3, type: 'company', name: 'PIXAR' },
-        'a24': { id: 110, type: 'company', name: 'A24' }
+        'a24': { id: 110, type: 'company', name: 'A24' },
         'vivamax': { id: 4569, type: 'network', name: 'VIVAMAX' },
     };
 
